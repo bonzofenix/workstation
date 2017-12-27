@@ -1,0 +1,6 @@
+pairs:
+  am: Alan Moran; bonzofenix@gmail.com
+
+email:
+  domain: gmail.com
+email_template: '{{.Username}}'
