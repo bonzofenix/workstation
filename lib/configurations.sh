@@ -79,3 +79,13 @@ if ! grep -q 'PS1' ~/.bash_profile; then
   echo '# configure shell prompt'      >> ~/.bash_profile
   echo "PS1='\$ '"                     >> ~/.bash_profile
 fi
+
+echo
+echo "Enables z shell plugin"
+if ! grep -q 'bin/z.sh' ~/.bash_profile; then
+  echo                                 >> ~/.bash_profile
+  echo '# Enables z shell plugin'      >> ~/.bash_profile
+  echo ". ~/workstation/bin/z.sh"      >> ~/.bash_profile
+fi
+
+
