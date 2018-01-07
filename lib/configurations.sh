@@ -75,9 +75,9 @@ fi
 echo
 echo "Configuring shell prompt"
 if ! grep -q 'PS1' ~/.bash_profile; then
-  echo                                 >> ~/.bash_profile
-  echo '# configure shell prompt'      >> ~/.bash_profile
-  echo "PS1='\$ '"                     >> ~/.bash_profile
+  echo                                  >> ~/.bash_profile
+  echo '# configure shell prompt'       >> ~/.bash_profile
+  echo "PS1='\[\e[1;35m\]\$\[\e[0m\] '" >> ~/.bash_profile
 fi
 
 echo
