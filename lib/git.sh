@@ -19,6 +19,15 @@ git config --global transfer.fsckobjects true
 git config --global hub.protocol https
 git config --global push.default simple
 
+
+echo
+echo "Enables colors to git output"
+git config --global color.ui true
+git config color.status.changed "blue normal bold"
+git config color.status.header "white normal dim"
+git config --global color.status.untracked "magenta"
+
+
 # Force unset osxkeychain cache
 git config --system --unset credential.helper
 
