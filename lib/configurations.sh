@@ -88,4 +88,10 @@ if ! grep -q 'bin/z.sh' ~/.bash_profile; then
   echo ". ~/workstation/bin/z.sh"      >> ~/.bash_profile
 fi
 
-
+echo
+echo "Disables case sensitive completition"
+if ! grep -q 'completition-ignore-case' ~/.bash_profile; then
+  echo                                          >> ~/.bash_profile
+  echo '# Disables case sensitive completition' >> ~/.bash_profile
+  echo "bind 'set completion-ignore-case on'"   >> ~/.bash_profile
+fi
