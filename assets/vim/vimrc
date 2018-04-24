@@ -67,6 +67,13 @@ set stl=[%n]\ file:%-50F\ %y%r%m\ byte:0x%B%=line:%l:%c/%L\ %p%%
 set wildmode=longest,list
 
 
+" Adds support for ack
+let g:ackprg = 'ag --vimgrep --smart-case'                                                   
+cnoreabbrev ag Ack                                                                           
+cnoreabbrev aG Ack                                                                           
+cnoreabbrev Ag Ack                                                                           
+cnoreabbrev AG Ack  
+
 """
 """
 """ ###   Copy/Paste Support   ###############################################
