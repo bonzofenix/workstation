@@ -6,11 +6,6 @@ echo
 echo "Cleanup git configs"
 rm ~/.gitconfig
 
-echo
-echo "Installing Git and associated tools"
-brew install git 
-brew tap git-duet/tap
-brew install git-duet
 
 echo
 echo "Setting global Git configurations"

@@ -20,7 +20,7 @@ source ${MY_DIR}/lib/git-aliases.sh
 source ${MY_DIR}/lib/ruby.sh
 source ${MY_DIR}/lib/go.sh
 source ${MY_DIR}/lib/node.sh
-source ${MY_DIR}/lib/tooling.sh
+source ${MY_DIR}/lib/tooling-osx.sh
 source ${MY_DIR}/lib/configurations.sh
 
 echo

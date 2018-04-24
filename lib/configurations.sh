@@ -1,5 +1,52 @@
+set -e
+
 echo
-echo "Installing Bash-It"
+echo 'Adding workstation/bin to path'
+if ! grep -q '~/workstation/bin' ~/.bash_profile; then
+  echo                                        >> ~/.bash_profile
+  echo '# Add workstation binaries'          	>> ~/.bash_profile
+  echo 'export PATH=$PATH:~/workstation/bin' 	>> ~/.bash_profile
+fi
+
+echo
+echo 'Adding ~/bin to path'
+if ! grep -q '~/bin' ~/.bash_profile; then
+  echo                                          >> ~/.bash_profile
+  echo '# Add ~/bin binaries'                   >> ~/.bash_profile
+  echo 'export PATH=$PATH:~/bin'                >> ~/.bash_profile
+fi
+
+echo
+echo 'Enabling VI mode for bash'
+if ! grep -q 'set -o vi' ~/.bash_profile; then
+  echo                              >> ~/.bash_profile
+  echo '# Enable VI mode for bash'  >> ~/.bash_profile
+  echo 'set -o vi'                  >> ~/.bash_profile
+fi
+
+echo
+echo 'Setting tmux config'
+if [[ -fe ~/.tmux.conf ]]; then
+ rm -f ~/.tmux.conf
+fi
+ln -fs ~/workstation/assets/tmux.conf ~/.tmux.conf
+
+echo
+echo 'Setting LANG for UTF-8 tmux support'
+if ! grep -q 'LANG=' ~/.bash_profile; then
+  echo 'export LANG=en_US.UTF-8' >> ~/.bash_profile
+fi
+
+echo
+echo 'Enabling TMUX to run by default'
+if !  grep -q "TMUX" ~/.bash_profile ; then
+  echo                                                             >> ~/.bash_profile
+  echo '# Adding tmux to run by default on new terminal'           >> ~/.bash_profile
+  echo 'if [[ ! $TMUX ]] ; then' >> ~/.bash_profile
+  echo 'tmux attach -t base || tmux new -s base'                   >> ~/.bash_profile
+  echo 'fi'                                                        >> ~/.bash_profile
+fi
+
 
 echo
 echo "Installing VIM configs"
@@ -28,11 +75,11 @@ if ! grep -q 'rbenv init -' ~/.bash_profile; then
 fi
 
 echo
-echo "Configuring ~/pe-workstation/bin in PATH"
-if ! grep -q '~/pe-workstation/bin' ~/.bash_profile; then
+echo "Configuring ~/workstation/bin in PATH"
+if ! grep -q '~/workstation/bin' ~/.bash_profile; then
   echo                                            >> ~/.bash_profile
   echo '# Adds pe workstation binaries to path'   >> ~/.bash_profile
-  echo 'export PATH="~/pe-workstation/bin:$PATH"' >> ~/.bash_profile
+  echo 'export PATH="~/workstation/bin:$PATH"'    >> ~/.bash_profile
 fi
 
 echo
