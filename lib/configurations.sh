@@ -26,7 +26,7 @@ fi
 
 echo
 echo 'Setting tmux config'
-if [[ -fe ~/.tmux.conf ]]; then
+if [ -fe ~/.tmux.conf ]; then
  rm -f ~/.tmux.conf
 fi
 ln -fs ~/workstation/assets/tmux.conf ~/.tmux.conf
@@ -50,7 +50,7 @@ fi
 
 echo
 echo "Installing VIM configs"
-if [[ -de ~/.vim ]]; then
+if [ -de ~/.vim ]; then
   rm -rf ~/.vim
 fi
 
