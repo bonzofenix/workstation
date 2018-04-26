@@ -54,7 +54,7 @@ if [ -de ~/.vim ]; then
   rm -rf ~/.vim
 fi
 
-if [[ -L ~/.vimrc ]]; then
+if [ -L ~/.vimrc ]; then
   rm ~/.vimrc
 fi
 cp ~/workstation/assets/vim/vimrc ~/.vimrc
