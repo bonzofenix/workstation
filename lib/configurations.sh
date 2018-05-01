@@ -16,13 +16,13 @@ if ! grep -q '~/bin' ~/.bash_profile; then
   echo 'export PATH=$PATH:~/bin'                >> ~/.bash_profile
 fi
 
-echo
-echo 'Enabling VI mode for bash'
-if ! grep -q 'set -o vi' ~/.bash_profile; then
-  echo                              >> ~/.bash_profile
-  echo '# Enable VI mode for bash'  >> ~/.bash_profile
-  echo 'set -o vi'                  >> ~/.bash_profile
-fi
+#echo
+#echo 'Enabling VI mode for bash'
+#if ! grep -q 'set -o vi' ~/.bash_profile; then
+#  echo                              >> ~/.bash_profile
+#  echo '# Enable VI mode for bash'  >> ~/.bash_profile
+#  echo 'set -o vi'                  >> ~/.bash_profile
+#fi
 
 echo
 echo 'Setting tmux config'
