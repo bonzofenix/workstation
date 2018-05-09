@@ -50,7 +50,7 @@ fi
 
 echo
 echo "Installing VIM configs"
-if [ -de ~/.vim ]; then
+if [ -d ~/.vim ]; then
   rm -rf ~/.vim
 fi
 
@@ -60,10 +60,6 @@ fi
 cp ~/workstation/assets/vim/vimrc ~/.vimrc
 cp -R ~/workstation/assets/vim ~/.vim
 vim -c ":GoInstallBinaries" -c ":q" - </dev/null
-
-echo
-echo "Configuring iTerm"
-cp assets/com.googlecode.iterm2.plist ~/Library/Preferences
 
 echo
 echo "Configuring rbenv"

@@ -39,3 +39,8 @@ defaults write com.apple.Terminal Shell -string "/bin/bash"
 
 # Set default to use function key
 defaults write -g com.apple.keyboard.fnState -bool true
+
+echo
+echo "Configuring iTerm"
+cp assets/com.googlecode.iterm2.plist ~/Library/Preferences
+
