@@ -26,7 +26,7 @@ fi
 
 echo
 echo 'Setting tmux config'
-if [ -fe ~/.tmux.conf ]; then
+if [ -e ~/.tmux.conf ]; then
  rm -f ~/.tmux.conf
 fi
 ln -fs ~/workstation/assets/tmux.conf ~/.tmux.conf
