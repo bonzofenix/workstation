@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+function select-option(){
+  PS3=$'\e[0;32mSelect: \e[0m'
+  opts=($@)
+
+  select opt in "${opts[@]}" "Quit" ; do
+    if (( REPLY == 1 + ${#opts[@]} )) ; then
+      exit
+
+    elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
+      echo $opt
+      break
+
+    else
+      echo "Invalid option. Try another one."
+    fi
+  done
+}
+
+function run(){
+  payload=$(fly -t concourse pipelines --json)
+
+  pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
+  pipeline=$(select-option $pipelines)
+  groups=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | .name" -r)
+  group=$(select-option $groups)
+  jobs=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | select(.name==\"$group\")  | .jobs[]" -r)
+  job=$(select-option $jobs)
+
+  build=$(fly -t concourse builds -j $pipeline/$job --json | jq ".[] | .name" -r | head -n 1)
+  fly -t concourse i -j $pipeline/$job -b $build
+}
+
+PIPELINE_DIR=$HOME/workspace/pipelines
+TMP_DIR=$HOME/.book
+
+
+run $1
