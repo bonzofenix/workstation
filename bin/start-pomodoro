@@ -1,0 +1,7 @@
+#!/bin/bash
+
+current_window=$(tmux display-message -p '#I')
+while true; do
+  tmux rename-window -t $current_window "$(pomodoro clock)"
+  sleep 1
+done
