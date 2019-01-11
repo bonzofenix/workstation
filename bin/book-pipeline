@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -e
+
+PIPELINE_DIR=$HOME/workspace/pipelines
+TMP_DIR=$HOME/.book
+
+function temp_travel_agent() {
+  local pipeline=$1
+  local agent_file=$PIPELINE_DIR/$pipeline/travel-agent.yml
+
+  mkdir -p $TMP_DIR
+
+  local git_project=$( bosh int $agent_file --path /git_project | xargs -I {} basename {} .git )
+
+  spruce merge \
+    $agent_file \
+    <(echo "git_project: $HOME/workspace/$git_project") \
+    > $TMP_DIR/$pipeline.yml
+
+  echo $TMP_DIR/$pipeline.yml
+}
+
+function book_pipeline(){
+  local pipeline_name=$1
+  local agent_file=$( temp_travel_agent $pipeline_name )
+  local settings_file=$PIPELINE_DIR/$pipeline_name/settings.yml
+
+  travel-agent book \
+    $agent_file \
+    $settings_file
+
+  fly -t concourse expose-pipeline --pipeline $pipeline_name
+}
+
+prompt="Available Travel Agent pipeline:"
+options=( $(tree -d -L 1 -i --noreport ~/workspace/pipelines | sed 1d) )
+
+if [[ -z "$1" ]]; then
+  PS3="$prompt "
+
+  select pipeline_name in "${options[@]}" "Quit" ; do
+    if (( REPLY == 1 + ${#options[@]} )) ; then
+      exit
+
+    elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
+
+      echo "Booking $pipeline_name pipeline"
+      book_pipeline $pipeline_name
+      break
+
+    else
+      echo "Invalid option. Try another one."
+    fi
+  done
+else
+  book_pipeline $1
+fi
