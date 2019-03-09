@@ -1,6 +1,9 @@
 pairs:
   am: Alan Moran; bonzofenix@gmail.com
+  ag: Anand Gopal; anandkumar.gopalkrishnan@aon.com
+  db: Dave Brock; david.brock1@aon.com
+  jg: Joe Goller; joe.goller@aon.com
 
 email:
-  domain: gmail.com
+  domain: aon.com
 email_template: '{{.Username}}'

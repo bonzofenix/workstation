@@ -17,4 +17,3 @@ if ! grep -q "GOPATH" ~/.bash_profile; then
   echo 'export PATH=$PATH:$GOPATH/bin'  >> ~/.bash_profile
 fi
 
-brew install go 

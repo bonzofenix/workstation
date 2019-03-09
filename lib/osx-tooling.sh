@@ -86,4 +86,8 @@ brew install git
 brew tap git-duet/tap
 brew install git-duet
 
+echo
+echo "Installing GO"
+brew install go 
+
 set -e

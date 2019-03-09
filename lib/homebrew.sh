@@ -25,7 +25,7 @@ brew update
 
 echo
 echo "Ensuring you have a healthy Homebrew environment..."
-brew doctor
+brew doctor || :
 
 echo
 echo "Ensuring your Homebrew directory is writable..."

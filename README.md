@@ -1,25 +1,39 @@
-# Workstation 
+# Workstation
 
 This is a full workstation based off pivotal's workstation project.
 
+## Prerequisits on OSX
+
+Self service seems to only install command line tools, and you need full xcode version to run the workstation setup script. Unfortunately, corp policy prevents you from using the app store, so you will need to install manually:
+
+  - Download right version for your OS:
+    - Latest version for Sierra: https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_9.2/Xcode_9.2.xip
+    - Double-click the zip to uncompress
+    - Drag Xcode binary to Applications
+    - Run Xcode.app and accept the license and quit
+    - From terminal, run `xcode-select -s /Applications/Xcode.app/Contents/Developer`
+    - `xcode-select -p` should show the correct path
+
 ## Installation
 
-
-- Download Xcode 8.2.1
-- Extract it in `Applications/XCode.app`
-
-Open up the OS X Terminal and run the following commands:
+Open up a Terminal and run the following commands:
 
 _Note: It is important that this project is cloned to your **HOME** directory_
 
 ```sh
-cd ~ && git clone https://github.com/bonzofenix/workstation && cd workstation
+cd ~ && git clone https://github.com/bonzofenix/workstation.git && cd workstation && git checkout dev
 ```
 
-To install a completely new workstation run:
+For **OSX**:
 
 ```sh
-./setup.sh 
+./osx.sh
+```
+
+For **Linux**:
+
+```sh
+./linux.sh
 ```
 
 ## FAQ and Troubleshooting
