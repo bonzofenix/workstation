@@ -136,14 +136,6 @@ if ! grep -q '~/workstation/bin' ~/.bash_profile; then
   fi
 
   echo
-  echo "Adds utility functions for sessions"
-  if ! grep -q 'bin/utils.sh' ~/.bash_profile; then
-    echo                                          >> ~/.bash_profile
-    echo '# Adds utility functions to session'    >> ~/.bash_profile
-    echo ". ~/workstation/bin/utils.sh"           >> ~/.bash_profile
-  fi
-
-  echo
   echo "cds into the HOME directory"
   if ! grep -q 'cd $HOME' ~/.bash_profile; then
     echo                                          >> ~/.bash_profile
