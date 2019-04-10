@@ -112,11 +112,7 @@ if ! grep -q '~/workstation/bin' ~/.bash_profile; then
   if ! grep -q 'PS1' ~/.bash_profile; then
     echo                                      >> ~/.bash_profile
     echo '# configure shell prompt'           >> ~/.bash_profile
-    echo "if [[ $TERM =~ 256color ]]; then"   >> ~/.bash_profile
     echo "  PS1='\[\033[01;32m\]\u\[\033[0m\]:\[\033[01;34m\]\W\[\033[0m\]\\$ '" >> ~/.bash_profile
-    echo "else"                               >> ~/.bash_profile
-    echo "PS1='\[\e[1;35m\]\$\[\e[0m\] '"     >> ~/.bash_profile
-    echo "fi"                                 >> ~/.bash_profile
   fi
 
   echo
