@@ -1,0 +1,294 @@
+#!/usr/bin/env bash
+
+set -eu
+
+###
+# List all available commands in full namespace.
+##
+function profile-manager._functions() {
+  declare -F -p | cut -d " " -f 3 | grep '^profile-manager.*$'
+}
+
+###
+# List all available 'public' commands in full namespace.
+##
+function profile-manager._commands() {
+  profile-manager._functions | grep -v '^profile-manager\._.*'
+}
+
+###
+# List all available 'public' commands.
+##
+function profile-manager.commands() {
+  for i in $( profile-manager._commands | awk -F. '{print $2}' ); do
+    echo -n "$i "
+  done
+
+  echo
+}
+
+###
+# Prints a help message.
+##
+function profile-manager.help() {
+  echo "PROFILE-MANAGER"
+  echo ""
+  echo "USAGE"
+  echo "  profile-manager CMD [ARGS...]"
+  echo ""
+  echo "COMMANDS"
+  echo ""
+  echo "  commands   Prints the commands that are available"
+  echo "  create     Prompts an edit on a new profile"
+  echo "  current    Prints the current profile loaded"
+  echo "  dir        Prints the directory where profiles are kept"
+  echo "  edit       Prompts an edit on a profile"
+  echo "  exists     Returns 0 if the profile exists; otherwise, 1"
+  echo "  help       Prints this help message"
+  echo "  load       Loads a profile"
+  echo "  path       Prints the path of a profile"
+  echo "  rcfile     Prints the path to the rcfile"
+  echo ""
+}
+
+###
+# Echos a log statement to stderr
+#
+# Parameters:
+#   1 {level} (string) Uppercased to be shown in the log statement
+#   @ {messages} ([string]) The messages to print within the log message
+#
+# Environment:
+#   PROFILE_MANAGER_DATE_FORMAT (string): Used to format the date strings
+##
+function profile-manager._log() {
+  local date_format="${LOGGER_DATE_FORMAT:-%Y-%m-%d %H:%M:%S}"
+  local level="$( echo "$1" | tr a-z A-Z )"
+  shift
+
+  echo "[$( date +"$date_format" )][$level] $@" >&2
+}
+
+###
+# Runs the log command using debug as the level but only if `PROFILE_MANAGER_DEBUG` is not empty.
+#
+# Parameters:
+#   @ {messages} ([string]) The messages to print within the log message
+#
+# Environment:
+#   PROFILE_MANAGER_DEBUG (string) If not empty, the debug message will be displayed; otherwise, nothing
+##
+function profile-manager._debug() {
+  if [ -n "${PROFILE_MANAGER_DEBUG}" ]; then
+    profile-manager._log debug "$@"
+  fi
+}
+
+###
+# Runs the log command using info as the level.
+#
+# Parameters:
+#   @ {messages} ([string]) The messages to print within the log message
+##
+function profile-manager._info() {
+  profile-manager._log info "$@"
+}
+
+###
+# Runs the log command using error as the level.
+#
+# Parameters:
+#   @ {messages} ([string]) The messages to print within the log message
+##
+function profile-manager._error() {
+  profile-manager._log error "$@"
+}
+
+###
+# Echos out the rcfile that is used by direnv
+#
+# Environment:
+#   PROFILE_MANAGER_RCFILE (file) The rcfile that is used by direnv
+##
+function profile-manager.rcfile() {
+  echo "${PROFILE_MANAGER_RCFILE:-$HOME/.envrc}"
+}
+
+###
+# Echos out the directory where profile envrc files are kept
+#
+# Environment:
+#   PROFILE_MANAGER_DIRECTORY (directory) The directory where profile envrc files are kept
+##
+function profile-manager.dir() {
+  echo "${PROFILE_MANAGER_DIRECTORY:-$HOME/.profiles}"
+}
+
+###
+# Echos the path to a profile's envrc.
+##
+function profile-manager.path() {
+  local profile="$1"
+
+  if [ -z "$profile" ]; then
+    profile-manager._error "Missing required argument: PROFILE"
+    return 1
+  fi
+
+  echo "$( profile-manager.dir )/$profile.envrc"
+}
+
+###
+# Echos the currently loaded profile.
+##
+function profile-manager.current() {
+  local rcfile="$( profile-manager.rcfile )"
+  if [ ! -f "$rcfile" ]; then
+    profile-manager._error "No current profile is currently set"
+    return 2
+  fi
+
+  if [ ! -L "$rcfile" ]; then
+    profile-manager._error "Current profile has not been configured via $0.\nThis can result in data loss!"
+    return 3
+  fi
+
+  basename "$( readlink -n "$rcfile" )" .envrc
+}
+
+###
+# Checks if a profile exists.
+#
+# Parameters:
+#   1 (string) The profile to check for existance.
+##
+function profile-manager.exists() {
+  local profile="$1"
+
+  if [ ! -f "$( profile-manager.path "$profile" )" ]; then
+    profile-manager._error "Cannot find profile: $profile"
+    return 1
+  fi
+
+  return 0
+}
+
+###
+# Loads a profile.
+#
+# Parameters:
+#   1 (string) The profile to load.
+##
+function profile-manager.load() {
+  local profile="$1"
+  local rcfile="$( profile-manager.rcfile )"
+
+  # Check that the profile exists
+  profile-manager.exists "$profile"
+
+  local profile_path="$( profile-manager.path "$profile" )"
+
+  # Link the new profile (overwriting the previous)
+  ln -fs "$profile_path" "$rcfile"
+
+  profile-manager._info "Successfully loaded $profile"
+
+  pushd "$( dirname "$( profile-manager.rcfile )" )" > /dev/null
+    profile-manager._info "Allowing direnv changes"
+    direnv allow
+
+    profile-manager._info "Reloading the environment"
+    direnv reload
+  popd > /dev/null
+}
+
+###
+# Creates a new profile.
+#
+# Parameters:
+#   1 (string) The profile to load.
+##
+function profile-manager.create() {
+  local profile="$( profile-manager.path "$1" )"
+
+  if [ -f "$profile" ]; then
+    profile-manager._error "Profile '$profile' already exists"
+    return 4
+  fi
+
+  mkdir -p "$( profile-manager.dir )"
+
+  "${EDITOR:-vi}" "$profile"
+}
+
+###
+# Edits an existing profile.
+#
+# Parameters:
+#   1 (string) The profile to load.
+##
+function profile-manager.edit() {
+  local profile="$( profile-manager.path "$1" )"
+
+  if [ ! -f "$profile" ]; then
+    profile-manager._error "Profile '$profile' does not exist"
+    return 5
+  fi
+
+  "${EDITOR:-vi}" "$profile"
+}
+
+###
+# The main function which will call its subcommand provided as the first parameter.
+#
+# Parameter:
+#   1 {subcommand} The profile-manager.{subcommand} function to call
+#   @ {parameters} The arguments to be forwarded to the subcommand function
+##
+function profile-manager() {
+  local args=()
+  while [ "${1:-}" != '' ]; do
+    case "$1" in
+      -- )
+        shift
+        args+=($@)
+        break
+        ;;
+      * )
+        args+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  set -- "${args[@]}"
+
+  if [ $# -lt 1 ]; then
+    profile-manager.help
+    return 0
+  fi
+
+  local cmd="$1"
+  shift
+
+  if ( profile-manager._commands | grep -q "^profile-manager.$cmd$" ); then
+    # Nothing
+    :
+  else
+    echo "Unknown function $cmd" >&2
+    return 1
+  fi
+
+  profile-manager.$cmd $@
+  return $?
+}
+
+if [[ ${BASH_SOURCE[0]} != $0 ]]; then
+  export -f $( profile-manager._functions )
+else
+  profile-manager "${@:-}"
+  exit $?
+fi
+
+# pm
+

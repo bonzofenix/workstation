@@ -157,4 +157,3 @@ if ! grep -q '~/workstation/bin' ~/.bash_profile; then
     fi
 fi
 
-ln -fsn ~/workstation/assets/profiles ~/.profiles
