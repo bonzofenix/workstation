@@ -2,7 +2,7 @@
 
 set -e
 
-PIPELINE_DIR=$HOME/workspace/pipelines
+PIPELINE_DIR=$HOME/workspace/configs/pipelines
 TMP_DIR=$HOME/.book
 
 function temp_travel_agent() {
@@ -34,7 +34,7 @@ function book_pipeline(){
 }
 
 prompt="Available Travel Agent pipeline:"
-options=( $(tree -d -L 1 -i --noreport ~/workspace/pipelines | sed 1d) )
+options=( $(tree -d -L 1 -i --noreport $PIPELINE_DIR | sed 1d) )
 
 if [[ -z "$1" ]]; then
   PS3="$prompt "
