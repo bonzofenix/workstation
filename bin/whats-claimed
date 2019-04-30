@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+source ~/workstation/bin/common.sh
+
+function check_locks {
+  [[ -z "$(ls $1/claimed/)" ]] && return
+  echo -e "$1 locks: \n"
+  for lock in $(ls $1/claimed/*);do
+
+
+    msg=$(git log -n 1 --graph --pretty=format:'%s' --abbrev-commit  -- $lock)
+    resource=$(echo "$msg" | cut -d ' ' -f2 )
+    env=$(echo "$msg" | cut -d ' ' -f6 )
+    build=$(echo "$msg" | cut -d ' ' -f4 )
+    pipeline=$(echo "$resource" | cut -d '/' -f1 )
+    job=$(echo "$resource" | cut -d '/' -f2 )
+
+    echo -e "$env: \t $CONCOURSE_URL/teams/main/pipelines/$pipeline/jobs/$job/builds/$build"
+  done
+}
+
+
+function whats-claimed() {
+  if [[ -z $1 ]]; then
+    echo "Usage: ${FUNCNAME[0]} LOCK_NAME"
+    exit 1
+  fi
+
+  pushd ~/workspace/locks > /dev/null
+    git pull -r > /dev/null 2>&1
+    check_locks $1
+  popd > /dev/null
+}
+
+whats-claimed "${@:-}"
