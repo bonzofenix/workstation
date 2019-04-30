@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+source ~/workstation/bin/common.sh
+
+###
+# @description Removes concourse lock for an specific environment
+#
+# @arg $1 string lock name to unlock
+# @arg $2 string Environment to unlock
+#
+# @stdout git output
+##
+
+function unlock-env() {
+  LOCK_NAME=$1
+  ENV=$2
+
+  if [[ -z $LOCK_NAME ]]; then
+    error "Usage: ${FUNCNAME[0]} LOCK_NAME ENV"
+    exit 1
+  fi
+
+
+  pushd ~/workspace/locks > /dev/null
+    set -x
+    git up
+    git reset
+    git mv $LOCK_NAME/claimed/$ENV $LOCK_NAME/unclaimed/$ENV
+    git ci -m "Manually unlocking $LOCK_NAME $ENV"
+    git push
+    set +x
+  popd > /dev/null
+
+}
+
+unlock-env "${@:-}"
+exit $?
+
