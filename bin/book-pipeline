@@ -24,10 +24,13 @@ function temp_travel_agent() {
 function book_pipeline(){
   local pipeline_name=$1
   local agent_file=$( temp_travel_agent $pipeline_name )
+  local git_project=$( bosh int $agent_file --path /git_project | xargs -I {} basename {} .git )
   local settings_file=$PIPELINE_DIR/$pipeline_name/settings.yml
+  local default_settings_file=$PIPELINE_DIR/$git_project.settings.yml
 
   travel-agent book \
     $agent_file \
+    $default_settings_file \
     $settings_file
 
   fly -t concourse expose-pipeline --pipeline $pipeline_name
