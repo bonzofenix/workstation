@@ -1,0 +1,36 @@
+#!/bin/bash
+
+source ~/workstation/bin/common.sh
+
+###
+# @description Login and set concourse target
+#
+# @arg $1 string Environment name
+# @arg $2 string Concourse url
+#
+# @stdout The identity and password formatted
+##
+
+function concourse-login() {
+  URL=$2
+
+  if [[ -z $1 ]]; then
+    echo "Usage: ${FUNCNAME[0]} ENV URL"
+    exit 1
+  fi
+
+  concourse_url="${1^^}_CONCOURSE_URL"
+  log "Login into ${!concourse_url} with main team"
+
+  if [[ -z "${!concourse_url}" ]]; then
+    error "$concourse_url ENV variable not defined"
+  fi
+
+  read -p "Enter username: " username
+  fly -t concourse login \
+    -u $username \
+    -n main \
+    -c ${!concourse_url}
+}
+
+concourse-login "${@:-}"
