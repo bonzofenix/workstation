@@ -16,6 +16,13 @@ function unlock-env() {
   ENV=$2
 
   if [[ -z $LOCK_NAME ]]; then
+    error "missing lock name"
+    error "Usage: ${FUNCNAME[0]} LOCK_NAME ENV"
+    exit 1
+  fi
+
+  if [[ -z $ENV ]]; then
+    error "missing env name"
     error "Usage: ${FUNCNAME[0]} LOCK_NAME ENV"
     exit 1
   fi
