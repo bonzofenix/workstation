@@ -11,11 +11,18 @@ function temp_travel_agent() {
 
   mkdir -p $TMP_DIR
 
-  local git_project=$( bosh int $agent_file --path /git_project | xargs -I {} basename {} .git )
+  local git_url=$( bosh int $agent_file --path /git_project )
+  local git_project=$( echo $git_url | xargs -I {} basename {} .git )
+  local local_git_project_folder="$HOME/workspace/$git_project"
+
+  if [ ! -d $local_git_project_folder ]; then
+    git clone $git_url $local_git_project_folder
+  fi
+
 
   spruce merge \
     $agent_file \
-    <(echo "git_project: $HOME/workspace/$git_project") \
+    <(echo "git_project: $local_git_project_folder") \
     > $TMP_DIR/$pipeline.yml
 
   echo $TMP_DIR/$pipeline.yml
