@@ -28,4 +28,5 @@ alias tmux="TERM=screen-256color-bce tmux"
 
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
-alias go='mkdir -p ~/tmp; TMPDIR=~/tmp go'
+
+alias go='TMPDIR=~/tmp go'
