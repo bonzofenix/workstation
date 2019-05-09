@@ -53,13 +53,15 @@ if ! grep -q '~/workstation/bin' ~/.bash_profile; then
   cp -R ~/workstation/assets/vim ~/.vim
   vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 
-  echo
-  echo "Configuring rbenv"
-  if ! grep -q 'rbenv init -' ~/.bash_profile; then
-    echo                                        >> ~/.bash_profile
-    echo '# Use rbenv'                          >> ~/.bash_profile
-    echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-    echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+  if `hash rbenv`; then
+    echo
+    echo "Configuring rbenv"
+    if ! grep -q 'rbenv init -' ~/.bash_profile; then
+      echo                                        >> ~/.bash_profile
+      echo '# Use rbenv'                          >> ~/.bash_profile
+      echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+      echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+    fi
   fi
 
   echo
