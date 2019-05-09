@@ -5,7 +5,7 @@ set +e
 # Utilities
 
 brew cask install spectacle
-brew cask install postman 
+brew cask install postman
 
 brew install ag
 brew install gpg
@@ -14,80 +14,74 @@ brew install wget --with-libressl
 
 # Terminals
 
-brew cask install iterm2 
+brew cask install iterm2
 
 # Browsers
 
-brew cask install google-chrome 
+brew cask install google-chrome
 
 # Communication
 
-brew cask install slack 
-brew cask install skype 
+brew cask install slack
+brew cask install skype
 
 # Video player
 brew cask install vlc
 
 # Emulation tools
 
-brew cask install virtualbox 
+brew cask install virtualbox
 
 # Data tools
 
-brew install mysql 
-brew install postgresql 
+brew install mysql
+brew install postgresql
 
 # Docker For Mac
 
-brew install docker 
+brew install docker
 
+# Ruby tools
+brew install readline
+brew install rbenv
 
-echo
-echo "Installing spruce"
+# spruce
 brew tap starkandwayne/cf
-brew install spruce 
+brew install spruce
 
-echo
-echo "Installing concourse fly"
+
+# concourse fly
 rm -rf /usr/local/bin/fly
-brew cask install fly 
+brew cask install fly
 
-echo "Installing tree"
+# tree
 brew install tree
 
-echo
-echo "Installing jq"
-brew install jq 
+# jq
+brew install jq
 
-echo
-echo "Installing nmap"
-brew install nmap 
+# nmap
+brew install nmap
 
-echo
-echo "Installing sshpass"
+# sshpass
 brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
 
-echo
-echo "Installing coreutils"
+# coreutils
 brew install coreutils
 
-echo
-echo "Installing Cloud Foundry Command-line Interface"
+# Cloud Foundry Command-line Interface
 brew tap cloudfoundry/tap
-brew install cf-cli 
+brew install cf-cli
 
-echo
-echo 'Installing yaml2json'
+# yaml2json
 gem install yaml2json
 
-echo
-echo "Installing Git and associated tools"
-brew install git 
+# Git and associated tools
+brew install git
 brew tap git-duet/tap
 brew install git-duet
 
-echo
-echo "Installing GO"
-brew install go 
+# GO
+brew install go
 
 set -e
