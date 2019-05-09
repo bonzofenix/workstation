@@ -165,10 +165,6 @@ set nolist
 
 let g:go_fmt_command = "goimports"
 
-" Add Delete empty lines
-call operator#user#define_ex_command('delete-blanks', 'g/^$/d')
-map _ <Plug>(operator-delete-blanks)
-
 " Remove trailing whitespace
 if has("autocmd")
   autocmd BufWritePre * :%s/\s\+$//e
