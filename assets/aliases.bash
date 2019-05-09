@@ -27,3 +27,5 @@ alias go_build_linux="GOOS=linux GOARCH=amd64 go build -v"
 alias tmux="TERM=screen-256color-bce tmux"
 
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
+
+alias go='mkdir -p ~/tmp; TMPDIR=~/tmp go'
