@@ -23,6 +23,9 @@ sudo apt-get install -y awscli
 # OM
 sudo apt-get install -y om
 
+# hub
+sudo apt-get install -y hub
+
 # Git-duet
 GOVENDOREXPERIMENT=1 go get github.com/git-duet/git-duet/...
 
