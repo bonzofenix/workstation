@@ -34,11 +34,20 @@ function book_pipeline(){
   local git_project=$( bosh int $agent_file --path /git_project | xargs -I {} basename {} .git )
   local settings_file=$PIPELINE_DIR/$pipeline_name/settings.yml
   local default_settings_file=$PIPELINE_DIR/$git_project.settings.yml
+  local book_args=""
 
-  travel-agent book \
-    $agent_file \
-    $default_settings_file \
-    $settings_file
+  if [ -f "$default_settings_file" ]; then
+    book_args="$book_args $default_settings_file"
+    echo "in default:  $book_args"
+  fi
+
+  if [ -f "$settings_file" ]; then
+    book_args="$book_args $settings_file"
+    echo "in settings:  $book_args"
+  fi
+
+  echo "out:   $book_args"
+  travel-agent book $agent_file $book_args
 
   fly -t concourse expose-pipeline --pipeline $pipeline_name
 }
