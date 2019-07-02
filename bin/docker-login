@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -eu
+
+###
+# @description Pushes a docker image tagged to the private registry
+#
+# @arg $1 The image name ORG/NAME
+#
+# @stdout Prints information about what the script is doing
+##
+
+function docker-login() {
+        docker login $(DOCKER_REGISTRY)
+}
+
+docker-login "${@:-}"
+exit $?
+
