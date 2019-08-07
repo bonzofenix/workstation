@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+source ~/workstation/bin/common.sh
+
+function select-option(){
+  PS3=$'\e[0;32mSelect: \e[0m'
+  opts=($@)
+
+  select opt in "${opts[@]}" "all" "Quit" ; do
+    if (( REPLY == 1 + ${#opts[@]} )) ; then
+      echo "all"
+      break
+
+    elif (( REPLY == 2 + ${#opts[@]} )) ; then
+      exit
+
+    elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
+      echo $opt
+      break
+
+    else
+      error "Invalid option. Try another one."
+    fi
+  done
+}
+
+function pause-pipeline(){
+  payload=$(fly -t concourse pipelines --json)
+
+  pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
+  pipeline=$(select-option $pipelines)
+
+  if [[ "$pipeline" == "all" ]]; then
+    for p in $pipelines; do
+      fly -t concourse pp -p $p
+    done
+  else
+    fly -t concourse pp -p $pipeline
+  fi
+
+}
+
+
+pause-pipeline "${@:-}"
