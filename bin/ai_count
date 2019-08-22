@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set +x
+cf api |grep endpoint
+ai_count="$(cf usage-report -f csv |grep -v system| cut -d',' -f8 | tail -n +2 | awk '{s+=$1} END {print s}')"
+echo -e "ai count: \t$ai_count"
