@@ -5,6 +5,7 @@ set +e
 # Utilities
 
 brew cask install spectacle
+brew cask install calibre
 brew cask install postman
 
 brew install ag
@@ -62,6 +63,9 @@ brew install jq
 
 # nmap
 brew install nmap
+
+# nmap
+brew install hub
 
 # sshpass
 brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb

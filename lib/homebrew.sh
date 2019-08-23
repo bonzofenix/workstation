@@ -16,10 +16,6 @@ if ! grep -q "/usr/local/sbin" ~/.bash_profile; then
 fi
 
 echo
-echo "Brew prune ..."
-brew prune
-
-echo
 echo "Ensuring you have the latest Homebrew..."
 brew update
 
