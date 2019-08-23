@@ -11,7 +11,7 @@ brew cask install postman
 brew install ag
 brew install gpg
 brew install tmux
-brew install wget --with-libressl
+brew install wget
 
 # Terminals
 
@@ -64,8 +64,11 @@ brew install jq
 # nmap
 brew install nmap
 
-# nmap
+# hub
 brew install hub
+
+# direnv
+brew install direnv
 
 # sshpass
 brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
