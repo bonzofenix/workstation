@@ -91,4 +91,6 @@ brew install git-duet
 # GO
 brew install go
 
+# KUBECTL
+brew install kubernetes-cli
 set -e
