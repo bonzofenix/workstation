@@ -15,9 +15,12 @@ sudo apt-get update
 
 wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-# AG
 
+# AG
 sudo apt-get install -y silversearcher-ag
+
+# vim dependencies
+sudo apt-get install  vim-gui-common
 
 # Direnv
 sudo apt-get install -y direnv
@@ -52,3 +55,9 @@ sudo chmod +x /usr/local/bin/credhub
 # Kubectl
 sudo apt-get update
 sudo apt-get install -y kubectl
+
+# UAA cli
+sudo wget "https://github.com/cloudfoundry-incubator/uaa-cli/releases/download/0.7.0/uaa-linux-amd64-0.7.0"
+sudo mv uaa-linux-amd64-0.7.0 /usr/local/bin/uaa
+sudo chmod +x /usr/local/bin/uaa
+
