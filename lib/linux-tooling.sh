@@ -19,6 +19,9 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 # AG
 sudo apt-get install -y silversearcher-ag
 
+# Unzip
+sudo apt-get install -y unzip
+
 # vim dependencies
 sudo apt-get install  vim-gui-common
 
@@ -61,3 +64,8 @@ sudo wget "https://github.com/cloudfoundry-incubator/uaa-cli/releases/download/0
 sudo mv uaa-linux-amd64-0.7.0 /usr/local/bin/uaa
 sudo chmod +x /usr/local/bin/uaa
 
+# Vault cli
+sudo wget "https://releases.hashicorp.com/vault/1.1.1/vault_1.1.1_linux_amd64.zip"
+sudo unzip vault_1.1.1_linux_amd64.zip && rm vault_1.1.1_linux_amd64.zip
+sudo mv vault /usr/local/bin/vault
+sudo chmod +x /usr/local/bin/vault
