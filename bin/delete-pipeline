@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+source ~/workstation/bin/common.sh
+
+function select-option(){
+  PS3=$'\e[0;32mSelect: \e[0m'
+  opts=($@)
+
+  select opt in "${opts[@]}" "Quit" ; do
+    if (( REPLY == 1 + ${#opts[@]} )) ; then
+      exit
+
+    elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
+      echo $opt
+      break
+
+    else
+      error "Invalid option. Try another one."
+    fi
+  done
+}
+
+function delete-pipeline(){
+  payload=$(fly -t concourse pipelines --json)
+
+  pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
+  pipeline=$(select-option $pipelines)
+
+  fly -t concourse dp -p $pipeline
+}
+
+
+delete-pipeline "${@:-}"
