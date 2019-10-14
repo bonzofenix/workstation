@@ -158,6 +158,9 @@ let mapleader = ","
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 map <leader>f <C-p>
 
+" Ignore node_modules, DS_Store and git
+let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git'
+
 " set up git blame mapping
 map <leader>g :Gblame<Enter>
 
