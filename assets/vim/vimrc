@@ -26,6 +26,12 @@ set formatoptions=tcqo
 " Turn on search term highlighting
 set hlsearch
 
+
+" Save bkp, swp and undo in /tmp  instead of the working directory
+set backupdir=/tmp//
+set directory=/tmp//
+set undodir=/tmp//
+
 " Print representations of trailing spaces, tabs and end-of-line
 highlight SpecialKey ctermfg=LightGray
 highlight NonText    ctermfg=LightGray
