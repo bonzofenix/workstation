@@ -7,6 +7,8 @@ alias fgrep="fgrep --color=auto"
 alias egrep="egrep --color=auto"
 alias grpe='grep'
 
+alias tree="tree -I 'node_modules'"
+
 alias more="less"
 
 alias cls="clear"
