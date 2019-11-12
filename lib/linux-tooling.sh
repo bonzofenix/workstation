@@ -30,6 +30,7 @@ wget -q -O - https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd63] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
 
+sudo apt-get clean
 sudo apt-get update
 
 # AG
@@ -68,6 +69,11 @@ sudo mv fly /usr/local/bin/fly
 rm -fr fly-5.3.0-linux-amd64.tgz
 sudo chmod +x /usr/local/bin/fly
 
+# GOVC
+sudo wget "https://github.com/vmware/govmomi/releases/download/v0.18.0/govc_linux_amd64.gz" && gunzip govc_linux_amd64.gz
+sudo mv govc_linux_amd64 /usr/local/bin/govc
+chmod +x /usr/local/bin/govc
+
 # Credhub
 sudo wget "https://github.com/cloudfoundry-incubator/credhub-cli/releases/download/2.5.3/credhub-linux-2.5.3.tgz" && tar xzvf credhub-linux-2.5.3.tgz
 sudo mv credhub /usr/local/bin/credhub
@@ -75,7 +81,6 @@ rm -fr credhub-linux-2.5.3.tgz
 sudo chmod +x /usr/local/bin/credhub
 
 # Kubectl
-sudo apt-get update
 sudo apt-get install -y kubectl
 
 # UAA cli
