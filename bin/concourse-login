@@ -26,9 +26,7 @@ function concourse-login() {
     error "$concourse_url ENV variable not defined"
   fi
 
-  read -p "Enter username: " username
   fly -t concourse login \
-    -u $username \
     -n main \
     -c ${!concourse_url}
 }
