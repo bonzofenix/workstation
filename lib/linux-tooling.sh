@@ -98,3 +98,8 @@ sudo chmod +x /usr/local/bin/vault
 sudo wget "https://github.com/pivotalservices/cf-mgmt/releases/download/v1.0.34/cf-mgmt-config-linux"
 sudo mv cf-mgmt-config-linux /usr/local/bin/cf-mgmt-config
 sudo chmod +x /usr/local/bin/cf-mgmt-config
+
+# Docker compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo mount /tmp -o remount,exec
