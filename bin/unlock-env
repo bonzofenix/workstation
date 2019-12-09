@@ -27,13 +27,13 @@ function unlock-env() {
     exit 1
   fi
 
-
   pushd ~/workspace/locks > /dev/null
     set -x
+
     git up
     git reset
     git mv $LOCK_NAME/claimed/$ENV $LOCK_NAME/unclaimed/$ENV
-    git ci -m "Manually unlocking $LOCK_NAME $ENV"
+    git ci -m "Manually unlocking $LOCK_NAME $ENV" --author="ci <ci@user.com>"
     git push
     set +x
   popd > /dev/null
