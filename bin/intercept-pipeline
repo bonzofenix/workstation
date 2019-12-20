@@ -21,7 +21,7 @@ function select-option(){
 }
 
 function run(){
-  payload=$(fly -t concourse pipelines --json)
+  payload=$(fly -t $ENV pipelines --json)
 
   pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
   pipeline=$(select-option $pipelines)
@@ -30,8 +30,8 @@ function run(){
   jobs=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | select(.name==\"$group\")  | .jobs[]" -r)
   job=$(select-option $jobs)
 
-  build=$(fly -t concourse builds -j $pipeline/$job --json | jq ".[] | .name" -r | head -n 1)
-  fly -t concourse i -j $pipeline/$job -b $build
+  build=$(fly -t $ENV builds -j $pipeline/$job --json | jq ".[] | .name" -r | head -n 1)
+  fly -t $ENV i -j $pipeline/$job -b $build
 }
 
 PIPELINE_DIR=$HOME/workspace/pipelines
