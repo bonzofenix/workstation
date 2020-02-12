@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+fly -t $ENV builds |grep --color=always started

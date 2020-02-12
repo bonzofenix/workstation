@@ -38,18 +38,14 @@ function book_pipeline(){
 
   if [ -f "$default_settings_file" ]; then
     book_args="$book_args $default_settings_file"
-    echo "in default:  $book_args"
   fi
 
   if [ -f "$settings_file" ]; then
     book_args="$book_args $settings_file"
-    echo "in settings:  $book_args"
   fi
 
-  echo "out:   $book_args"
   travel-agent book $agent_file $book_args
 
-  fly -t concourse expose-pipeline --pipeline $pipeline_name
 }
 
 prompt="Available Travel Agent pipeline:"

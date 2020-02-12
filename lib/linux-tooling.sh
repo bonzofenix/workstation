@@ -20,7 +20,6 @@ sudo apt-get install -y apt-transport-https \
 wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | sudo apt-key add -
 echo "deb http://apt.starkandwayne.com stable main" | sudo tee /etc/apt/sources.list.d/starkandwayne.list
 
-
 # Get google apt keys
 wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
@@ -29,8 +28,6 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 wget -q -O - https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd63] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-
-sudo apt-get clean
 sudo apt-get update
 
 # AG
@@ -61,7 +58,7 @@ GOVENDOREXPERIMENT=1 go get github.com/git-duet/git-duet/...
 sudo apt-get install -y spruce
 
 # Install docker
-sudo apt-get install docker-ce docker-ce-cli containerd.io
+#sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 # Fly
 sudo wget "https://github.com/concourse/concourse/releases/download/v5.3.0/fly-5.3.0-linux-amd64.tgz" && tar xzvf fly-5.3.0-linux-amd64.tgz
@@ -90,7 +87,7 @@ sudo chmod +x /usr/local/bin/uaa
 
 # Vault cli
 sudo wget "https://releases.hashicorp.com/vault/1.1.1/vault_1.1.1_linux_amd64.zip"
-sudo unzip vault_1.1.1_linux_amd64.zip && rm vault_1.1.1_linux_amd64.zip
+sudo unzip vault_1.1.1_linux_amd64.zip && rm -f vault_1.1.1_linux_amd64.zip
 sudo mv vault /usr/local/bin/vault
 sudo chmod +x /usr/local/bin/vault
 

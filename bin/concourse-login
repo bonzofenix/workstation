@@ -12,7 +12,8 @@ source ~/workstation/bin/common.sh
 ##
 
 function concourse-login() {
-  URL=$2
+  local env=$1
+  local url=$2
 
   if [[ -z $1 ]]; then
     echo "Usage: ${FUNCNAME[0]} ENV URL"
@@ -26,9 +27,7 @@ function concourse-login() {
     error "$concourse_url ENV variable not defined"
   fi
 
-  fly -t concourse login \
-    -n main \
-    -c ${!concourse_url}
+  fly -t $env login -n main -c ${!concourse_url}
 }
 
 concourse-login "${@:-}"

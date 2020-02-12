@@ -21,7 +21,7 @@ function select-option(){
 }
 
 function trigger-pipeline(){
-  payload=$(fly -t concourse pipelines --json)
+  payload=$(fly -t $ENV pipelines --json)
 
   pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
   pipeline=$(select-option $pipelines)
@@ -30,7 +30,7 @@ function trigger-pipeline(){
   jobs=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | select(.name==\"$group\")  | .jobs[]" -r)
   job=$(select-option $jobs)
 
-  fly -t concourse tj -j $pipeline/$job -w
+  fly -t $ENV tj -j $pipeline/$job -w
 }
 
 
