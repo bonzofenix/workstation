@@ -22,9 +22,13 @@ function select-option(){
 
 function trigger-pipeline(){
   payload=$(fly -t $ENV pipelines --json)
+  pipeline=$1
 
-  pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
-  pipeline=$(select-option $pipelines)
+  if [[ -z $pipeline ]]; then
+    pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
+    pipeline=$(select-option $pipelines)
+  fi
+
   groups=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | .name" -r)
   group=$(select-option $groups)
   jobs=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | select(.name==\"$group\")  | .jobs[]" -r)
