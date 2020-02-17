@@ -28,7 +28,7 @@ function create_temp_config() {
 
 
   cp $agent_file $temp_pipeline_file
-  sed -i '' '/git_project/d' $temp_pipeline_file > /dev/null
+  sed -i '.old' '/git_project/d' $temp_pipeline_file > /dev/null
   echo "git_project: $local_git_project_folder" >> $temp_pipeline_file
 
   echo $temp_pipeline_file
