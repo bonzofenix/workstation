@@ -12,15 +12,11 @@ function create_temp_config() {
   local agent_file=$PIPELINE_DIR/$pipeline/travel-agent.yml
   temp_pipeline_file=$TMP_DIR/$pipeline.yml
 
-  log_stderr $temp_pipeline_file
   mkdir -p $TMP_DIR
 
-  log_stderr "this is $agent_file"
   local git_url=$( bosh int $agent_file --path /git_project )
-  log_stderr $git_url
   local git_project=$( echo $git_url | xargs -I {} basename {} .git )
   local local_git_project_folder="$HOME/workspace/$git_project"
-  log_stderr $local_git_project_folder
 
   if [ ! -d $local_git_project_folder ]; then
     git clone $git_url $local_git_project_folder
