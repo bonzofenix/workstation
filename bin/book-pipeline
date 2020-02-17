@@ -2,36 +2,44 @@
 
 set -e
 
+source ~/workstation/bin/common.sh
+
 PIPELINE_DIR=$HOME/workspace/configs/pipelines
 TMP_DIR=$HOME/.book
 
-function temp_travel_agent() {
+function create_temp_config() {
   local pipeline=$1
   local agent_file=$PIPELINE_DIR/$pipeline/travel-agent.yml
+  temp_pipeline_file=$TMP_DIR/$pipeline.yml
 
+  log_stderr $temp_pipeline_file
   mkdir -p $TMP_DIR
 
+  log_stderr "this is $agent_file"
   local git_url=$( bosh int $agent_file --path /git_project )
+  log_stderr $git_url
   local git_project=$( echo $git_url | xargs -I {} basename {} .git )
   local local_git_project_folder="$HOME/workspace/$git_project"
+  log_stderr $local_git_project_folder
 
   if [ ! -d $local_git_project_folder ]; then
     git clone $git_url $local_git_project_folder
   fi
 
 
-  spruce merge \
-    $agent_file \
-    <(echo "git_project: $local_git_project_folder") \
-    > $TMP_DIR/$pipeline.yml
+  cp $agent_file $temp_pipeline_file
+  sed -i '' '/git_project/d' $temp_pipeline_file > /dev/null
+  echo "git_project: $local_git_project_folder" >> $temp_pipeline_file
 
-  echo $TMP_DIR/$pipeline.yml
+  echo $temp_pipeline_file
 }
 
 function book_pipeline(){
   local pipeline_name=$1
-  local agent_file=$( temp_travel_agent $pipeline_name )
-  local git_project=$( bosh int $agent_file --path /git_project | xargs -I {} basename {} .git )
+  local agent_file=$( create_temp_config $pipeline_name )
+
+  local git_url=$(bosh int $agent_file --path /git_project)
+  local git_project=$( echo $git_url | xargs -I {} basename {} .git )
   local settings_file=$PIPELINE_DIR/$pipeline_name/settings.yml
   local default_settings_file=$PIPELINE_DIR/$git_project.settings.yml
   local book_args=""

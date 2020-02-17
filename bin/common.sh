@@ -17,6 +17,14 @@ function log() {
   echo -e "${green}$1${reset}"
 }
 
+
+function log_stderr() {
+  purple='\033[0;35m'
+  reset='\033[0m'
+
+  echo -e "${purple}$1${reset}" >&2
+}
+
 function error() {
   red='\033[0;31m'
   reset='\033[0m'
