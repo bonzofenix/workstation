@@ -21,3 +21,5 @@ source ${MY_DIR}/lib/configurations.sh
 echo
 echo "Reloading Bash..."
 source ~/.bash_profile
+
+echo "DONE"

@@ -53,7 +53,7 @@ brew install spruce
 
 # concourse fly
 rm -rf /usr/local/bin/fly
-brew cask install fly
+brew cask install fly --version=5.8.0
 
 # tree
 brew install tree

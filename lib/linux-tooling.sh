@@ -61,7 +61,7 @@ sudo apt-get install -y spruce
 #sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 # Fly
-sudo wget "https://github.com/concourse/concourse/releases/download/v5.3.0/fly-5.3.0-linux-amd64.tgz" && tar xzvf fly-5.3.0-linux-amd64.tgz
+sudo wget "https://github.com/concourse/concourse/releases/download/v5.8.0/fly-5.8.0-linux-amd64.tgz" && tar xzvf fly-5.8.0-linux-amd64.tgz
 sudo mv fly /usr/local/bin/fly
 rm -fr fly-5.3.0-linux-amd64.tgz
 sudo chmod +x /usr/local/bin/fly
