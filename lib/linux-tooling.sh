@@ -26,7 +26,7 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 
 # Get docker apt keys
 wget -q -O - https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd63] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
 sudo apt-get update
 
@@ -37,7 +37,7 @@ sudo apt-get install -y silversearcher-ag
 sudo apt-get install -y unzip
 
 # vim dependencies
-sudo apt-get install  vim-gui-common
+sudo apt-get install -y vim-gui-common
 
 # Direnv
 sudo apt-get install -y direnv
@@ -58,7 +58,7 @@ GOVENDOREXPERIMENT=1 go get github.com/git-duet/git-duet/...
 sudo apt-get install -y spruce
 
 # Install docker
-#sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # Fly
 sudo wget "https://github.com/concourse/concourse/releases/download/v5.8.0/fly-5.8.0-linux-amd64.tgz" && tar xzvf fly-5.8.0-linux-amd64.tgz
