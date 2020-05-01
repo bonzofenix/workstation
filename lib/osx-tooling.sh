@@ -39,8 +39,7 @@ brew install mysql
 brew install postgresql
 
 # Docker For Mac
-
-brew install docker
+brew cask install docker
 
 # Ruby tools
 brew install readline
