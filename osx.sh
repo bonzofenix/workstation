@@ -12,7 +12,6 @@ MY_DIR="$(dirname "$0")"
 echo
 echo "Setting up a $SETUP_TYPE machine..."
 
-source ${MY_DIR}/lib/xcode-license.sh
 source ${MY_DIR}/lib/homebrew.sh
 source ${MY_DIR}/lib/osx-configurations.sh
 source ${MY_DIR}/lib/git.sh
