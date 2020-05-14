@@ -25,17 +25,17 @@ function select-option(){
 }
 
 function pause-pipeline(){
-  payload=$(fly -t concourse pipelines --json)
+  payload=$(fly -t $ENV pipelines --json)
 
   pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
   pipeline=$(select-option $pipelines)
 
   if [[ "$pipeline" == "all" ]]; then
     for p in $pipelines; do
-      fly -t concourse pp -p $p
+      fly -t $ENV pp -p $p
     done
   else
-    fly -t concourse pp -p $pipeline
+    fly -t $ENV pp -p $pipeline
   fi
 
 }
