@@ -9,7 +9,7 @@ rm ~/.gitconfig
 
 echo
 echo "Setting global Git configurations"
-git config --global core.editor /usr/bin/vim
+git config --global core.editor $(which vim)
 git config --global transfer.fsckobjects true
 git config --global hub.protocol https
 git config --global push.default simple
