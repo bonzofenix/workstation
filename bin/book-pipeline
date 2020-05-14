@@ -4,7 +4,7 @@ set -e
 
 source ~/workstation/bin/common.sh
 
-PIPELINE_DIR=$HOME/workspace/configs/pipelines
+PIPELINE_DIR=$HOME/workspace/config/pipelines
 TMP_DIR=$HOME/.book
 
 function create_temp_config() {
@@ -24,7 +24,7 @@ function create_temp_config() {
 
 
   cp $agent_file $temp_pipeline_file
-  sed -i '.old' '/git_project/d' $temp_pipeline_file > /dev/null
+  sed -i.old '/git_project/d' $temp_pipeline_file > /dev/null
   echo "git_project: $local_git_project_folder" >> $temp_pipeline_file
 
   echo $temp_pipeline_file
