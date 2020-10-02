@@ -4,15 +4,15 @@ if hash brew 2>/dev/null; then
   echo "Homebrew is already installed!"
 else
   echo "Installing Homebrew..."
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 
 echo
 echo "Adding Homebrew's sbin to your PATH..."
-if ! grep -q "/usr/local/sbin" ~/.bash_profile; then
+if ! grep -q "/usr/local/bin" ~/.bash_profile; then
   echo                                  >> ~/.bash_profile
   echo '# Homebrew Path'                >> ~/.bash_profile
-  echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
+  echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
 fi
 
 echo
