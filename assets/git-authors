@@ -1,9 +1,4 @@
 pairs:
-  am: Alan Moran; alan.moran1@aon.com
-  ag: Anand Gopal; anandkumar.gopalkrishnan@aon.com
-  jg: Joe Goller; joe.goller@aon.com
-  ar: Adam Roffler; adam.roffler@aon.com
+  am: Alan Moran; example@mail.com
 
-email:
-  domain: aon.com
 email_template: '{{.Username}}'
