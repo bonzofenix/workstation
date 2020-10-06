@@ -36,8 +36,15 @@ For **Linux**:
 ./linux.sh
 ```
 
+@
+## Next step
+
+- [ ] Adds flags for config only
+- [ ] Allow provisioning of dotfiles repo to pull
+
 ## FAQ and Troubleshooting
 
 - Some brew applications require you to re-enter the sudo password, no workaround found yet
 - Old Homebrew installations can sometimes cause issues, follow the command advice in the WARNING messages and re-run the script
+
 
