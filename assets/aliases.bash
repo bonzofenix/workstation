@@ -13,6 +13,8 @@ alias more="less"
 
 alias cls="clear"
 
+alias bosh-cli="bosh"
+
 alias vi="vim"
 alias vim="vim -X -O"
 
