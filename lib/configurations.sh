@@ -13,7 +13,7 @@ if ! grep -q '~/workstation/bin' ~/.bash_profile; then
   if ! grep -q '~/bin' ~/.bash_profile; then
     echo                                          >> ~/.bash_profile
     echo '# Add ~/bin binaries'                   >> ~/.bash_profile
-    echo 'export PATH=$PATH:~/bin'                >> ~/.bash_profile
+    echo 'export PATH=~/bin:$PATH'                >> ~/.bash_profile
   fi
 
   echo
