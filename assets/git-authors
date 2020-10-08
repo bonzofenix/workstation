@@ -1,4 +1,4 @@
 pairs:
-  am: Alan Moran; example@mail.com
+  am: Alan Moran; alan.moranrusso@sky.uk
 
 email_template: '{{.Username}}'

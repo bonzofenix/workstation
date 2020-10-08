@@ -13,10 +13,10 @@ alias more="less"
 
 alias cls="clear"
 
-alias bosh-cli="bosh"
-
 alias vi="vim"
 alias vim="vim -X -O"
+
+alias open_ports="sudo lsof -i -P -n | grep LISTEN"
 
 alias ll="ls -lah"
 
