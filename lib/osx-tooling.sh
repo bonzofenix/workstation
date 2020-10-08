@@ -82,6 +82,9 @@ brew install cf-cli
 # yaml2json
 gem install yaml2json
 
+# yq
+brew install yq
+
 # Git and associated tools
 brew install git
 brew tap git-duet/tap
