@@ -7,7 +7,7 @@ alias fgrep="fgrep --color=auto"
 alias egrep="egrep --color=auto"
 alias grpe='grep'
 
-alias tree="tree -I 'node_modules|site'"
+alias tree="tree -I 'node_modules|site|Godeps'"
 
 alias more="less"
 
