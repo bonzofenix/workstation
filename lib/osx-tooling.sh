@@ -95,4 +95,6 @@ brew install go
 
 # KUBECTL
 brew install kubernetes-cli
+
+sudo python3 -m pip install s3cmd
 set -e
