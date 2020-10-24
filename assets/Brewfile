@@ -1,0 +1,91 @@
+# Utilities
+
+cask "spectacle"
+cask "calibre"
+cask "postman"
+
+brew "ag"
+brew "gpg"
+brew "tmux"
+brew "wget"
+
+# Terminals
+
+cask "iterm2"
+
+# Browsers
+
+cask "google-chrome"
+
+# Communication
+
+cask "slack"
+cask "skype"
+
+# Video player
+cask "vlc"
+
+# Emulation tools
+
+cask "virtualbox"
+
+# Data tools
+
+brew "mysql"
+brew "postgresql"
+
+# Docker For Mac
+cask "docker"
+
+# Ruby tools
+brew "readline"
+brew "rbenv"
+
+# spruce
+tap "starkandwayne/cf"
+brew "spruce"
+
+
+# concourse fly
+cask "fly"
+
+# tree
+brew "tree"
+
+# jq
+brew "jq"
+
+# nmap
+brew "nmap"
+
+# hub
+brew "hub"
+
+# direnv
+brew "direnv"
+
+
+# coreutils
+brew "coreutils"
+
+# Cloud Foundry Command-line Interface
+tap "cloudfoundry/tap"
+brew "cf-cli"
+
+# yq
+brew "yq"
+
+# Git and associated tools
+brew "git"
+
+tap "git-duet/tap"
+brew "git-duet"
+
+# GO
+brew "go"
+
+# KUBECTL
+brew "kubernetes-cli"
+
+# tfenv
+brew "tfenv"

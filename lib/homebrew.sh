@@ -1,4 +1,3 @@
-echo
 
 if hash brew 2>/dev/null; then
   echo "Homebrew is already installed!"
@@ -28,14 +27,6 @@ echo "Ensuring your Homebrew directory is writable..."
 sudo chown -R $(whoami) /usr/local/bin
 
 echo
-echo "Installing Homebrew services..."
-brew tap homebrew/services
-
-echo
-echo "Adding pivotal tap to Homebrew"
-brew tap pivotal/tap
-
-echo
 echo "Removing old Homebrew Caskroom directory..."
 sudo rm -rf /opt/homebrew-cask/Caskroom
 
@@ -45,3 +36,6 @@ brew upgrade
 
 echo "Cleaning up your Homebrew installation..."
 brew cleanup
+
+echo "Running brew bundle..."
+brew bundle --file  ~/workstation/assets/Brewfile
