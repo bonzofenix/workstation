@@ -1,3 +1,4 @@
+source ~/workstation/lib/common.sh
 
 if hash brew 2>/dev/null; then
   echo "Homebrew is already installed!"
@@ -6,13 +7,9 @@ else
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 
-echo
-echo "Adding Homebrew's sbin to your PATH..."
-if ! grep -q "/usr/local/bin" ~/.bash_profile; then
-  echo                                  >> ~/.bash_profile
-  echo '# Homebrew Path'                >> ~/.bash_profile
-  echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
-fi
+echo "Adding Homebrew's bin to your PATH..."
+add_to_profile '# Homebrew Path' \
+               'export PATH="/usr/local/bin:$PATH"'
 
 echo
 echo "Ensuring you have the latest Homebrew..."

@@ -89,3 +89,9 @@ brew "kubernetes-cli"
 
 # tfenv
 brew "tfenv"
+
+# node
+brew "node"
+
+# Neovim
+brew "neovim"

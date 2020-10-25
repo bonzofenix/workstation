@@ -7,28 +7,37 @@ alias fgrep="fgrep --color=auto"
 alias egrep="egrep --color=auto"
 alias grpe='grep'
 
-alias tree="tree -I 'node_modules|site|Godeps'"
+alias tree="tree -I 'node_modules|site|Godeps|vendor'"
 
+#alias ag="ag -i 'node_modules|site|Godeps|vendor'"
 alias more="less"
 
 alias cls="clear"
 
-alias vi="vim"
-alias vim="vim -X -O"
+alias rm="rm -i"
+
+alias vim="nvim -X -O"
+alias vi="nvim"
 
 alias open_ports="sudo lsof -i -P -n | grep LISTEN"
 
 alias ll="ls -lah"
 
+alias k=kubectl
+
 alias gl="git log -n 20 --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %an' --abbrev-commit --date=relative"
 alias gs="git status"
 
+alias list-issues="gh issue list -R $(git remote get-url --push origin | (cut -d: -f2) | sed "s/.git//")"
+
 alias pm="profile-manager"
+
+alias docker-clean=" docker rm -f $(docker ps -a -q)"
 
 alias datacenter-info="govc datacenter.info"
 alias go_build_linux="GOOS=linux GOARCH=amd64 go build -v"
 
-alias tmux="TERM=screen-256color-bce tmux"
+alias tmux="tmux -2"
 
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 

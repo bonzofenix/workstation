@@ -44,3 +44,4 @@ echo
 echo "Configuring iTerm"
 cp assets/com.googlecode.iterm2.plist ~/Library/Preferences
 
+

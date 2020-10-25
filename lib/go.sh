@@ -1,3 +1,5 @@
+source ~/workstation/bin/common.sh
+
 echo
 echo "Installing Go"
 
@@ -8,12 +10,9 @@ if [ ! -d ~/go ]; then
   popd
 fi
 
-echo
 echo "Configuring Go PATH"
-if ! grep -q "GOPATH" ~/.bash_profile; then
-  echo                                  >> ~/.bash_profile
-  echo '# GOPATH Configuration'         >> ~/.bash_profile
-  echo 'export GOPATH=~/go'             >> ~/.bash_profile
-  echo 'export PATH=$PATH:$GOPATH/bin'  >> ~/.bash_profile
-fi
+add_to_profile '# Use rbenv' \
+               '# GOPATH Configuration' \
+               'export GOPATH=~/go' \
+               'export PATH=$PATH:$GOPATH/bin'
 

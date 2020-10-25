@@ -2,12 +2,11 @@
 
 set -x
 
+source ~/workstation/bin/common.sh
+
 echo "Adding usr/local/bin to your PATH"
-if ! grep -q "/usr/local/bin" ~/.bash_profile; then
-  echo                                      >> ~/.bash_profile
-  echo '# Adds usr/local/bin to path'       >> ~/.bash_profile
-  echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
-fi
+add_to_profile '# Adds usr/local/bin to path' \
+               'export PATH="/usr/local/bin:$PATH"'
 
 sudo apt-get install -y apt-transport-https \
     ca-certificates \
