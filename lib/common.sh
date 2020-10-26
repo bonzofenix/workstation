@@ -26,6 +26,6 @@ function add_to_profile(){
   done
 
   [ "$profile_changed" == "true" ] && echo >> $profile
-  return
+  return 0
 }
 
