@@ -25,13 +25,13 @@ add_to_profile '# Setting UTF-8 tmux support' \
 
 echo "Installing VIM configs"
 [ -d ~/.vim ] && rm -rf ~/.vim
+ln -fs ~/workstation/assets/vim ~/.vim
 
 echo "Create symlink for vimrc"
 [ -e ~/.vimrc ] && rm -f ~/.vimrc
 ln -fs ~/workstation/assets/vim/vimrc ~/.vimrc
 
 
-cp -R ~/workstation/assets/vim ~/.vim
 vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 
 
@@ -63,7 +63,14 @@ echo
 echo "Configuring shell prompt"
 if ! grep -q 'PS1' ~/.bash_profile; then
   echo '# configure shell prompt'           >> ~/.bash_profile
-  echo "PS1='\[\033[01;32m\]\u\[\033[0m\]:\[\033[01;34m\]\W\[\033[0m\]\\$ '" >> ~/.bash_profile
+  echo "PS1='\[\033[01;32m\]\u\[\033[0m\]:\[\033[01;34m\]\W\[\033[0m\]\e[91m\]$(parse_git_branch)\[\e[00m\]$ '" >> ~/.bash_profile
+  echo
+fi
+
+echo "Configuring debug shell prompt"
+if ! grep -q 'PS4' ~/.bash_profile; then
+  echo "# Configuring debug shell prompt"      >> ~/.bash_profile
+  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> ~/.bash_profile
 fi
 
 echo 'Enabling TMUX to run by default'
