@@ -95,3 +95,8 @@ brew "node"
 
 # Neovim
 brew "neovim"
+
+# ytt and kapp
+tap "k14s/tap"
+brew "ytt"
+brew "kapp"
