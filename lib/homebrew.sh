@@ -9,7 +9,8 @@ fi
 
 echo "Adding Homebrew's bin to your PATH..."
 add_to_profile '# Homebrew Path' \
-               'export PATH="/usr/local/bin:$PATH"'
+               'export PATH="/usr/local/bin:$PATH"' \
+               'export PATH="/usr/local/sbin:$PATH"'
 
 echo
 echo "Ensuring you have the latest Homebrew..."
