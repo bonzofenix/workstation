@@ -100,3 +100,7 @@ brew "neovim"
 tap "k14s/tap"
 brew "ytt"
 brew "kapp"
+
+cask "1password"
+
+cask "google-backup-and-sync"

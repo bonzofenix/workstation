@@ -45,3 +45,10 @@ echo "Configuring iTerm"
 cp assets/com.googlecode.iterm2.plist ~/Library/Preferences
 
 
+icons=('Photos' 'Terminal' 'Keynote' 'Mail' 'Launchpad' 'App Store' 'Safari' 'Keynotes' 'Pages' 'FaceTime' 'Podcast' 'Numbers' 'Messages' 'Maps' 'Contacts' 'Calendar' 'Reminders' 'Notes' 'Music' 'Podcasts' 'TV')
+for icon in "${icons[@]}"; do
+  dockutil --remove "$icon"
+done
+
+dockutil --add "/Applications/1Password 7.app"
+dockutil --add "/Applications/Google Chrome.app"
