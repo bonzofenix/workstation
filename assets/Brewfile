@@ -104,3 +104,6 @@ brew "kapp"
 cask "1password"
 
 cask "google-backup-and-sync"
+
+brew "watch"
+brew "rsync"
