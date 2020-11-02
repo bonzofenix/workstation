@@ -5,7 +5,7 @@ git config --global alias.st status
 git config --global alias.di diff
 git config --global alias.co checkout
 git config --global alias.ci duet-commit
-git config --global alias.br branch
+git config --global alias.br "branch --sort=-committerdate"
 git config --global alias.sta stash
 git config --global alias.llog "log --date=local"
 git config --global alias.flog "log --pretty=fuller --decorate"
@@ -31,6 +31,5 @@ git config --global color.ui true
 git config --global ui.color auto
 git config --global alias.up 'pull --rebase --autostash'
 git config --global hub.protocol https
-
 git config --global user.email "alan@bonzocorp.com"
 git config --global user.name "Alan Moran"
