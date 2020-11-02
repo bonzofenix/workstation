@@ -63,7 +63,7 @@ echo
 echo "Configuring shell prompt"
 if ! grep -q 'PS1' ~/.bash_profile; then
   echo '# configure shell prompt'           >> ~/.bash_profile
-  echo "PS1='\[\033[01;32m\]\u\[\033[0m\]:\[\033[01;34m\]\W\[\033[0m\]\e[91m\]$(parse_git_branch)\[\e[00m\]$ '" >> ~/.bash_profile
+  echo "PS1='\[\e[01;32m\]\u\[\e[0m\]:\[\e[01;34m\]\W\[\e[0m\]\[\e[91m\]$(parse_git_branch)\[\e[0m\]$ '" >> ~/.bash_profile
   echo
 fi
 
