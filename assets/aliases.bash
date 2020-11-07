@@ -9,7 +9,7 @@ alias grpe='grep'
 
 alias tree="tree -I 'node_modules|site|Godeps|vendor'"
 
-#alias ag="ag -i 'node_modules|site|Godeps|vendor'"
+alias ag="ag -U --ignore 'node_modules' --ignore 'site' --ignore 'Godeps' --ignore 'vendor'"
 alias more="less"
 
 alias cls="clear"
