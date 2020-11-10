@@ -18,6 +18,7 @@ alias rm="rm -i"
 
 alias vim="nvim -X -O"
 alias vi="nvim"
+alias vimdiff="nvim -d"
 
 alias open_ports="sudo lsof -i -P -n | grep LISTEN"
 
