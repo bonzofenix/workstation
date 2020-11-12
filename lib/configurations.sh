@@ -43,6 +43,12 @@ echo "Allowing history to track lines beginning with whitespace"
 add_to_profile '# Only ignore duplicates in history' \
                'export HISTCONTROL=ignoredups'
 
+echo "Infinite history"
+add_to_profile '# Infinite bash history' \
+               'export HISTTIMEFORMAT="%d/%m/%y %T "' \
+               'export HISTSIZE=' \
+               'export HISTFILESIZE='
+
 echo "Configuring custom aliases"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
 ln -fs ~/workstation/assets/aliases.bash ~/.aliases.bash
