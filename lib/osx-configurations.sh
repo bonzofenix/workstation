@@ -38,7 +38,7 @@ defaults write com.apple.Safari ShowStatusBar -bool true
 defaults write com.apple.Terminal Shell -string "/bin/bash"
 
 # Set default to use function key
-defaults write -g com.apple.keyboard.fnState -bool true
+defaults write -g com.apple.keyboard.fnState -boolean false
 
 echo
 echo "Configuring iTerm"
