@@ -109,5 +109,9 @@ brew "watch"
 brew "rsync"
 
 brew "dockutil"
+
 cask "nordvpn"
+
 cask "transmission"
+
+cask "caffeinate"
