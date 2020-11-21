@@ -115,3 +115,8 @@ cask "nordvpn"
 cask "transmission"
 
 cask "caffeinate"
+
+cask "stremio"
+
+cask "handbreak"
+
