@@ -47,7 +47,10 @@ echo "Infinite history"
 add_to_profile '# Infinite bash history' \
                'export HISTTIMEFORMAT="%d/%m/%y %T "' \
                'export HISTSIZE=' \
-               'export HISTFILESIZE='
+               'export HISTFILESIZE=' \
+               'export HISTFILE=~/.bash_eternal_history' \
+               'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"'
+
 
 echo "Configuring custom aliases"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
