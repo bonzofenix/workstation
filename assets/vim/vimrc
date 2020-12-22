@@ -56,7 +56,11 @@ if has('gui_running')
 	color slate
 endif
 
+" Obsession saves highligh with this option
+set sessionoptions+=localoptions
+
 colorscheme paramount
+
 
 " Turn on modeline processing, so we can force certain vim
 " parameters when we don't match an autocommand.

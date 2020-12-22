@@ -222,3 +222,12 @@ hi link GitGutterAdd                LineNr
 hi link GitGutterDelete             LineNr
 hi link GitGutterChange             LineNr
 hi link GitGutterChangeDelete       LineNr
+
+" Define background colors for vim buffers
+" " Background colors for active vs inactive windows
+hi White guibg=#FBFCFC guifg=black
+hi Red guibg=#FB2929 guifg=black
+hi Orange guibg=#FAAC23 guifg=black
+hi Green guibg=#B6FA23 guifg=black
+hi Blue guibg=#29BFFB guifg=black
+hi Yellow guibg=#FBFB29 guifg=black

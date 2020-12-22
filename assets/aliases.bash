@@ -46,3 +46,5 @@ alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 alias go='TMPDIR=~/tmp go'
 
 alias docker_prune='sudo docker system prune -a'
+
+alias tasks='cd "$HOME/Google Drive/REFERENCE/tasks" && vim -S'
