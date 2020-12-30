@@ -48,3 +48,5 @@ alias go='TMPDIR=~/tmp go'
 alias docker_prune='sudo docker system prune -a'
 
 alias tasks='cd "$HOME/Google Drive/REFERENCE/tasks" && vim -S'
+alias trade='tmux attach-session -t trade || tmux new-session -s trade'
+
