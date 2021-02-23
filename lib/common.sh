@@ -28,4 +28,3 @@ function add_to_profile(){
   [ "$profile_changed" == "true" ] && echo >> $profile
   return 0
 }
-

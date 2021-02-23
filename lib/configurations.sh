@@ -2,6 +2,9 @@
 
 source ~/workstation/bin/common.sh
 
+local profile_file="~/.bash_profile"
+
+
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
                'export PATH=$PATH:~/workstation/bin'
@@ -70,16 +73,16 @@ add_to_profile '# configure GPG' \
 
 echo
 echo "Configuring shell prompt"
-if ! grep -q 'PS1' ~/.bash_profile; then
-  echo '# configure shell prompt'           >> ~/.bash_profile
+if ! grep -q 'PS1' $profile_file; then
+  echo '# configure shell prompt'           >> $profile_file
   echo "PS1='\[\e[01;32m\]\u\[\e[0m\]:\[\e[01;34m\]\W\[\e[0m\]\[\e[91m\]$(parse_git_branch)\[\e[0m\]$ '" >> ~/.bash_profile
   echo
 fi
 
 echo "Configuring debug shell prompt"
 if ! grep -q 'PS4' ~/.bash_profile; then
-  echo "# Configuring debug shell prompt"      >> ~/.bash_profile
-  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> ~/.bash_profile
+  echo "# Configuring debug shell prompt"    >> $profile_file
+  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> $profile_file
 fi
 
 echo 'Enabling TMUX to run by default'
@@ -94,14 +97,12 @@ echo "Disables case sensitive completion"
 add_to_profile '# Disables case sensitive completion' \
                'bind "set completion-ignore-case on"'
 
-echo "cds into the HOME directory"
-add_to_profile '# cds into $HOME directory' \
-               'cd $HOME'
-
-
 echo "sets vi mode"
 add_to_profile '# sets vi mode' \
                'set -o vi'
+
+add_to_profile '# sets editor' \
+               'export EDITOR=nvim'
 
 if `hash direnv`; then
   add_to_profile '# Load direnv' \
@@ -124,3 +125,5 @@ let &packpath = &runtimepath
 source ~/.vimrc
 EOT
 
+
+ln -s .bash_profile .zprofile

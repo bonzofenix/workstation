@@ -1,4 +1,4 @@
 pairs:
-  am: Alan Moran; alan.moranrusso@sky.uk
+  am: Alan Moran; bonzofenix@gmail.com
 
 email_template: '{{.Username}}'

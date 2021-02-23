@@ -48,4 +48,5 @@ alias go='TMPDIR=~/tmp go'
 alias docker_prune='sudo docker system prune -a'
 
 alias trading='tmuxp load -y trading'
+alias trading='tmuxp load -y tango'
 alias bitex='tmuxp load -y bitex'
