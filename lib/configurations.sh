@@ -2,8 +2,8 @@
 
 source ~/workstation/bin/common.sh
 
-local profile_file="~/.bash_profile"
-
+touch ~/.bash_profile
+ln -fs ~/.bash_profile ~/.zprofile
 
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
@@ -71,31 +71,21 @@ add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
                'export GPG_TTY'
 
-echo
-echo "Configuring shell prompt"
-if ! grep -q 'PS1' $profile_file; then
-  echo '# configure shell prompt'           >> $profile_file
-  echo "PS1='\[\e[01;32m\]\u\[\e[0m\]:\[\e[01;34m\]\W\[\e[0m\]\[\e[91m\]$(parse_git_branch)\[\e[0m\]$ '" >> ~/.bash_profile
-  echo
-fi
-
 echo "Configuring debug shell prompt"
 if ! grep -q 'PS4' ~/.bash_profile; then
-  echo "# Configuring debug shell prompt"    >> $profile_file
-  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> $profile_file
+  echo "# Configuring debug shell prompt"    >> ~/.bash_profile
+  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> ~/.bash_profile
 fi
 
 echo 'Enabling TMUX to run by default'
+if ! grep -q 'TMUX' $profile_file; then
 add_to_profile '# Adding tmux to run by default on new terminal' \
                'if [ -z $TMUX ] ; then tmux new -As base ; fi'
+fi
 
 echo "Enables z shell plugin"
 add_to_profile '# Enables z shell plugin' \
                '. ~/workstation/bin/z.sh'
-
-echo "Disables case sensitive completion"
-add_to_profile '# Disables case sensitive completion' \
-               'bind "set completion-ignore-case on"'
 
 echo "sets vi mode"
 add_to_profile '# sets vi mode' \
@@ -126,4 +116,3 @@ source ~/.vimrc
 EOT
 
 
-ln -s .bash_profile .zprofile
