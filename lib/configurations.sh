@@ -78,7 +78,7 @@ if ! grep -q 'PS4' ~/.bash_profile; then
 fi
 
 echo 'Enabling TMUX to run by default'
-if ! grep -q 'TMUX' $profile_file; then
+if ! grep -q 'TMUX' ~/.bash_profile; then
 add_to_profile '# Adding tmux to run by default on new terminal' \
                'if [ -z $TMUX ] ; then tmux new -As base ; fi'
 fi
@@ -116,3 +116,5 @@ source ~/.vimrc
 EOT
 
 
+echo "Install oh my zsh"
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
