@@ -107,6 +107,9 @@ if `hash rbenv`; then
 
 fi
 
+add_to_profile '# Adds python bin path' \
+               'export PATH=$HOME/Library/Python/3.9/bin:$PATH'
+
 echo "Coonfigure nvim"
 mkdir -p ~/.config/nvim/
 cat <<EOT >> ~/.config/nvim/init.vim
