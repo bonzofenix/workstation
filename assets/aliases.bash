@@ -42,6 +42,7 @@ alias tmux="tmux -2"
 
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
+alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0" out.mp4'
 
 alias go='TMPDIR=~/tmp go'
 
