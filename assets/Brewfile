@@ -87,6 +87,9 @@ brew "go"
 # KUBECTL
 brew "kubernetes-cli"
 
+# sops
+brew "sops"
+
 # tfenv
 brew "tfenv"
 
