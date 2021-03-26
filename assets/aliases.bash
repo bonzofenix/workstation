@@ -51,3 +51,5 @@ alias docker_prune='sudo docker system prune -a'
 alias trading='tmuxp load -y trading'
 alias tango='tmuxp load -y tango'
 alias bitex='tmuxp load -y bitex'
+
+alias amend='git amend && git push -f'

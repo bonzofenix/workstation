@@ -13,6 +13,7 @@ git config --global alias.lg "log --graph --pretty=format:'%Cred%h%Creset -%C(ye
 git config --global alias.lol "log --graph --decorate --oneline"
 git config --global alias.lola "log --graph --decorate --oneline --all"
 git config --global alias.blog "log origin/master... --left-right"
+git config --global alias.amend 'commit --amend --no-edit'
 git config --global alias.ds diff --staged
 git config --global alias.dsc "diff --stat --name-status --cached"
 git config --global alias.fixup commit --fixup
