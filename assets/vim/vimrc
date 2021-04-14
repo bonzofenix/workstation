@@ -103,6 +103,9 @@ set statusline+=\
 set wildmode=longest,list
 
 
+" Highhlights cursor line
+set cursorline
+
 " Adds support for ack
 let g:ackprg = 'ag --vimgrep --smart-case'
 cnoreabbrev ag Ack
