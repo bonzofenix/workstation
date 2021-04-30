@@ -25,15 +25,15 @@ alias open_ports="sudo lsof -i -P -n | grep LISTEN"
 alias ll="ls -lah"
 
 alias k=kubectl
+alias tr=terraform
 
 alias gl="git log -n 20 --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %an' --abbrev-commit --date=relative"
 alias gs="git status"
 
-alias list-issues="gh issue list -R $(git remote get-url --push origin | (cut -d: -f2) | sed "s/.git//")"
+#alias list-issues="gh issue list -R $(git remote get-url --push origin | (cut -d: -f2) | sed "s/.git//")"
 
 alias pm="profile-manager"
 
-alias docker-clean=" docker rm -f $(docker ps -a -q)"
 
 alias datacenter-info="govc datacenter.info"
 alias go_build_linux="GOOS=linux GOARCH=amd64 go build -v"
@@ -50,6 +50,7 @@ alias docker_prune='sudo docker system prune -a'
 
 alias trading='tmuxp load -y trading'
 alias tango='tmuxp load -y tango'
+alias reading='tmuxp load -y reading'
 alias bitex='tmuxp load -y bitex'
 
 alias amend='git amend && git push -f'
