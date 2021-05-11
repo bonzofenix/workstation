@@ -84,14 +84,11 @@ brew "git-duet"
 # GO
 brew "go"
 
-# KUBECTL
-brew "kubernetes-cli"
+# asdf
+brew "asdf"
 
 # sops
 brew "sops"
-
-# tfenv
-brew "tfenv"
 
 # node
 brew "node"
