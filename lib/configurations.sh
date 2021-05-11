@@ -3,7 +3,7 @@
 source ~/workstation/bin/common.sh
 
 touch ~/.bash_profile
-ln -fs ~/.bash_profile ~/.zprofile
+ln -fs ~/.bash_profile ~/.zshenv
 
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
@@ -107,11 +107,14 @@ if `hash rbenv`; then
 
 fi
 
+echo "Adds python to path"
 add_to_profile '# Adds python bin path' \
                'export PATH=$HOME/Library/Python/3.9/bin:$PATH'
 
-echo "Coonfigure nvim"
-mkdir -p ~/.config/nvim/
+echo "Adds asdf to path"
+add_to_profile '# Adds asdf bin path' \
+               'export PATH=$PATH:$HOME/.asdf/shims'
+
 cat <<EOT >> ~/.config/nvim/init.vim
 set runtimepath^=~/.vim runtimepath+=~/.vim/after
 let &packpath = &runtimepath
