@@ -25,7 +25,7 @@ alias open_ports="sudo lsof -i -P -n | grep LISTEN"
 alias ll="ls -lah"
 
 alias k=kubectl
-alias tr=terraform
+alias tf=terraform
 
 alias gl="git log -n 20 --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %an' --abbrev-commit --date=relative"
 alias gs="git status"
