@@ -7,6 +7,8 @@ sudo true;
 SETUP_TYPE=$1
 MY_DIR="$(dirname "$0")"
 
+export WORKSTATION_DIR="$( cd "$( dirname "${bash_source[0]}" )" &> /dev/null && pwd )"
+
 echo "Setting up a $SETUP_TYPE machine..."
 
 source ${MY_DIR}/lib/homebrew.sh

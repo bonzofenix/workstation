@@ -1,38 +1,27 @@
 # Utilities
 
 cask "spectacle"
-cask "calibre"
 cask "postman"
 
 brew "ag"
-brew "gpg"
+# brew "gpg"
+brew "mvn"
 brew "tmux"
 brew "wget"
 
 # Terminals
-
 cask "iterm2"
 
 # Browsers
-
 cask "google-chrome"
 
 # Communication
-
 cask "slack"
 cask "skype"
 
-# Video player
-cask "vlc"
 
 # Emulation tools
-
 cask "virtualbox"
-
-# Data tools
-
-brew "mysql"
-brew "postgresql"
 
 # Docker For Mac
 cask "docker"
@@ -90,9 +79,6 @@ brew "asdf"
 # sops
 brew "sops"
 
-# node
-brew "node"
-
 # Neovim
 brew "neovim"
 
@@ -112,11 +98,7 @@ brew "dockutil"
 
 cask "nordvpn"
 
-cask "transmission"
-
 cask "caffeinate"
 
-cask "stremio"
 
-cask "handbreak"
 

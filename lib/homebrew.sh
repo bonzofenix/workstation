@@ -1,4 +1,6 @@
-source ~/workstation/lib/common.sh
+#!/usr/bin/env bash
+
+source $WORKSTATION_DIR/lib/common.sh
 
 if hash brew 2>/dev/null; then
   echo "Homebrew is already installed!"
@@ -10,7 +12,8 @@ fi
 echo "Adding Homebrew's bin to your PATH..."
 add_to_profile '# Homebrew Path' \
                'export PATH="/usr/local/bin:$PATH"' \
-               'export PATH="/usr/local/sbin:$PATH"'
+               'export PATH="/usr/local/sbin:$PATH"' \
+	       'export PATH="$HOME/homebrew/sbin:$PATH"'
 
 echo
 echo "Ensuring you have the latest Homebrew..."
@@ -36,4 +39,4 @@ echo "Cleaning up your Homebrew installation..."
 brew cleanup
 
 echo "Running brew bundle..."
-brew bundle --file  ~/workstation/assets/Brewfile
+brew bundle --file  $WORKSTATION_DIR/assets/work/Brewfile

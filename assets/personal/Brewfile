@@ -1,0 +1,11 @@
+
+cask "calibre"
+
+# Video player
+cask "vlc"
+
+cask "transmission"
+
+cask "stremio"
+
+cask "handbreak"

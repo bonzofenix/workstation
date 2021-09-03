@@ -1,4 +1,7 @@
-source ~/workstation/bin/common.sh
+#!/usr/bin/env bash
+
+WORKSTATION_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/.."
+source $WORKSTATION_DIR/bin/common.sh
 
 echo
 echo "Installing Go"

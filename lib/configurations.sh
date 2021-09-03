@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ~/workstation/bin/common.sh
+source $WORKSTATION_DIR/lib/common.sh
 
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
@@ -8,6 +8,7 @@ ln -fs ~/.bash_profile ~/.zshenv
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
                'export PATH=$PATH:~/workstation/bin'
+source $WORKSTATION_DIR/bin/common.sh
 
 echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
@@ -19,7 +20,7 @@ add_to_profile '# Use adds python bin folder' \
 
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
-ln -fs ~/workstation/assets/tmux.conf ~/.tmux.conf
+ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
 
 
 echo 'Setting LANG for UTF-8 tmux support'
@@ -28,11 +29,11 @@ add_to_profile '# Setting UTF-8 tmux support' \
 
 echo "Installing VIM configs"
 [ -d ~/.vim ] && rm -rf ~/.vim
-ln -fs ~/workstation/assets/vim ~/.vim
+ln -fs $WORKSTATION_DIR/assets/vim ~/.vim
 
 echo "Create symlink for vimrc"
 [ -e ~/.vimrc ] && rm -f ~/.vimrc
-ln -fs ~/workstation/assets/vim/vimrc ~/.vimrc
+ln -fs $WORKSTATION_DIR/assets/vim/vimrc ~/.vimrc
 
 
 vim -c ":GoInstallBinaries" -c ":q" - </dev/null
@@ -57,7 +58,7 @@ add_to_profile '# Infinite bash history' \
 
 echo "Configuring custom aliases"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
-ln -fs ~/workstation/assets/aliases.bash ~/.aliases.bash
+ln -fs $WORKSTATION_DIR/assets/aliases.bash ~/.aliases.bash
 
 add_to_profile '# Load custom aliases' \
                'source ~/.aliases.bash'
@@ -85,7 +86,7 @@ fi
 
 echo "Enables z shell plugin"
 add_to_profile '# Enables z shell plugin' \
-               '. ~/workstation/bin/z.sh'
+	". $WORKSTATION_DIR/bin/z.sh"
 
 echo "sets vi mode"
 add_to_profile '# sets vi mode' \
@@ -93,6 +94,9 @@ add_to_profile '# sets vi mode' \
 
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
+
+mkdir -p ~/.config
+ln -fs $WORKSTATION_DIR/assets/nvim-config/nvim ~/.config/nvim
 
 if `hash direnv`; then
   add_to_profile '# Load direnv' \
@@ -115,11 +119,6 @@ echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
                'export PATH=$PATH:$HOME/.asdf/shims'
 
-cat <<EOT >> ~/.config/nvim/init.vim
-set runtimepath^=~/.vim runtimepath+=~/.vim/after
-let &packpath = &runtimepath
-source ~/.vimrc
-EOT
 
 
 echo "Install oh my zsh"

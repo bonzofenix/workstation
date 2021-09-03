@@ -32,5 +32,3 @@ git config --global color.ui true
 git config --global ui.color auto
 git config --global alias.up 'pull --rebase --autostash'
 git config --global hub.protocol https
-git config --global user.email "alan@bonzocorp.com"
-git config --global user.name "Alan Moran"
