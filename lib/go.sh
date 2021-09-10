@@ -17,5 +17,5 @@ echo "Configuring Go PATH"
 add_to_profile '# Use rbenv' \
                '# GOPATH Configuration' \
                'export GOPATH=~/go' \
-               'export PATH=$PATH:$GOPATH/bin'
-
+               'export PATH=$PATH:$GOPATH/bin' \
+               'export GOROOT=$ASDFINSTALLS/golang/$GOV/go/'

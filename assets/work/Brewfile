@@ -30,14 +30,6 @@ cask "docker"
 brew "readline"
 brew "rbenv"
 
-# spruce
-tap "starkandwayne/cf"
-brew "spruce"
-
-
-# concourse fly
-cask "fly"
-
 # tree
 brew "tree"
 
@@ -57,10 +49,6 @@ brew "direnv"
 # coreutils
 brew "coreutils"
 
-# Cloud Foundry Command-line Interface
-tap "cloudfoundry/tap"
-brew "cf-cli"
-
 # yq
 brew "yq"
 
@@ -69,9 +57,6 @@ brew "git"
 
 tap "git-duet/tap"
 brew "git-duet"
-
-# GO
-brew "go"
 
 # asdf
 brew "asdf"
