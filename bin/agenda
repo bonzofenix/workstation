@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -x
+
+today="$(date +'%d/%m/%Y')"
+tomorrow="$(date -v+1d +'%d/%m/%Y')"
+
+
+gcalcli agenda $today $tomorrow
