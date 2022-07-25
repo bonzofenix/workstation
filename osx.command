@@ -15,7 +15,6 @@ source ${MY_DIR}/lib/homebrew.sh
 source ${MY_DIR}/lib/asdf.sh
 source ${MY_DIR}/lib/git.sh
 source ${MY_DIR}/lib/git-aliases.sh
-source ${MY_DIR}/lib/go.sh
 source ${MY_DIR}/lib/configurations.sh
 source ${MY_DIR}/lib/osx-configurations.sh
 

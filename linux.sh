@@ -14,7 +14,6 @@ echo "Setting up a $SETUP_TYPE machine..."
 
 source ${MY_DIR}/lib/git.sh
 source ${MY_DIR}/lib/git-aliases.sh
-source ${MY_DIR}/lib/go.sh
 source ${MY_DIR}/lib/linux-tooling.sh
 source ${MY_DIR}/lib/configurations.sh
 
