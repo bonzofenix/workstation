@@ -72,12 +72,6 @@ add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
                'export GPG_TTY'
 
-echo "Configuring debug shell prompt"
-if ! grep -q 'PS4' ~/.bash_profile; then
-  echo "# Configuring debug shell prompt"    >> ~/.bash_profile
-  export PS4='(${BASH_SOURCE}:${LINENO}) $ ' >> ~/.bash_profile
-fi
-
 echo 'Enabling TMUX to run by default'
 if ! grep -q 'TMUX' ~/.bash_profile; then
 add_to_profile '# Adding tmux to run by default on new terminal' \
@@ -88,9 +82,15 @@ echo "Enables z shell plugin"
 add_to_profile '# Enables z shell plugin' \
 	". $WORKSTATION_DIR/bin/z.sh"
 
-echo "sets vi mode"
+echo "sets vi mode for bash"
 add_to_profile '# sets vi mode' \
                'set -o vi'
+
+echo "sets vi mode for zsh"
+add_to_profile '# sets vi mode for zsh' \
+               'bindkey -v'
+
+
 
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
