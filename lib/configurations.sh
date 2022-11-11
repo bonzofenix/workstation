@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source $WORKSTATION_DIR/lib/common.sh
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source $SCRIPT_DIR/common.sh
+export WORKSTATION_DIR="$SCRIPT_DIR/.."
 
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
@@ -8,7 +10,6 @@ ln -fs ~/.bash_profile ~/.zshenv
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
                'export PATH=$PATH:~/workstation/bin'
-source $WORKSTATION_DIR/bin/common.sh
 
 echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
@@ -52,6 +53,7 @@ add_to_profile '# Infinite bash history' \
                'export HISTTIMEFORMAT="%d/%m/%y %T "' \
                'export HISTSIZE=' \
                'export HISTFILESIZE=' \
+	       m
                'export HISTFILE=~/.bash_eternal_history' \
                'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"'
 
@@ -87,8 +89,13 @@ add_to_profile '# sets vi mode' \
                'set -o vi'
 
 echo "sets vi mode for zsh"
-add_to_profile '# sets vi mode for zsh' \
+add_to_rc '# sets vi mode for zsh' \
                'bindkey -v'
+
+echo "sets search to ctr+r"
+add_to_rc '# sets vi mode for zsh' \
+               'bindkey "^R" history-incremental-search-backward'
+
 
 
 
@@ -120,6 +127,9 @@ add_to_profile '# Adds asdf bin path' \
                'export PATH=$PATH:$HOME/.asdf/shims'
 
 
-
-echo "Install oh my zsh"
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+if [[ ! -d ~/.oh-my-zsh ]]; then
+  echo "Install oh my zsh"
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+  echo "Oh my zsh already installed .. skipping"
+fi
