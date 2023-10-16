@@ -3,6 +3,7 @@
 cask "spectacle"
 cask "postman"
 
+brew "gum"
 brew "ag"
 # brew "gpg"
 brew "tmux"

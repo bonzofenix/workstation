@@ -28,3 +28,7 @@ function add_to_profile(){
   [ "$profile_changed" == "true" ] && echo >> $profile
   return 0
 }
+
+function say(){
+  echo '======> :heart: $1 :candy:' | gum format -t emoji
+}
