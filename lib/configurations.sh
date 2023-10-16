@@ -127,9 +127,9 @@ add_to_profile '# Adds asdf bin path' \
                'export PATH=$PATH:$HOME/.asdf/shims'
 
 
-if [[ ! -d ~/.oh-my-zsh ]]; then
-  echo "Install oh my zsh"
-  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-else
-  echo "Oh my zsh already installed .. skipping"
-fi
+echo "Points to openssl instead of libressl"
+add_to_profile '# Points to openssl instead of libressl' \
+               'export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH" '
+
+echo "Install oh my zsh"
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
