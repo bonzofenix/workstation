@@ -60,6 +60,7 @@ endif
 set sessionoptions+=localoptions
 
 colorscheme paramount
+autocmd BufEnter *.md colorscheme molokai
 
 
 " Turn on modeline processing, so we can force certain vim
@@ -180,6 +181,8 @@ if filereadable($VIMRUNTIME . "/syntax/man.vim")
         source $VIMRUNTIME/syntax/man.vim
 endif
 
+set clipboard=unnamed
+
 set splitright
 cabbrev man Man
 
@@ -191,10 +194,35 @@ function! ResCur()
   endif
 endfunction
 
+
+function! WordFrequency() range
+  let all = split(join(getline(a:firstline, a:lastline)), '\A\+')
+  let frequencies = {}
+  for word in all
+    let frequencies[word] = get(frequencies, word, 0) + 1
+  endfor
+  new
+  setlocal buftype=nofile bufhidden=hide noswapfile tabstop=20
+  for [key,value] in items(frequencies)
+    call append('$', key."\t".value)
+  endfor
+  sort i
+endfunction
+
+command! -range=% WordFrequency <line1>,<line2>call WordFrequency()
+
 augroup resCur
   autocmd!
   autocmd BufWinEnter * call ResCur()
 augroup END
+
+" Makes markdown files to wrap by default
+augroup WrapLineInTeXFile
+    autocmd!
+    autocmd FileType markdown setlocal wrap
+augroup END
+
+autocmd FileType markdown setlocal wrap
 
 let mapleader = ","
 " set up ctrlp / ,f searching

@@ -5,7 +5,6 @@ cask "postman"
 
 brew "ag"
 # brew "gpg"
-brew "mvn"
 brew "tmux"
 brew "wget"
 
@@ -19,9 +18,6 @@ cask "google-chrome"
 cask "slack"
 cask "skype"
 
-
-# Emulation tools
-cask "virtualbox"
 
 # Docker For Mac
 cask "docker"

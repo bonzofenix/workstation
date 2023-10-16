@@ -42,7 +42,7 @@ alias tmux="tmux -2"
 
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
-alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0" out.mp4'
+alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0:1" out.mp4'
 
 alias docker_prune='sudo docker system prune -a'
 
@@ -53,3 +53,4 @@ alias fitness='tmuxp load -y fitness'
 alias bitex='tmuxp load -y bitex'
 
 alias amend='git amend && git push -f'
+alias k9s='k9s --context foo'

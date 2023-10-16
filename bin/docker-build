@@ -12,8 +12,6 @@ set -eu
 
 function docker-build() {
   DOCKER_IMAGE=$1
-  DOCKER_TAG=latest
-  sudo docker build -t $DOCKER_REGISTRY/$@
 }
 
 docker-build "${@:-}"

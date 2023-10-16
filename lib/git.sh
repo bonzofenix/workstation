@@ -23,7 +23,9 @@ git config --global color.status.untracked "magenta"
 # Force unset osxkeychain cache
 git config --system --unset credential.helper
 
-echo  "Configuring authors file if there is non present"
-[ ! -e ~/.git-authors ] && ln -fs "$WORKSTATION_DIR/../assets/git-authors" "~/.git-authors"
+echo  "Configuring authors file"
+[ -e ~/.authors ] && rm -f ~/.authors
+WORKSTATION_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ln -fs $WORKSTATION_DIR/../assets/git-authors ~/.git-authors
 
 set -e
