@@ -56,7 +56,6 @@ add_to_profile '# Infinite bash history' \
                'export HISTTIMEFORMAT="%d/%m/%y %T "' \
                'export HISTSIZE=' \
                'export HISTFILESIZE=' \
-	       m
                'export HISTFILE=~/.bash_eternal_history' \
                'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"'
 
@@ -97,7 +96,7 @@ add_to_rc '# sets vi mode for zsh' \
 
 echo "sets search to ctr+r"
 add_to_rc '# sets vi mode for zsh' \
-               'bindkey "^R" history-incremental-search-backward'
+          'bindkey "^R" history-incremental-search-backward'
 
 
 

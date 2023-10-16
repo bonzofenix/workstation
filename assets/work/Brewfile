@@ -65,7 +65,6 @@ cask "1password"
 brew "watch"
 brew "rsync"
 
-brew "dockutil"
 
 cask "nordvpn"
 
