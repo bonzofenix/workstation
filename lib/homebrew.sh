@@ -1,8 +1,16 @@
+<<<<<<< Updated upstream
 source $WORKSTATION_DIR/lib/common.sh
+=======
+#!/usr/bin/env bash
+
+export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $SCRIPT_DIR/common.sh
+>>>>>>> Stashed changes
 
 function configure_homebrew(){
   [[ "${OS}" == "Darwin" && "${NO_BREW}" == false ]] || return
 
+<<<<<<< Updated upstream
 
   if hash brew 2>/dev/null; then
     echo "Homebrew is already installed!"
@@ -44,3 +52,18 @@ function configure_homebrew(){
   brew bundle --file  $WORKSTATION_DIR/assets/work/Brewfile
 }
 # For OSX only
+=======
+brew update
+brew doctor || :
+sudo chown -R $(whoami) /usr/local/bin
+brew upgrade
+brew cleanup
+brew bundle --file  $SCRIPT_DIR/../assets/work/Brewfile
+
+add_to_profile '# Homebrew Path' \
+               'path=("opt/homebrew/bin" $path)'
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+and then
+
+>>>>>>> Stashed changes

@@ -25,7 +25,6 @@ cask "docker"
 
 # Ruby tools
 brew "readline"
-brew "rbenv"
 
 # tree
 brew "tree"
@@ -54,24 +53,14 @@ brew "git"
 
 tap "git-duet/tap"
 brew "git-duet"
-
 # asdf
 brew "asdf"
-
-# sops
-brew "sops"
 
 # Neovim
 brew "neovim"
 
-# ytt and kapp
-tap "k14s/tap"
-brew "ytt"
-brew "kapp"
 
 cask "1password"
-
-cask "google-backup-and-sync"
 
 brew "watch"
 brew "rsync"
@@ -80,7 +69,7 @@ brew "dockutil"
 
 cask "nordvpn"
 
-cask "caffeinate"
+cask "caffeine"
 
 
 
