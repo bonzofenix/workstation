@@ -1,32 +1,34 @@
 #!/usr/bin/env bash
 
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source $SCRIPT_DIR/common.sh
+export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export WORKSTATION_DIR="$SCRIPT_DIR/.."
+source $SCRIPT_DIR/common.sh
 
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
 
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
-               'export PATH=$PATH:~/workstation/bin'
+               "path+=('~/workstation/bin')"
 
 echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
-               'export PATH=~/bin:$PATH'
+               'path=("~/bin" $path)'
 
-echo "Configuring python bin folder"
-add_to_profile '# Use adds python bin folder' \
-               'export PATH="~/Library/Python/3.7/bin:$PATH"'
+echo "Adds asdf to path"
+add_to_profile '# Adds asdf bin path' \
+               "path+=('~/.asdf/shims')"
+
+echo "Points to openssl instead of libressl"
+add_to_profile '# Points to openssl instead of libressl' \
+               'path=("opt/homebrew/opt/openssl@1.1/bin" $path)'
+
 
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
 
 
-echo 'Setting LANG for UTF-8 tmux support'
-add_to_profile '# Setting UTF-8 tmux support' \
-               'export LANG=en_US.UTF-8'
 
 echo "Installing VIM configs"
 [ -d ~/.vim ] && rm -rf ~/.vim
@@ -37,12 +39,13 @@ echo "Create symlink for vimrc"
 ln -fs $WORKSTATION_DIR/assets/vim/vimrc ~/.vimrc
 
 
+echo 'Setting LANG for UTF-8 tmux support'
+add_to_profile '# Setting UTF-8 tmux support' \
+               'export LANG=en_US.UTF-8'
+
 vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 
 
-echo "Configuring ~/workstation/bin in PATH"
-add_to_profile '# Adds pe workstation binaries to path' \
-               'export PATH=~/workstation/bin:$PATH'
 
 echo "Allowing history to track lines beginning with whitespace"
 add_to_profile '# Only ignore duplicates in history' \
@@ -69,7 +72,7 @@ echo "Enable git duet"
 add_to_profile '# git duet works globally' \
                 'export GIT_DUET_GLOBAL=true'
 
-echo "Configuring GPG"
+say "Configuring GPG"
 add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
                'export GPG_TTY'
@@ -102,34 +105,13 @@ add_to_rc '# sets vi mode for zsh' \
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
 
-mkdir -p ~/.config
-ln -fs $WORKSTATION_DIR/assets/nvim-config/nvim ~/.config/nvim
-
 if `hash direnv`; then
   add_to_profile '# Load direnv' \
                  'eval "$( direnv hook bash )"'
 fi
 
-if `hash rbenv`; then
-  echo "Configuring rbenv"
-  add_to_profile '# Use rbenv' \
-                 'export PATH=$HOME/.rbenv/bin:$PATH' \
-                 'eval "$(rbenv init -)"'
-
-fi
-
-echo "Adds python to path"
-add_to_profile '# Adds python bin path' \
-               'export PATH=$HOME/Library/Python/3.9/bin:$PATH'
-
-echo "Adds asdf to path"
-add_to_profile '# Adds asdf bin path' \
-               'export PATH=$PATH:$HOME/.asdf/shims'
-
-
-echo "Points to openssl instead of libressl"
-add_to_profile '# Points to openssl instead of libressl' \
-               'export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH" '
+mkdir -p ~/.config
+ln -fs $WORKSTATION_DIR/assets/nvim-config/nvim ~/.config/nvim
 
 echo "Install oh my zsh"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
