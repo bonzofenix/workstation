@@ -1,13 +1,16 @@
-"
-" ~/.vimrc - Vim Runtime Control file
-"
-" These are my handy-dandy settings for Vim
-"
-" author:    Geoff Franks <gfranks.franks@gmail.com>
-"
+call plug#begin()
 
-"################################################################################
-"#### GLOBAL PARAMETERS #########################################################
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
+Plug 'godlygeek/tabular'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'preservim/nerdcommenter'
+Plug 'hashivim/vim-terraform'
+Plug 'preservim/vim-markdown'
+Plug 'pangloss/vim-javascript'
+Plug 'github/copilot.vim'
+
+call plug#end()
 
 " Tabs are 2 columns wide, and use the TAB character
 set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
@@ -25,7 +28,6 @@ set formatoptions=tcqo
 
 " Turn on search term highlighting
 set hlsearch
-
 
 " Save bkp, swp and undo in /tmp  instead of the working directory
 set backupdir=/tmp//
@@ -55,9 +57,6 @@ syntax on
 if has('gui_running')
 	color slate
 endif
-
-" Obsession saves highligh with this option
-set sessionoptions+=localoptions
 
 colorscheme paramount
 autocmd BufEnter *.md colorscheme molokai
@@ -194,22 +193,6 @@ function! ResCur()
   endif
 endfunction
 
-
-function! WordFrequency() range
-  let all = split(join(getline(a:firstline, a:lastline)), '\A\+')
-  let frequencies = {}
-  for word in all
-    let frequencies[word] = get(frequencies, word, 0) + 1
-  endfor
-  new
-  setlocal buftype=nofile bufhidden=hide noswapfile tabstop=20
-  for [key,value] in items(frequencies)
-    call append('$', key."\t".value)
-  endfor
-  sort i
-endfunction
-
-command! -range=% WordFrequency <line1>,<line2>call WordFrequency()
 
 augroup resCur
   autocmd!
