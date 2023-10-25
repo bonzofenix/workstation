@@ -110,7 +110,7 @@ if `hash direnv`; then
 fi
 
 mkdir -p ~/.config
-ln -fs $WORKSTATION_DIR/assets/nvim-config/nvim ~/.config/nvim
+ln -fs $WORKSTATION_DIR/assets/nvim ~/.config/nvim
 
 echo "Install oh my zsh"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
