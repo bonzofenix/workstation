@@ -6,33 +6,31 @@ if [[ "${DEBUG}" == "true" ]]; then
   env
 fi
 
-function add_to_profile(){
-  local profile=~/.zprofile
-  local profile_changed="false"
-
-  for profile_line in "$@"; do
-    if ! grep -q "${profile_line//\"/\\\"}" $profile; then
-      echo $profile_line >> $profile
-      profile_changed="true"
-    fi
-  done
-
-  [ "$profile_changed" == "true" ] && echo >> $profile
+function add_to_rc(){
+  local profile=~/.zshrc
+  add_to_file $profile "$@"
   return 0
 }
 
-function add_to_rc(){
-  local profile=~/.zshrc
-  local profile_changed="false"
+function add_to_profile(){
+  local profile=~/.zprofile
+  add_to_file $profile "$@"
+  return 0
+}
 
-  for profile_line in "$@"; do
-    if ! grep -q "${profile_line//\"/\\\"}" $profile; then
-      echo $profile_line >> $profile
-      profile_changed="true"
+# write a generic function that adds a line to a file if it doesn't exist
+function add_to_file(){
+  local file=$1
+  local file_changed="false"
+
+  for file_line in "$@"; do
+    if ! grep -q "${file_line//\"/\\\"}" $file; then
+      echo $file_line >> $file
+      file_changed="true"
     fi
   done
 
-  [ "$profile_changed" == "true" ] && echo >> $profile
+  [ "$file_changed" == "true" ] && echo >> $file
   return 0
 }
 
