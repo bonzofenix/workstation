@@ -9,15 +9,15 @@ ln -fs ~/.bash_profile ~/.zshenv
 
 echo 'Adding workstation/bin to path'
 add_to_profile '# Add workstation binaries' \
-               "path+=('~/workstation/bin')"
+               'path+=("$HOME/workstation/bin")'
 
 echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
-               'path=("~/bin" $path)'
+               'path=("$HOME/bin" $path)'
 
 echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
-               "path+=('~/.asdf/shims')"
+               'path+=("$HOME/.asdf/shims")'
 
 echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
