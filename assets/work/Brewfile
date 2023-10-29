@@ -72,5 +72,4 @@ cask "nordvpn"
 
 cask "caffeine"
 
-
-
+cask "git-credential-manager"
