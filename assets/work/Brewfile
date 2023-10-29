@@ -26,6 +26,8 @@ cask "docker"
 # Ruby tools
 brew "readline"
 
+brew "openssl@1.1"
+
 # tree
 brew "tree"
 
