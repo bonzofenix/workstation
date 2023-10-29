@@ -23,7 +23,7 @@ function add_to_file(){
   local file=$1
   local file_changed="false"
 
-  for file_line in "$@"; do
+  for file_line in "${@:2}"; do
     if ! grep -q "${file_line//\"/\\\"}" $file; then
       echo $file_line >> $file
       file_changed="true"
