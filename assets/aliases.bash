@@ -17,7 +17,6 @@ alias cls="clear"
 alias rm="rm -i"
 
 alias vim="nvim -X -O"
-alias vi="nvim"
 alias vimdiff="nvim -d"
 
 alias open_ports="sudo lsof -i -P -n | grep LISTEN"
@@ -51,6 +50,7 @@ alias tango='tmuxp load -y tango'
 alias reading='tmuxp load -y reading'
 alias fitness='tmuxp load -y fitness'
 alias bitex='tmuxp load -y bitex'
+alias prs='gh search prs --author=@me --state=open'
 
 alias amend='git amend && git push -f'
 alias k9s='k9s --context foo'
