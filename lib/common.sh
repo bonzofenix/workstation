@@ -34,6 +34,4 @@ function add_to_file(){
   return 0
 }
 
-function say(){
-  echo '======> :heart: $1 :candy:' | gum format -t emoji
-}
+

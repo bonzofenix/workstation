@@ -71,7 +71,7 @@ echo "Enable git duet"
 add_to_profile '# git duet works globally' \
                 'export GIT_DUET_GLOBAL=true'
 
-say "Configuring GPG"
+echo "Configuring GPG"
 add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
                'export GPG_TTY'
