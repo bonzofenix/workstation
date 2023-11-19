@@ -226,7 +226,7 @@ let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git$'
 let g:ctrlp_show_hidden=1
 
 " set up git blame mapping
-map <leader>g :Gblame<Enter>
+map <leader>g :Git blame<Enter>
 
 set nolist
 
