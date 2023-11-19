@@ -122,6 +122,11 @@ cnoreabbrev AG Ack
 """   ;cp - Set for COPY mode (turn off non-printing chars)
 map ;cp :set nonumber<CR>:set nolist<CR>
 
+
+
+imap <silent> <C-j> <Plug>(copilot-next)
+
+
 """   ;pc - Opposite of ;cp - turns on non-printing chars
 map ;pc :set number<CR>:set list<CR>
 
