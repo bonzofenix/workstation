@@ -17,7 +17,11 @@ add_to_profile '# Add ~/bin binaries' \
 
 echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
-               'path+=("$HOME/.asdf/shims")'
+               'path=("$HOME/.asdf/shims" $path)'
+
+echo "adds local bin to path"
+add_to_profile '# Adds local bin to path' \
+               'path=("$HOME/.local/bin" $path)'
 
 echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
