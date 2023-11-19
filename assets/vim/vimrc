@@ -7,7 +7,9 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'preservim/nerdcommenter'
 Plug 'hashivim/vim-terraform'
 Plug 'preservim/vim-markdown'
+Plug 'fatih/vim-go'
 Plug 'pangloss/vim-javascript'
+Plug 'mileszs/ack.vim'
 Plug 'github/copilot.vim'
 
 call plug#end()
@@ -113,6 +115,8 @@ cnoreabbrev ag Ack
 cnoreabbrev aG Ack
 cnoreabbrev Ag Ack
 cnoreabbrev AG Ack
+
+noremap <Leader>a :Ack <cword><cr>
 
 """
 """
