@@ -13,6 +13,9 @@ git config --global hub.protocol https
 git config --global push.default simple
 
 
+echo "Setting default branch to develop"
+git config --global init.defaultBranch develop
+
 echo "Enables colors to git output"
 git config --global color.ui true
 git config color.status.changed "blue normal bold"
