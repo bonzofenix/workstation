@@ -19,6 +19,10 @@ echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
                'path=("$HOME/.asdf/shims" $path)'
 
+echo "Configures asdf golang mod version"
+add_to_profile '# Sets asdf golang' \
+               'export ASDF_GOLANG_MOD_VERSION_ENABLED=true'
+
 echo "adds local bin to path"
 add_to_profile '# Adds local bin to path' \
                'path=("$HOME/.local/bin" $path)'
