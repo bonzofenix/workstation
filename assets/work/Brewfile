@@ -19,6 +19,8 @@ cask "google-chrome"
 cask "slack"
 cask "skype"
 
+# Video player
+cask "vlc"
 
 # Docker For Mac
 cask "docker"
