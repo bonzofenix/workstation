@@ -240,9 +240,13 @@ let g:go_def_mode='godef'
 let g:go_def_reuse_buffer = 1
 au FileType go nmap gd <Plug>(go-def-vertical)
 au FileType go set autowrite
+autocmd BufWritePre *.go :silent! update
+" maps gb to switch to last buffer
+nnoremap gb :b# <CR>
 
 " Fmt on save for terraform files
 let g:terraform_fmt_on_save=1
+
 
 " Remove trailing whitespace
 if has("autocmd")
