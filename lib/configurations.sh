@@ -120,5 +120,9 @@ fi
 mkdir -p ~/.config
 ln -fs $WORKSTATION_DIR/assets/nvim ~/.config/nvim
 
+
+echo "create symlink to icloud folder"
+ln -fs ~/Library/Mobile\ Documents/com~apple~CloudDocs/ ~/icloud
+
 echo "Install oh my zsh"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
