@@ -55,3 +55,5 @@ alias prs='gh search prs --author=@me --state=open'
 alias amend='git amend && git push -f'
 alias k9s='k9s --context foo'
 alias dammit='git commit --amend --no-edit && git push -f'
+
+alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 '
