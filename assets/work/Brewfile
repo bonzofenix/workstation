@@ -1,6 +1,7 @@
 # Utilities
 
-cask "spectacle"
+cask "rectangle"
+
 cask "postman"
 
 brew "gum"
