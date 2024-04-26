@@ -40,8 +40,11 @@ brew "jq"
 # nmap
 brew "nmap"
 
-# hub
-brew "hub"
+# nmap
+brew "thefuck"
+
+# gh
+brew "gh"
 
 # direnv
 brew "direnv"
@@ -68,8 +71,12 @@ brew "neovim"
 cask "1password"
 
 brew "watch"
+
 brew "rsync"
 
+cask "spotify"
+
+cask "microsoft-teams"
 
 cask "nordvpn"
 
