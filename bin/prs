@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -eu
+
+# set jq response into an array
+selected_pr=$(gh search prs --author=@me --state=open --json number,repository,title | jq '. | map("\(.number) - \(.repository.nameWithOwner): \(.title)") | .[]' -r | gum choose)
+pr_number=$(echo $selected_pr | cut -d' ' -f1)
+gh pr view -w $pr_number
+
+
