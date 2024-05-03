@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -eu
+
+selected_org=$(cf curl "/v3/organizations?per_page=1000" | jq -r '.resources.[].name'| sort | gum choose)
+org_guid=$(cf org $selected_org --guid)
+selected_space=$(cf curl "/v3/spaces?organization_guids=$org_guid" | jq -r '.resources.[].name'| sort | gum choose)
+
+
+cf target -o $selected_org -s $selected_space
