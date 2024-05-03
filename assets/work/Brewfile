@@ -5,9 +5,15 @@ cask "rectangle"
 cask "postman"
 
 brew "gum"
+
 brew "ag"
-# brew "gpg"
+
+brew "gnupg"
+
+brew "gnupg2"
+
 brew "tmux"
+
 brew "wget"
 
 # Terminals
