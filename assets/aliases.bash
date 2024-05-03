@@ -56,3 +56,7 @@ alias k9s='k9s --context foo'
 alias dammit='git commit --amend --no-edit && git push -f'
 
 alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 '
+
+
+alias deployment-names='bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r'
+alias chatgpt='~/.asdf/shims/gpt'
