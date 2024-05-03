@@ -92,5 +92,7 @@ cask "caffeine"
 
 cask "git-credential-manager"
 
+cask "cool-retro-term"
+
 # Browsers
 cask "obsidian"
