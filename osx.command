@@ -6,8 +6,6 @@ sudo true;
 
 MY_DIR="$(dirname "$0")"
 
-
-
 source ${MY_DIR}/lib/homebrew.sh
 source ${MY_DIR}/lib/asdf.sh
 source ${MY_DIR}/lib/git.sh
