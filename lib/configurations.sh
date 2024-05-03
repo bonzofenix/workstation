@@ -106,8 +106,9 @@ echo "sets search to ctr+r"
 add_to_rc '# sets vi mode for zsh' \
           'bindkey "^R" history-incremental-search-backward'
 
-
-
+echo "Adds fuck alias"
+add_to_rc '# Adds fuck alias' \
+          'eval $(thefuck --alias)'
 
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
