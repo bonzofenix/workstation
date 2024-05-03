@@ -1,0 +1,7 @@
+#!/bin/bash
+set -eu
+
+selected_deployment=$( bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r | gum choose)
+selected_instance=$( bosh -d "$selected_deployment" vms --json | jq ".Tables | .[0] | .Rows | .[] | .instance" -r | gum choose)
+
+bosh ssh -d "$selected_deployment" "$selected_instance"
