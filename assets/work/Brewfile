@@ -62,11 +62,16 @@ brew "coreutils"
 # yq
 brew "yq"
 
-# Git and associated tools
+# Git
 brew "git"
 
+# Git Duet
 tap "git-duet/tap"
 brew "git-duet"
+
+# Ripgrep
+brew "ripgrep"
+
 # asdf
 brew "asdf"
 

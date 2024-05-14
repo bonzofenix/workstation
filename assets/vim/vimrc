@@ -3,7 +3,6 @@ call plug#begin()
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'godlygeek/tabular'
-Plug 'ctrlpvim/ctrlp.vim'
 Plug 'preservim/nerdcommenter'
 Plug 'hashivim/vim-terraform'
 Plug 'preservim/vim-markdown'
@@ -11,6 +10,8 @@ Plug 'fatih/vim-go'
 Plug 'pangloss/vim-javascript'
 Plug 'mileszs/ack.vim'
 Plug 'github/copilot.vim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
 
 call plug#end()
 
@@ -217,13 +218,6 @@ augroup END
 autocmd FileType markdown setlocal wrap
 
 let mapleader = ","
-" set up ctrlp / ,f searching
-set runtimepath^=~/.vim/bundle/ctrlp.vim
-map <leader>f <C-p>
-
-" Ignore node_modules, DS_Store and git
-let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git$'
-let g:ctrlp_show_hidden=1
 
 " set up git blame mapping
 map <leader>g :Git blame<Enter>
@@ -238,9 +232,19 @@ set termguicolors
 let g:go_fmt_command = "goimports"
 let g:go_def_mode='godef'
 let g:go_def_reuse_buffer = 1
+
 au FileType go nmap gd <Plug>(go-def-vertical)
+au FileType go nmap gr <Plug>(go-referrers)
 au FileType go set autowrite
+
 autocmd BufWritePre *.go :silent! update
+
+" Find files using Telescope command-line sugar.
+nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
+nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+"
 " maps gb to switch to last buffer
 nnoremap gb :b# <CR>
 
