@@ -111,13 +111,14 @@ set wildmode=longest,list
 set cursorline
 
 " Adds support for ack
-let g:ackprg = 'ag --vimgrep --smart-case'
+let g:ackprg = 'ag --vimgrep'
+
 cnoreabbrev ag Ack
 cnoreabbrev aG Ack
 cnoreabbrev Ag Ack
 cnoreabbrev AG Ack
 
-noremap <Leader>a :Ack <cword><cr>
+noremap <Leader>a :Ack <word><cr>
 
 """
 """
