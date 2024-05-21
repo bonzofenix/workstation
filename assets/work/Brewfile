@@ -79,6 +79,9 @@ brew "asdf"
 brew "neovim"
 
 
+# fuck
+brew "thefuck"
+
 cask "1password"
 
 cask "1password-cli"
@@ -101,3 +104,5 @@ cask "cool-retro-term"
 
 # Browsers
 cask "obsidian"
+
+cask "citrix-workspace"
