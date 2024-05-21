@@ -15,6 +15,11 @@ echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
                'path=("$HOME/bin" $path)'
 
+
+echo 'Adding coreutil path'
+add_to_profile '# Add gnubin for coreutil tooling to path' \
+               'path=("/usr/local/opt/coreutils/libexec/gnubin" $path)'
+
 echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
                'path=("$HOME/.asdf/shims" $path)'
