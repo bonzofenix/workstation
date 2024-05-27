@@ -32,3 +32,4 @@ git config --global color.ui true
 git config --global ui.color auto
 git config --global alias.up 'pull --rebase --autostash'
 git config --global hub.protocol https
+git config --global alias.head 'rev-parse --short HEAD'
