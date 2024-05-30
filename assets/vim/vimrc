@@ -12,6 +12,7 @@ Plug 'mileszs/ack.vim'
 Plug 'github/copilot.vim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
+Plug 'morhetz/gruvbox'
 
 call plug#end()
 
@@ -63,6 +64,10 @@ endif
 
 colorscheme paramount
 autocmd BufEnter *.md colorscheme molokai
+autocmd BufEnter *.go colorscheme gruvbox
+"
+"
+"
 
 
 " Turn on modeline processing, so we can force certain vim
@@ -241,7 +246,7 @@ au FileType go set autowrite
 autocmd BufWritePre *.go :silent! update
 
 " Find files using Telescope command-line sugar.
-nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>ff <cmd>Telescope find_files<CR>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
