@@ -1,0 +1,8 @@
+#!/bin/bash
+set -eu
+
+timestamp=$(date +%s)
+
+selected_deployment="$( bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r | gum choose)"
+selected_vm="$(bosh vms -d "$selected_deployment" --json | jq ".Tables | .[0] | .Rows | .[] | .instance" -r | gum choose)"
+bosh -d $selected_deployment vms --json | jq -r ".Tables | .[] | .Rows  | .[] | select(.instance|test(\"$selected_vm\"))"
