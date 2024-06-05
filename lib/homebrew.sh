@@ -17,3 +17,6 @@ add_to_profile '# Homebrew Path' \
                'path=("opt/homebrew/bin" $path)'
 
 
+add_to_profile '# Adds coreutils path' \
+               'path=("$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin" $path)'
+
