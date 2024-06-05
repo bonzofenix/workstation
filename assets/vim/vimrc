@@ -62,9 +62,10 @@ if has('gui_running')
 	color slate
 endif
 
-colorscheme paramount
-autocmd BufEnter *.md colorscheme molokai
-autocmd BufEnter *.go colorscheme gruvbox
+colorscheme gruvbox
+"colorscheme paramount
+"autocmd BufEnter *.md colorscheme molokai
+"autocmd BufEnter *.go colorscheme gruvbox
 "
 "
 "
