@@ -136,7 +136,9 @@ map ;cp :set nonumber<CR>:set nolist<CR>
 
 
 
+"""   copilot maps to navigate through the competion options
 imap <silent> <C-j> <Plug>(copilot-next)
+imap <silent> <C-k> <Plug>(copilot-previous)
 
 
 """   ;pc - Opposite of ;cp - turns on non-printing chars
