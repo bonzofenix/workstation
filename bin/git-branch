@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eu
+
+selected_branch=$( git branch --format "%(refname:short)" |gum choose)
+git checkout $selected_branch
+
