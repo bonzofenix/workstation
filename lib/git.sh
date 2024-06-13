@@ -28,6 +28,6 @@ git config --system --unset credential.helper
 
 echo  "Configuring authors file"
 [ -e ~/.authors ] && rm -f ~/.authors
-ln -fs $WORKSTATION_DIR/../assets/git-authors ~/.git-authors
+ln -fs $WORKSTATION_DIR/assets/git-authors ~/.git-authors
 
 set -e
