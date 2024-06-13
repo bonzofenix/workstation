@@ -5,6 +5,6 @@ DEBUG?=false
 
 .PHONY: install
 install:
-	NO_BREW="${NO_BREW}" DEBUG="${DEBUG}" ./scripts/install.sh
+	@NO_BREW="${NO_BREW}" DEBUG="${DEBUG}" ./scripts/install.sh
 
 

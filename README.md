@@ -7,21 +7,12 @@ This is a full workstation based off pivotal's workstation project.
 
 Donwnload [Zip file](https://github.com/bonzofenix/workstation/archive/master.zip) into `~/workstation`
 
-
-For **OSX**:
-
-Double click installation script.
-```sh
-osx.command
-```
-
-For **Linux**:
+git config credential.https://github.tools.sap.username SAP_USER
 
 ```sh
-./linux.sh
+make install
 ```
 
-@
 ## Next step
 
 - [ ] Adds flags for config only

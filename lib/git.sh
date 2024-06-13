@@ -28,7 +28,6 @@ git config --system --unset credential.helper
 
 echo  "Configuring authors file"
 [ -e ~/.authors ] && rm -f ~/.authors
-WORKSTATION_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ln -fs $WORKSTATION_DIR/../assets/git-authors ~/.git-authors
 
 set -e
