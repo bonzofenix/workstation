@@ -69,6 +69,9 @@ brew "git"
 tap "git-duet/tap"
 brew "git-duet"
 
+# cf2go
+brew "cf2go"
+
 # Ripgrep
 brew "ripgrep"
 
@@ -81,6 +84,9 @@ brew "neovim"
 
 # fuck
 brew "thefuck"
+
+# reattach-to-user-namespace
+brew "reattach-to-user-namespace"
 
 cask "1password"
 
@@ -106,3 +112,7 @@ cask "cool-retro-term"
 cask "obsidian"
 
 cask "citrix-workspace"
+
+
+
+
