@@ -62,7 +62,13 @@ if has('gui_running')
 	color slate
 endif
 
+
+" Set autorisize of panes
+autocmd VimResized * wincmd =
+
+" set the colorscheme
 colorscheme gruvbox
+
 "colorscheme paramount
 "autocmd BufEnter *.md colorscheme molokai
 "autocmd BufEnter *.go colorscheme gruvbox
@@ -139,6 +145,7 @@ map ;cp :set nonumber<CR>:set nolist<CR>
 """   copilot maps to navigate through the competion options
 imap <silent> <C-j> <Plug>(copilot-next)
 imap <silent> <C-k> <Plug>(copilot-previous)
+imap <silent> <C-l> <Plug>(copilot-accept-word)
 
 
 """   ;pc - Opposite of ;cp - turns on non-printing chars
@@ -240,10 +247,14 @@ set termguicolors
 " configure vim-go
 let g:go_fmt_command = "goimports"
 let g:go_def_mode='godef'
+let g:go_def_mode='gopls'
 let g:go_def_reuse_buffer = 1
+let g:go_test_timeout = '30s'
+
 
 au FileType go nmap gd <Plug>(go-def-vertical)
 au FileType go nmap gr <Plug>(go-referrers)
+au FileType go nmap <leader>t <Plug>(go-test)
 au FileType go set autowrite
 
 autocmd BufWritePre *.go :silent! update
