@@ -114,5 +114,6 @@ cask "obsidian"
 cask "citrix-workspace"
 
 
+cask "visual-studio-code"
 
 
