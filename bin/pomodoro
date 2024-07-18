@@ -43,8 +43,9 @@ fi
 
 [[ -n $POMO_FILE ]] && POMO=$POMO_FILE || POMO=$HOME/.local/share/pomo
 
-[[ -n $POMO_WORK_TIME ]] && WORK_TIME=$POMO_WORK_TIME || WORK_TIME=25
-[[ -n $POMO_BREAK_TIME ]] && BREAK_TIME=$POMO_BREAK_TIME || BREAK_TIME=5
+# if pomo_work_Time variable is not set, then set it to the default value
+WORK_TIME="${POMO_WORK_TIME:-50}"
+BREAK_TIME=${POMO_BREAK_TIME:-10}
 
 #--- Pomodoro functions ---
 
@@ -184,8 +185,8 @@ function pomo_notify {
 function send_msg {
     if [ "$(uname)" == "Darwin" ]; then
         osascript -e "tell app \"System Events\" to display dialog \"${1}\"" &> /dev/null
-    elif command -v notify-send &> /dev/null; then
-        notify-send Pomodoro "${1}"
+    elif command -v terminal-notifier &> /dev/null; then
+         terminal-notifier -title "Pomodoro" -message "${1}" -sound default
     else
         echo "${1}"
     fi
