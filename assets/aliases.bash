@@ -60,3 +60,7 @@ alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 '
 alias bosh-deployments='bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r'
 alias chatgpt='~/.asdf/shims/gpt'
 alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" '
+
+command="Generate a concise git commit message that summarizes the key changes. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes"
+
+alias autocommit="BRANCH_NAME=\$(git branch --show-current) && MSG=\"\$(git diff --staged | sgpt '$command')\" && PREFIXED_MSG=\"\${BRANCH_NAME}: \${MSG}\" && echo \${PREFIXED_MSG} && git commit -m \${PREFIXED_MSG}"
