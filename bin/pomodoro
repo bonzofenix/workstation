@@ -52,6 +52,7 @@ BREAK_TIME=${POMO_BREAK_TIME:-10}
 function pomo_start {
     # Start new pomo block (work+break cycle).
     test -e "$(dirname -- "$POMO")" || mkdir "$(dirname -- "$POMO")"
+    [[ -e "$POMO" ]] && gum confirm "restart current timer? current: $( pomodoro clock)"
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
 }
