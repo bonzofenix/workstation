@@ -1,4 +1,4 @@
-call plug#begin()
+call plug#begin('~/.vim/plugged')
 
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
@@ -13,6 +13,7 @@ Plug 'github/copilot.vim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'morhetz/gruvbox'
+Plug 'dhruvasagar/vim-zoom'
 
 call plug#end()
 
@@ -237,6 +238,10 @@ let mapleader = ","
 
 " set up git blame mapping
 map <leader>g :Git blame<Enter>
+
+
+" set zoom mapping to leader + z
+map <leader>z <Plug>(zoom-toggle)
 
 set nolist
 
