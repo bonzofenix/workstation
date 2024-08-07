@@ -133,6 +133,15 @@ cnoreabbrev AG Ack
 
 noremap <Leader>a :Ack <word><cr>
 
+
+
+" Find and replace word in whole file
+noremap <Leader>s :%s/\<<C-r><C-w>\>//gc<left><left>
+
+
+
+
+
 """
 """
 """ ###   Copy/Paste Support   ###############################################
