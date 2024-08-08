@@ -114,6 +114,10 @@ echo "Adds fuck alias"
 add_to_rc '# Adds fuck alias' \
           'eval $(thefuck --alias)'
 
+echo "Adds direnv hook"
+add_to_rc '# Adds direnv hook' \
+          'eval "$(direnv hook zsh)"'
+
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
 
