@@ -2,31 +2,15 @@
 
 source ~/workstation/bin/common.sh
 
-function select-option(){
-  PS3=$'\e[0;32mSelect: \e[0m'
-  opts=($@)
-
-  select opt in "${opts[@]}" "Quit" ; do
-    if (( REPLY == 1 + ${#opts[@]} )) ; then
-      exit
-
-    elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
-      echo $opt
-      break
-
-    else
-      error "Invalid option. Try another one."
-    fi
-  done
-}
+if [ -z "$CONCOURSE_TARGET" ]; then
+  echo "Please set CONCOURSE_TARGET"
+  exit 1
+fi
 
 function delete-pipeline(){
-  payload=$(fly -t concourse pipelines --json)
-
-  pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
-  pipeline=$(select-option $pipelines)
-
-  fly -t concourse dp -p $pipeline
+  payload=$(fly -t $CONCOURSE_TARGET pipelines --json)
+  pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose)
+  fly -t $CONCOURSE_TARGET dp -p $pipeline
 }
 
 

@@ -2,48 +2,32 @@
 
 source ~/workstation/bin/common.sh
 
-function select-option(){
-  PS3=$'\e[0;32mSelect: \e[0m'
-  opts=($@)
-
-  select opt in "${opts[@]}" "Quit" ; do
-    if (( REPLY == 1 + ${#opts[@]} )) ; then
-      exit
-
-    elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
-      echo $opt
-      break
-
-    else
-      error "Invalid option. Try another one."
-    fi
-  done
-}
+if [ -z "$CONCOURSE_TARGET" ]; then
+  echo "Please set CONCOURSE_TARGET"
+  exit 1
+fi
 
 function trigger-pipeline(){
-  payload=$(fly -t $ENV pipelines --json)
+  payload=$(fly -t $CONCOURSE_TARGET pipelines --json)
   pipeline=$1
   jobs=()
 
   if [[ -z $pipeline ]]; then
-    pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
-    pipeline=$(select-option $pipelines)
+    pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose -q "Select pipeline")
   fi
 
   groups=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups" -r)
 
   if [ "$groups" == "null" ]; then
-    payload=$(fly -t $ENV jobs -p "$pipeline" --json)
-    jobs=$(echo "$payload" | jq ".[] | .name" -r)
+    payload=$(fly -t app-autoscaler-release jobs -p "$pipeline" --json)
+    job=$(echo "$payload" | jq ".[] | .name" -r | gum choose -q "Select job")
   else
-    group_names=$(echo $groups | jq -r ".[] | .name")
-    group=$(select-option $group_names)
-    jobs=$(echo "$groups" | jq ".[] | select(.name==\"$group\")  | .jobs[]" -r)
+    group=$(echo $groups | jq -r ".[] | .name" | gum choose -q "Select group")
+    job=$(echo "$groups" | jq ".[] | select(.name==\"$group\")  | .jobs[]" -r | gum choose -q "Select job")
   fi
 
-  job=$(select-option $jobs)
 
-  fly -t $ENV tj -j $pipeline/$job -w
+  fly -t $CONCOURSE_TARGET tj -j $pipeline/$job -w
 }
 
 
