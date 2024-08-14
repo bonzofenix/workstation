@@ -13,17 +13,17 @@ function trigger-pipeline(){
   jobs=()
 
   if [[ -z $pipeline ]]; then
-    pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose -q "Select pipeline")
+    pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose)
   fi
 
   groups=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups" -r)
 
   if [ "$groups" == "null" ]; then
     payload=$(fly -t app-autoscaler-release jobs -p "$pipeline" --json)
-    job=$(echo "$payload" | jq ".[] | .name" -r | gum choose -q "Select job")
+    job=$(echo "$payload" | jq ".[] | .name" -r | gum choose)
   else
-    group=$(echo $groups | jq -r ".[] | .name" | gum choose -q "Select group")
-    job=$(echo "$groups" | jq ".[] | select(.name==\"$group\")  | .jobs[]" -r | gum choose -q "Select job")
+    group=$(echo $groups | jq -r ".[] | .name" | gum choose)
+    job=$(echo "$groups" | jq ".[] | select(.name==\"$group\")  | .jobs[]" -r | gum choose)
   fi
 
 
