@@ -74,16 +74,15 @@ colorscheme gruvbox
 "autocmd BufEnter *.md colorscheme molokai
 "autocmd BufEnter *.go colorscheme gruvbox
 "
-"
-"
 
 
 " Turn on modeline processing, so we can force certain vim
 " parameters when we don't match an autocommand.
 set modeline
 
-" Turn on marker foldmethod, to make things easier
-set foldmethod=marker
+autocmd FileType go setlocal foldmethod=syntax
+autocmd FileType yaml setlocal foldmethod=indent
+syntax on
 
 " Turn off stupid cindent rules, until I can figure out
 " how to customize them to my coding style.
@@ -207,7 +206,6 @@ set nowrap
 set nocompatible
 set bs=2
 set history=50
-syntax on
 set viminfo='20,\"50
 if filereadable($VIMRUNTIME . "/ftplugin/man.vim")
         source $VIMRUNTIME/ftplugin/man.vim
