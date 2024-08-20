@@ -1,0 +1,9 @@
+#!/bin/bash
+set -eu
+
+timestamp=$(date +%s)
+
+selected_deployment="$( bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r | gum choose)"
+gum confirm "Are you sure you want to delete the deployment $selected_deployment?" || exit 1
+bosh -d "$selected_deployment" delete-deployment
+
