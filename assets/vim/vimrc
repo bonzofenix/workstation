@@ -19,6 +19,7 @@ call plug#end()
 
 " Tabs are 2 columns wide, and use the TAB character
 set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+"autocmd BufWritePre * :%s/\t/  /ge
 
 " Disable all sorts of bells and visual alerts
 set visualbell t_vb=
