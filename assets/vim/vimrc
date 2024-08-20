@@ -56,14 +56,6 @@ highlight clear folded
 highlight folded term=bold ctermfg=4 guifg=DarkBlue
 
 
-" Turn on syntax higlighting on
-syntax on
-" ... and don't forget gvim
-if has('gui_running')
-	color slate
-endif
-
-
 " Set autorisize of panes
 autocmd VimResized * wincmd =
 
@@ -219,28 +211,6 @@ set clipboard=unnamed
 set splitright
 cabbrev man Man
 
-" functions to make cursor restore work
-function! ResCur()
-  if line("'\"") <= line("$")
-    normal! g`"
-    return 1
-  endif
-endfunction
-
-
-augroup resCur
-  autocmd!
-  autocmd BufWinEnter * call ResCur()
-augroup END
-
-" Makes markdown files to wrap by default
-augroup WrapLineInTeXFile
-    autocmd!
-    autocmd FileType markdown setlocal wrap
-augroup END
-
-autocmd FileType markdown setlocal wrap
-
 let mapleader = ","
 
 " set up git blame mapping
@@ -269,8 +239,6 @@ au FileType go nmap gr <Plug>(go-referrers)
 au FileType go nmap <leader>t <Plug>(go-test)
 au FileType go set autowrite
 
-autocmd BufWritePre *.go :silent! update
-
 " Find files using Telescope command-line sugar.
 nnoremap <leader>ff <cmd>Telescope find_files<CR>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
@@ -290,4 +258,5 @@ if has("autocmd")
 endif
 
 execute pathogen#infect()
+
 
