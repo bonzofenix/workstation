@@ -227,11 +227,13 @@ let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 set termguicolors
 
 " configure vim-go
-let g:go_fmt_command = "goimports"
+let g:go_fmt_command = "gofmt"
+let g:go_imports_mode = 'gopls'
 let g:go_def_mode='godef'
 let g:go_def_mode='gopls'
 let g:go_def_reuse_buffer = 1
 let g:go_test_timeout = '30s'
+let g:go_fmt_experimental = 1
 
 
 au FileType go nmap gd <Plug>(go-def-vertical)
@@ -248,7 +250,8 @@ nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 " maps gb to switch to last buffer
 nnoremap gb :b# <CR>
 
-" Fmt on save for terraform files
+
+" configure vim-terraform
 let g:terraform_fmt_on_save=1
 
 
