@@ -85,6 +85,7 @@ function pomo_pause {
         # Pause a pomo block.
         running=$(pomo_stat)
         echo "$running" > "$POMO"
+        gum confirm "continue working?" && pomo_pause
     fi
 }
 
