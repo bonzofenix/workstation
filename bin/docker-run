@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -eu
+
+###
+# @description Builds a docker image tagged with the private registry
+#
+# @arg $1 The image name ORG/NAME
+#
+# @stdout Prints information about what the script is doing
+##
+
+function docker-run() {
+  DOCKER_IMAGE=$1
+  docker run -it $DOCKER_IMAGE /bin/bash
+}
+
+docker-run "${@:-}"
+exit $?
+
