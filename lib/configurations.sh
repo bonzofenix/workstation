@@ -126,6 +126,9 @@ if `hash direnv`; then
                  'eval "$( direnv hook bash )"'
 fi
 
+add_to_profile '# sets devbox' \
+               'eval "$(devbox global shellenv)"'
+
 mkdir -p ~/.config
 ln -fs $WORKSTATION_DIR/assets/nvim ~/.config/nvim
 
