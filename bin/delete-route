@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -eu
+
+selected_space=$(cf curl "/v3/spaces?per_page=1000" | jq -r '.resources.[].name'| sort | gum choose)
+space_guid=$(cf space $selected_space --guid)
+url=$(cf curl "/v3/routes?page=1&per_page=5000&space_guids=${space_guid}" | jq -r '.resources.[].url'| sort | gum choose)
+host=$(echo $url | cut -d'.' -f1)
+cf delete-route autoscaler.app-runtime-interfaces.ci.cloudfoundry.org -n $host
+
+
