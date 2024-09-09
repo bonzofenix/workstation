@@ -11,7 +11,7 @@ function run(){
   pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose )
   group=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | .name" -r | gum choose)
   job=$(echo "$payload" | jq ".[] | select(.name==\"$pipeline\") | .groups[] | select(.name==\"$group\")  | .jobs[]" -r | gum choose)
-  build=$(fly -t app-autoscaler-release builds -j $pipeline/$job --json | jq ".[] | .name" -r | head -n 1)
+  build=$(fly -t $CONCOURSE_TARGET builds -j $pipeline/$job --json | jq ".[] | .name" -r | head -n 1)
   fly -t $CONCOURSE_TARGET i -j $pipeline/$job -b $build
 }
 
