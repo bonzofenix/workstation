@@ -3,8 +3,14 @@
 set -eu
 
 # set jq response into an array
-selected_pr=$(gh search prs --author=@me --state=open --json number,repository,title | jq '. | map("\(.number) - \(.repository.nameWithOwner): \(.title)") | .[]' -r | gum choose)
+# ..."
+github_hostname=$(git ls-remote --get-url origin | cut -f 3 -d "/")
+echo "Fetching PRs for $github_hostname"
+export GH_HOST=$github_hostname
+selected_pr=$(gh search prs --author=@me --state=open --json number,repository,title | jq '. | map("\(.number) - \(.repository.nameWithOwner) : \(.title)") | .[]' -r | gum choose)
 pr_number=$(echo $selected_pr | cut -d' ' -f1)
-gh pr view -w $pr_number
+
+echo "$github_hostname/$(echo $selected_pr | cut -d' ' -f3)"
+gh pr view -w $pr_number -R $github_hostname/$(echo $selected_pr | cut -d' ' -f3)
 
 
