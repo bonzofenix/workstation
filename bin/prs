@@ -2,10 +2,10 @@
 
 set -eu
 
-# set jq response into an array
-# ..."
-github_hostname=$(git ls-remote --get-url origin | cut -f 3 -d "/")
+github_hostname=$(git ls-remote --get-url origin | sed -E 's#(git@|https://)([^/:]+).*#\2#')
+
 echo "Fetching PRs for $github_hostname"
+
 export GH_HOST=$github_hostname
 selected_pr=$(gh search prs --author=@me --state=open --json number,repository,title | jq '. | map("\(.number) - \(.repository.nameWithOwner) : \(.title)") | .[]' -r | gum choose)
 pr_number=$(echo $selected_pr | cut -d' ' -f1)
