@@ -64,9 +64,3 @@ alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=
 
 commit_command="Generate a concise git commit message that summarizes the key changes. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes"
 alias autocommit="MSG=\"\$(git diff --staged | sgpt '$commit_command')\" && git commit -e -m \${MSG}"
-
-
-description_command="Generate a concise feature bulletpoint list that summarizes the key changes. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes"
-alias autodiff="git diff --merge-base origin/main | sgpt --model 'gpt-4o' '$description_command' | tee >(pbcopy)"
-
-
