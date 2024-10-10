@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -x
+# Ensure script fails on errors or unset variables, and propagate the pipefail
+set -euo pipefail
+
+# Function to refactor the input file using the refactor command
+refactor_file() {
+  local file=$1
+  local refactor_command="refactor this script using clean code from uncle bob. return the code, dont tell me what you did"
+
+  cat "$file" | sgpt --model "gpt-4o-mini" "$refactor_command" | tee > $file.refactored
+}
+
+# Ensure a file is passed as an argument
+if [[ $# -eq 0 ]]; then
+  echo "Usage: $0 <file>"
+  exit 1
+fi
+
+# Call the refactor function with the provided file
+refactor_file "$1"
