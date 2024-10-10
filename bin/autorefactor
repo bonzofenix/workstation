@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 # Ensure script fails on errors or unset variables, and propagate the pipefail
 set -euo pipefail
 

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# Ensure script fails on errors or unset variables, and propagate the pipefail
+set -x
+set -euo pipefail
+
+function main_or_master() {
+  main_branch=$(git for-each-ref --format='%(refname:short)' refs/heads/main)
+  master_branch=$(git for-each-ref --format='%(refname:short)' refs/heads/master)
+
+  if [[ -n "$main_branch" ]]; then
+    echo 'main'
+
+  elif [[ -n "$master_branch" ]]; then
+    echo 'master'
+  else
+    echo "Neither 'main' nor 'master' exists"
+    exit 1
+  fi
+}
+
+function check_repo() {
+  if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+    echo "Not a git repository"
+    exit 1
+  fi
+}
+
+describe_diff_from_upstream() {
+  local description_command="based on the provided diff generate a github pr description message."
+
+  git diff --merge-base origin/$(main_or_master) | \
+    sgpt --md --model 'gpt-4o' '$description_command' | tee >(pbcopy)
+}
+
+
+check_repo
+describe_diff_from_upstream
