@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # Ensure script fails on errors or unset variables, and propagate the pipefail
-set -x
 set -euo pipefail
 
 function main_or_master() {
@@ -27,10 +26,10 @@ function check_repo() {
 }
 
 describe_diff_from_upstream() {
-  local description_command="based on the provided diff generate a github pr description message."
+  local description_command="based on the provided diff generate a github pull request description message. follow best practices for pull request descriptions."
 
   git diff --merge-base origin/$(main_or_master) | \
-    sgpt --md --model 'gpt-4o' '$description_command' | tee >(pbcopy)
+    sgpt --no-md --model 'gpt-4o' "$description_command" | tee >(pbcopy)
 }
 
 
