@@ -4,7 +4,7 @@ NO_BREW?=false
 DEBUG?=false
 
 .PHONY: install
-install: cache-password homebrew asdf git git-alias configurations osx-configurations
+install: cache-password homebrew asdf git git-aliases configurations osx-configurations
 	@echo "Reloading Bash..."
 	@source ~/.bash_profile
 
@@ -18,9 +18,9 @@ cache-password:
 homebrew:
 	@NO_BREW="${NO_BREW}" DEBUG="${DEBUG}" ./lib/homebrew.sh
 
-.PHONY: git-alias
-git-alias:
-	@DEBUG="${DEBUG}" ./lib/git-aliase.sh
+.PHONY: git-aliases
+git-aliases:
+	@DEBUG="${DEBUG}" ./lib/git-aliases.sh
 
 .PHONY: configurations
 configurations:
@@ -37,5 +37,3 @@ asdf:
 .PHONY: git
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
-
-
