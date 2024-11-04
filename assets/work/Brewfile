@@ -8,6 +8,8 @@ brew "gum"
 
 brew "ag"
 
+brew "zsh"
+
 brew "gnupg"
 
 brew "gnupg2"
