@@ -3,7 +3,7 @@
 set +e
 
 echo "Cleanup git configs"
-rm ~/.gitconfig
+rm -rf ~/.gitconfig
 
 
 echo "Setting global Git configurations"
