@@ -2,6 +2,9 @@
 # fails to install, don't stop.
 set +e
 
+export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+export WORKSTATION_DIR="$SCRIPT_DIR/.."
+
 echo "Cleanup git configs"
 rm -rf ~/.gitconfig
 

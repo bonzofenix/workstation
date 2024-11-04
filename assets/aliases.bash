@@ -37,8 +37,6 @@ alias pm="profile-manager"
 alias datacenter-info="govc datacenter.info"
 alias go_build_linux="GOOS=linux GOARCH=amd64 go build -v"
 
-alias tmux="tmux -2"
-
 alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
 alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0:1" out.mp4'
