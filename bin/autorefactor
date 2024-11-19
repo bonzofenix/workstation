@@ -9,6 +9,13 @@ refactor_file() {
   local refactor_command="refactor this script using clean code from uncle bob. return the code, dont tell me what you did"
 
   cat "$file" | sgpt --model "gpt-4o-mini" "$refactor_command" | tee > $file.refactored
+
+  gum log "line count before and after refactoring"
+  gum log "Before: $(wc -l $file)"
+  gum log "After: $(wc -l $file.refactored)"
+
+  mv $file.refactored $file
+
 }
 
 # Ensure a file is passed as an argument
@@ -19,3 +26,4 @@ fi
 
 # Call the refactor function with the provided file
 refactor_file "$1"
+
