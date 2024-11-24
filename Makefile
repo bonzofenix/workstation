@@ -18,6 +18,9 @@ cache-password:
 homebrew:
 	@NO_BREW="${NO_BREW}" DEBUG="${DEBUG}" ./lib/homebrew.sh
 
+block-content:
+	@DEBUG="${DEBUG}" ./lib/block-content.sh
+
 .PHONY: git-aliases
 git-aliases:
 	@DEBUG="${DEBUG}" ./lib/git-aliases.sh

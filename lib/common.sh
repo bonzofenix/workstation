@@ -18,6 +18,12 @@ function add_to_profile(){
   return 0
 }
 
+function add_to_host(){
+  local profile=/etc/hosts
+  add_to_file $profile "$@"
+  return 0
+}
+
 # write a generic function that adds a line to a file if it doesn't exist
 function add_to_file(){
   local file=$1
