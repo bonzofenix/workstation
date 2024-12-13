@@ -26,10 +26,10 @@ function check_repo() {
 }
 
 describe_diff_from_upstream() {
-  local description_command="based on the provided diff generate a github pull request description message. follow best practices for pull request descriptions."
+  local description_command="based on the provided diff generate a github pull request description message. follow best practices for pull request descriptions. use the following headings: ## Overview ## Key changes ## Code refactoring ## Related Issues. Making 'Code refactoring' optional depending on the existing of refactoring or not"
 
   git diff --merge-base origin/$(main_or_master) | \
-    sgpt --no-md --model 'gpt-4o' "$description_command" | tee >(pbcopy)
+    sgpt --no-md --model 'gpt-4o-mini' "$description_command" | tee >(pbcopy)
 }
 
 
