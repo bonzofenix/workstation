@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+mkdir -p moises_result
+moises process file instrumental "$1" moises_result
