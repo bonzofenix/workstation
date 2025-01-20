@@ -1,0 +1,7 @@
+# cf2go
+#
+#
+brew tap "cloudfoundry/cp-core" "https://github.tools.sap/cloudfoundry/homebrew-cp-core.git"
+
+brew "cf2go"
+

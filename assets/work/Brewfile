@@ -71,8 +71,6 @@ brew "git"
 tap "git-duet/tap"
 brew "git-duet"
 
-# cf2go
-brew "cf2go"
 
 # Ripgrep
 brew "ripgrep"

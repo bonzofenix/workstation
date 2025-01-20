@@ -10,7 +10,6 @@ brew doctor || :
 sudo chown -R $(whoami) /usr/local/bin
 brew upgrade
 brew cleanup
-brew tap "cloudfoundry/cp-core" "https://github.tools.sap/cloudfoundry/homebrew-cp-core.git"
 brew bundle --file  $SCRIPT_DIR/../assets/work/Brewfile
 
 add_to_profile '# Homebrew Path' \
