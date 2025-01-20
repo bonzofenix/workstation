@@ -31,9 +31,6 @@ defaults -currentHost write com.apple.screensaver moduleDict -dict moduleName -s
 defaults write com.apple.dock "wvous-bl-corner" -int 5
 defaults write com.apple.dock "wvous-bl-modifier" -int 0
 
-# Safari Show status bar
-defaults write com.apple.Safari ShowStatusBar -bool true
-
 # Open Terminal with /bin/bash
 defaults write com.apple.Terminal Shell -string "/bin/bash"
 
