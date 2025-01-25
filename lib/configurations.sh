@@ -28,6 +28,10 @@ echo "Configures asdf golang mod version"
 add_to_profile '# Sets asdf golang' \
                'export ASDF_GOLANG_MOD_VERSION_ENABLED=true'
 
+echo "Configures git duet to set git user config"
+add_to_profile '# Sets git duet' \
+               'export GIT_DUET_SET_GIT_USER_CONFIG=1'
+
 echo "adds local bin to path"
 add_to_profile '# Adds local bin to path' \
                'path=("$HOME/.local/bin" $path)'
