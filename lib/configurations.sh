@@ -95,7 +95,7 @@ add_to_profile '# configure GPG' \
 echo 'Enabling TMUX to run by default'
 if ! grep -q 'TMUX' ~/.bash_profile; then
 add_to_profile '# Adding tmux to run by default on new terminal' \
-               '[ -z $TMUX ] && /usr/local/bin/tmux new -As base'
+               '[ -z $TMUX ] && /opt/homebrew/bin/tmux new -As base'
 fi
 
 echo "Enables z shell plugin"
