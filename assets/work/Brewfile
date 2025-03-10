@@ -94,6 +94,8 @@ cask "1password-cli"
 
 brew "watch"
 
+brew "htop"
+
 brew "rsync"
 
 cask "spotify"
