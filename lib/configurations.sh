@@ -120,6 +120,9 @@ add_to_rc '# Adds direnv hook' \
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
 
+add_to_profile '# sets editor' \
+               'export CGO_ENABLED=1'
+
 if `hash direnv`; then
   add_to_profile '# Load direnv' \
                  'eval "$( direnv hook bash )"'
