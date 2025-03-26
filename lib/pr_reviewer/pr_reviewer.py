@@ -49,12 +49,29 @@ def main(url: str, token: str, gh_token: str):
     if not gh_token:
         raise click.UsageError("GitHub token is required")
     files = fetch_file_contexts(url, gh_token)
+
+    m = re.search(r"github\.tools\.sap/([^/]+)/([^/]+)/pull/(\d+)", url)
+    org, repo, pr_number = m.groups()
+    out_path = Path(f"reviews/{org}-{repo}-pr{pr_number}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    output = []
     click.echo(f"Reviewing {len(files)} files...")
     for path, content in files.items():
         click.echo(f"Processing: {path}")
         suggestion = suggest_review(path, content)
-        click.echo(f"{path}:\n{suggestion}\n")
+        output.append(f"## {path}:\n{suggestion}\n")
+        output.append(f"\n")
+
+    out_path.write_text("\n".join(output))
+    click.echo(f"Written to: {out_path}")
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
 
