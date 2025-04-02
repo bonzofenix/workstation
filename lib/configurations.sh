@@ -58,23 +58,6 @@ ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
 
 
 
-echo "Installing VIM configs"
-[ -d ~/.vim ] && rm -rf ~/.vim
-ln -fs $WORKSTATION_DIR/assets/vim ~/.vim
-
-echo "Create symlink for vimrc"
-[ -e ~/.vimrc ] && rm -f ~/.vimrc
-ln -fs $WORKSTATION_DIR/assets/vim/vimrc ~/.vimrc
-
-
-echo 'Setting LANG for UTF-8 tmux support'
-add_to_profile '# Setting UTF-8 tmux support' \
-               'export LANG=en_US.UTF-8'
-
-vim -c ":GoInstallBinaries" -c ":q" - </dev/null
-
-
-
 echo "Allowing history to track lines beginning with whitespace"
 add_to_profile '# Only ignore duplicates in history' \
                'export HISTCONTROL=ignoredups'
@@ -145,8 +128,15 @@ fi
 add_to_profile '# sets devbox' \
                'eval "$(devbox global shellenv)"'
 
-mkdir -p ~/.config
-ln -fs $WORKSTATION_DIR/assets/nvim ~/.config/nvim
+echo "Installing NeoVim configs"
+[ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
+ln -fs $WORKSTATION_DIR/assets/config/nvim ~/.config/nvim
+
+echo 'Setting LANG for UTF-8 tmux support'
+add_to_profile '# Setting UTF-8 tmux support' \
+               'export LANG=en_US.UTF-8'
+
+vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 
 
 echo "create symlink to icloud folder"

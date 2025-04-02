@@ -14,6 +14,7 @@ Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'morhetz/gruvbox'
 Plug 'dhruvasagar/vim-zoom'
+Plug 'nvim-treesitter/nvim-treesitter'
 
 call plug#end()
 
@@ -53,8 +54,8 @@ set numberwidth=1
 highlight LineNr ctermfg=LightGray
 
 " Fix folded code highlighting
-highlight clear folded
-highlight folded term=bold ctermfg=4 guifg=DarkBlue
+" highlight clear folded
+" highlight folded term=bold ctermfg=4 guifg=DarkBlue
 
 
 " Set autorisize of panes
@@ -73,9 +74,9 @@ colorscheme gruvbox
 " parameters when we don't match an autocommand.
 set modeline
 
-autocmd FileType go setlocal foldmethod=syntax
-autocmd FileType yaml setlocal foldmethod=indent
-syntax on
+"autocmd FileType go setlocal foldmethod=syntax
+"autocmd FileType yaml setlocal foldmethod=indent
+"syntax on
 
 " Turn off stupid cindent rules, until I can figure out
 " how to customize them to my coding style.
@@ -152,8 +153,6 @@ imap <silent> <C-l> <Plug>(copilot-accept-word)
 
 """   ;pc - Opposite of ;cp - turns on non-printing chars
 map ;pc :set number<CR>:set list<CR>
-
-set pastetoggle=<F2>
 
 """
 """
@@ -240,7 +239,7 @@ let g:go_fmt_experimental = 1
 au FileType go nmap gd <Plug>(go-def-vertical)
 au FileType go nmap gr <Plug>(go-referrers)
 au FileType go nmap <leader>t <Plug>(go-test)
-au FileType go set autowrite
+"au FileType go set autowrite
 
 " Find files using Telescope command-line sugar.
 nnoremap <leader>ff <cmd>Telescope find_files<CR>

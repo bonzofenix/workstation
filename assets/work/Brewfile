@@ -82,8 +82,15 @@ brew "asdf"
 brew "neovim"
 
 
+tap "josephpage/jetpack-io"
+brew "devbox"
+
 # fuck
 brew "thefuck"
+
+brew "pam-reattach"
+
+brew "ripgrep"
 
 # reattach-to-user-namespace
 brew "reattach-to-user-namespace"
@@ -102,8 +109,6 @@ cask "spotify"
 
 cask "microsoft-teams"
 
-cask "nordvpn"
-
 cask "caffeine"
 
 cask "git-credential-manager"
@@ -112,9 +117,6 @@ cask "cool-retro-term"
 
 # Browsers
 cask "obsidian"
-
-cask "citrix-workspace"
-
 
 cask "visual-studio-code"
 
