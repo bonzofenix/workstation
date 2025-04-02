@@ -32,6 +32,18 @@ echo "Configures git duet to set git user config"
 add_to_profile '# Sets git duet' \
                'export GIT_DUET_SET_GIT_USER_CONFIG=1'
 
+echo "Configure homebrew to not show env hints"
+add_to_profile '# set homebrew no env hints' \
+               'export HOMEBREW_NO_ENV_HINTS=1'
+
+echo "Configure homebrew to not install cleanup"
+add_to_profile '# set homebrew no install cleanup' \
+               'export HOMEBREW_NO_INSTALL_CLEANUP=1'
+
+echo "Configure homebrew to not auto update"
+add_to_profile '# set homebrew no auto update' \
+               'export HOMEBREW_NO_AUTO_UPDATE=1'
+
 echo "adds local bin to path"
 add_to_profile '# Adds local bin to path' \
                'path=("$HOME/.local/bin" $path)'
