@@ -74,10 +74,6 @@ colorscheme gruvbox
 " parameters when we don't match an autocommand.
 set modeline
 
-"autocmd FileType go setlocal foldmethod=syntax
-"autocmd FileType yaml setlocal foldmethod=indent
-"syntax on
-
 " Turn off stupid cindent rules, until I can figure out
 " how to customize them to my coding style.
 set nocindent
@@ -234,6 +230,7 @@ let g:go_def_mode='gopls'
 let g:go_def_reuse_buffer = 1
 let g:go_test_timeout = '30s'
 let g:go_fmt_experimental = 1
+" let g:go_fold_enable = 0
 
 
 au FileType go nmap gd <Plug>(go-def-vertical)
