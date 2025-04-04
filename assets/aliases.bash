@@ -64,3 +64,5 @@ alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=
 commit_command="Generate a concise git commit message that summarizes the key changes. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes"
 alias autocommit="MSG=\"\$(git diff --staged | sgpt '$commit_command')\" && git commit -e -m \${MSG}"
 alias autoreset="git reset --soft HEAD~1; autocommit"
+
+alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
