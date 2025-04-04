@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Temp files
+enc_file=$(mktemp --suffix=.gpg)
+dec_file=$(mktemp)
+
+vim "$enc_file"
+
+if gpg --quiet --batch --yes --output "$dec_file" --decrypt "$enc_file"; then
+  echo "✅ Decryption succeeded. Opening result in Vim..."
+  cat "$dec_file"
+else
+  echo "❌ GPG decryption failed." >&2
+fi
+
+rm -f "$enc_file" "$dec_file"
