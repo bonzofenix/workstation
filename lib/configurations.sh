@@ -52,6 +52,11 @@ echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
                'path=("opt/homebrew/opt/openssl@1.1/bin" $path)'
 
+echo 'Adding ASDF env vars to path'
+add_to_profile '# Adding ASDF env vars to path' \
+               'export ASDFROOT=$HOME/.asdf' \
+               'export ASDFINSTALLS=$HOME/.asdf/installs'
+
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
