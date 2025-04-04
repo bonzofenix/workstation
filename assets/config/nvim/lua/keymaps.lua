@@ -18,6 +18,9 @@ keymap("n", "<leader>r", ":%s/\\<<C-r><C-w>\\>//gc<left><left><left>")
 -- Zoom
 vim.cmd [[map <leader>z <Plug>(zoom-toggle)]]
 
+-- Git blame
+vim.cmd [[map <leader>g :Git blame<Enter>]]
+
 -- Copilot navigation
 vim.cmd [[
 imap <silent> <C-j> <Plug>(copilot-next)
