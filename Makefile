@@ -6,7 +6,7 @@ DEBUG?=false
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
 
-install: cache-password homebrew git git-aliases configurations osx-configurations
+install: cache-password homebrew git git-aliases configurations osx-configurations nix
 	@echo "Reloading Bash..."
 	@source ~/.bash_profile
 
