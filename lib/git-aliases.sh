@@ -27,6 +27,7 @@ git config --global alias.drv = duet-revert
 git config --global alias.dmg duet-merge
 git config --global alias.drh "rebase -i --exec 'git duet-commit --amend --reset-author'"
 git config --global alias.up 'pull --rebase --autostash'
+git config --global alias.discard '!git restore -p && git clean -i'
 git config --global alias.logout 'credential-cache exit'
 git config --global diff.patience true
 git config --global color.ui true
