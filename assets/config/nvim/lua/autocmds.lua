@@ -32,9 +32,13 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "set expandtab ts=4",
 })
 
+-- auto-convert tabs to spaces on save
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = general,
   pattern = "*",
-  command = [[%s/\s\+$//e]],
+  callback = function()
+    if vim.bo.expandtab then
+      vim.cmd("retab")
+    end
+  end,
 })
 
