@@ -1,8 +1,9 @@
--- ~/.config/nvim/lua/options.lua
-vim.opt.tabstop = 2
-vim.opt.softtabstop = 2
-vim.opt.shiftwidth = 2
-vim.opt.expandtab = true
+--Set indentation behavior for 2 spaces
+vim.opt.tabstop = 2        -- Visual tab width (2 spaces)
+vim.opt.softtabstop = 2    -- How many spaces a tab feels like when editing
+vim.opt.shiftwidth = 2     -- Number of spaces for indentation
+vim.opt.expandtab = true   -- Use spaces instead of tabs
+
 vim.opt.autoindent = true
 vim.opt.formatoptions:append("o")
 vim.opt.hlsearch = true
