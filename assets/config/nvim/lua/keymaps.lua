@@ -8,6 +8,12 @@ keymap("n", "<leader>fg", "<cmd>Telescope live_grep<cr>")
 keymap("n", "<leader>fb", "<cmd>Telescope buffers<cr>")
 keymap("n", "<leader>fh", "<cmd>Telescope help_tags<cr>")
 keymap("n", "<leader>gw", "<cmd>Telescope grep_string<cr>")
+keymap("n", "<leader>gW", function()
+  local word = vim.fn.expand("<cWORD>")
+  require('telescope.builtin').grep_string({ search = word })
+end, { desc = "Grep WORD under cursor" })
+
+
 
 -- go back to last buffer
 vim.keymap.set("n", "gb", "<cmd>b#<CR>", { desc = "Go back to previous buffer" })
