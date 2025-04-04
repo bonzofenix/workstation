@@ -17,6 +17,8 @@ make install
 
 - [ ] Adds flags for config only
 - [ ] Allow provisioning of dotfiles repo to pull
+- [ ] make this colorscheme available: molokai.vim, paramount.vim
+
 
 ## FAQ and Troubleshooting
 
