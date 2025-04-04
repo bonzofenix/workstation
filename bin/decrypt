@@ -6,7 +6,7 @@ set -euo pipefail
 enc_file=$(mktemp --suffix=.gpg)
 dec_file=$(mktemp)
 
-vim "$enc_file"
+nvim "$enc_file"
 
 if gpg --quiet --batch --yes --output "$dec_file" --decrypt "$enc_file"; then
   echo "✅ Decryption succeeded. Opening result in Vim..."
