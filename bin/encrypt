@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+recipients=$(gpg --list-keys --with-colons | awk -F: '/^uid/ { print $10 }' | sort -u)
+recipient=$(echo "$recipients" | gum choose --header="🔐 **Choose a GPG recipient to encrypt to:**")
+
+if [[ -z "$recipient" ]]; then
+  echo "❌ No recipient selected. Exiting." >&2
+  exit 1
+fi
+
+signing_keys=$(gpg --list-secret-keys --with-colons | awk -F: '/^uid/ { print $10 }' | sort -u)
+signing_key=$(echo "$signing_keys" | gum choose --header="✍️ **Choose a GPG signing key:**")
+
+if [[ -z "$signing_key" ]]; then
+  echo "❌ No signing key selected. Exiting." >&2
+  exit 1
+fi
+
+plain_file=$(mktemp)
+enc_file=$(mktemp --suffix=.gpg)
+
+nvim "$plain_file"
+
+if gpg --encrypt --sign --armor -u "$signing_key" -r "$recipient" --output "$enc_file" "$plain_file"; then
+  echo "✅ Encrypted and signed to: $recipient with key: $signing_key"
+  cat "$enc_file"
+else
+  echo "❌ Encryption or signing failed." >&2
+fi
+
+rm -f "$plain_file" "$enc_file"
+
