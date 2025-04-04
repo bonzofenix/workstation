@@ -32,7 +32,14 @@ return require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" },
     cmd = "Telescope",
     config = function()
-      require("telescope").setup()
+      require('telescope').setup({
+        pickers = {
+          find_files = {
+            hidden = true,
+            file_ignore_patterns = { "^.git/" },
+          }
+        }
+      })
     end,
   },
 
