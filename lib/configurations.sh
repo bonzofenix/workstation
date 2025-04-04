@@ -135,6 +135,8 @@ echo "Installing NeoVim configs"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
 ln -fs $WORKSTATION_DIR/assets/config/nvim ~/.config/nvim
 
+git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
+
 echo 'Setting LANG for UTF-8 tmux support'
 add_to_profile '# Setting UTF-8 tmux support' \
                'export LANG=en_US.UTF-8'
