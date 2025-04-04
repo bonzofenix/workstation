@@ -3,40 +3,36 @@ SHELL := /bin/bash
 NO_BREW?=false
 DEBUG?=false
 
-.PHONY: install
-install: cache-password homebrew asdf git git-aliases configurations osx-configurations
+# This will grab all targets in the Makefile and make them PHONY
+.PHONY: $(MAKECMDGOALS)
+
+install: cache-password homebrew git git-aliases configurations osx-configurations
 	@echo "Reloading Bash..."
 	@source ~/.bash_profile
 
-.PHONY: cache-password
 cache-password:
 	@echo "Caching password..."
 	@sudo -K
 	@sudo true;
 
-.PHONY: homebrew
 homebrew:
 	@NO_BREW="${NO_BREW}" DEBUG="${DEBUG}" ./lib/homebrew.sh
 
 block-content:
 	@DEBUG="${DEBUG}" ./lib/block-content.sh
 
-.PHONY: git-aliases
+nix:
+	@DEBUG="${DEBUG}" ./lib/nix.sh
+
 git-aliases:
 	@DEBUG="${DEBUG}" ./lib/git-aliases.sh
 
-.PHONY: configurations
 configurations:
 	@DEBUG="${DEBUG}" ./lib/configurations.sh
 
-.PHONY: osx-configurations
 osx-configurations:
 	@DEBUG="${DEBUG}" ./lib/osx-configurations.sh
 
-.PHONY: asdf
-asdf:
-	@DEBUG="${DEBUG}" ./lib/asdf.sh
 
-.PHONY: git
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
