@@ -28,7 +28,7 @@ gh search prs --author=@me --state=open --json number,repository,title | jq -c '
   red=$(echo "$checks" | grep -c "FAILURE" || true)
   running=$(echo "$checks" | grep -c "IN_PROGRESS" || true)
 
-  choices+=("${repo} -${number} - [✅$green ❌$red ⏳$running] ${title}")
+  choices+=("${repo} - ${number} - [✅$green ❌$red ⏳$running] ${title}")
 done
 
 [[ ${#choices[@]} -eq 0 ]] && echo "No open PRs found" && exit 0
@@ -36,9 +36,11 @@ done
 selected_pr=$(printf "%s\n" "${choices[@]}" | gum choose)
 [[ -z "$selected_pr" ]] && exit 1
 
-pr_number=$(echo "$selected_pr" | awk '{print $1}')
-repo_name=$(echo "$selected_pr" | awk '{print $2}')
+repo_name=$(echo "$selected_pr" | awk -F' - ' '{print $1}')
+pr_number=$(echo "$selected_pr" | awk -F' - ' '{print $2}')
+
 
 echo "$github_hostname/$repo_name"
+
 gh pr view -w "$pr_number" -R "$repo_name"
 
