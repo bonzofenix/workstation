@@ -2,45 +2,64 @@
 
 set -eu
 
+WATCH=0
+while getopts "w" opt; do
+  case $opt in
+    w) WATCH=1 ;;
+  esac
+done
+
 cd "$OLDPWD"
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 
-[[ -z "$repo_root" ]] && echo "Not inside a git repo" && exit 1
+if [[ -z "$repo_root" ]]; then
+  echo "Not inside a git repo"
+  exit 1
+fi
+
 cd "$repo_root"
 
-remote_url=$(git config --get remote.origin.url)
-[[ -z "$remote_url" ]] && echo "Could not get remote.origin.url" && exit 1
+remote_url=$(git config --get remote.origin.url || echo "")
+if [[ -z "$remote_url" ]]; then
+  echo "Could not get remote.origin.url"
+  exit 1
+fi
 
 github_hostname=$(echo "$remote_url" | sed -E 's#(git@|https://)([^/:]+).*#\2#')
-
 echo "Fetching PRs for $github_hostname"
 
 export GH_HOST="$github_hostname"
 
 choices=()
-gh search prs --author=@me --state=open --json number,repository,title | jq -c '.[]' | while read -r pr; do
-  number=$(echo "$pr" | jq -r '.number')
-  repo=$(echo "$pr" | jq -r '.repository.nameWithOwner')
-  title=$(echo "$pr" | jq -r '.title')
+while IFS= read -r pr; do
+  number=$(jq -r '.number' <<<"$pr")
+  repo=$(jq -r '.repository.nameWithOwner' <<<"$pr")
+  title=$(jq -r '.title' <<<"$pr")
 
   checks=$(gh pr checks "$number" -R "$repo" --json state 2>/dev/null | jq -r '.[].state // "UNKNOWN"')
-  green=$(echo "$checks" | grep -c "SUCCESS" || true)
-  red=$(echo "$checks" | grep -c "FAILURE" || true)
-  running=$(echo "$checks" | grep -c "IN_PROGRESS" || true)
+  green=$(grep -c "SUCCESS" <<<"$checks" || true)
+  red=$(grep -c "FAILURE" <<<"$checks" || true)
+  running=$(grep -c "IN_PROGRESS" <<<"$checks" || true)
 
   choices+=("${repo} - ${number} - [✅$green ❌$red ⏳$running] ${title}")
-done
+done < <(gh search prs --author=@me --state=open --json number,repository,title | jq -c '.[]')
 
-[[ ${#choices[@]} -eq 0 ]] && echo "No open PRs found" && exit 0
+if [[ ${#choices[@]} -eq 0 ]]; then
+  echo "No open PRs found"
+  exit 0
+fi
+
+if [[ "$WATCH" -eq 1 ]]; then
+  printf "%s\n" "${choices[@]}"
+  exit 0
+fi
 
 selected_pr=$(printf "%s\n" "${choices[@]}" | gum choose)
 [[ -z "$selected_pr" ]] && exit 1
 
-repo_name=$(echo "$selected_pr" | awk -F' - ' '{print $1}')
-pr_number=$(echo "$selected_pr" | awk -F' - ' '{print $2}')
-
+repo_name=$(awk -F' - ' '{print $1}' <<<"$selected_pr")
+pr_number=$(awk -F' - ' '{print $2}' <<<"$selected_pr")
 
 echo "$github_hostname/$repo_name"
-
 gh pr view -w "$pr_number" -R "$repo_name"
 
