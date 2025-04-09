@@ -16,7 +16,10 @@ return require("lazy").setup({
   { "preservim/vim-markdown" },
 
   -- Copilot
-  { "github/copilot.vim" },
+  { "github/copilot.vim",
+    lazy = false,
+    build = ":Copilot setup"
+  },
 
   -- Go development
   { "fatih/vim-go",
