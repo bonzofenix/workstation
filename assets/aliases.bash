@@ -44,12 +44,6 @@ alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0:1" out.mp4'
 
 alias docker_prune='sudo docker system prune -a'
 
-alias trading='tmuxp load -y trading'
-alias tango='tmuxp load -y tango'
-alias reading='tmuxp load -y reading'
-alias fitness='tmuxp load -y fitness'
-alias bitex='tmuxp load -y bitex'
-
 alias amend='git amend && git push -f'
 alias k9s='k9s --context foo'
 alias dammit='git commit --amend --no-edit --reset-author && git push -f'
