@@ -41,3 +41,8 @@ map ;n GoZ<Esc>:g/^[ <Tab>]*$/.,/[^ <Tab>]/-j<CR>Gdd
 map ;c :,s/^[ <Tab>]*//g<CR>i
 ]]
 
+-- open location list with diagnostics
+vim.keymap.set('n', '<leader>ll', function()
+  vim.diagnostic.setloclist()
+  vim.cmd('lopen')
+end, { desc = "Open location list with diagnostics" })
