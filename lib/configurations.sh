@@ -57,9 +57,12 @@ add_to_profile '# Adding ASDF env vars to path' \
                'export ASDFROOT=$HOME/.asdf' \
                'export ASDFINSTALLS=$HOME/.asdf/installs'
 
+
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
+
 
 
 
