@@ -2,10 +2,8 @@
 
 # misc #
 alias authors="vim ~/.git-authors"
-alias grep="grep --color=auto"
-alias fgrep="fgrep --color=auto"
-alias egrep="egrep --color=auto"
-alias grpe='grep'
+
+alias default-interface="route get default | grep interface"
 
 alias tree="tree -I 'node_modules|site|Godeps|vendor'"
 
@@ -60,3 +58,6 @@ alias autocommit="MSG=\"\$(git diff --staged | sgpt '$commit_command')\" && git 
 alias autoreset="git reset --soft HEAD~1; autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
+
+alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " -f2 | gum choose --limit 1)'
+
