@@ -3,3 +3,4 @@ assets/vim/bundle/ctrlp.vim/.netrwhist
 *.swp
 assets/nvim/nvim
 assets/vim/plugged/
+lib/pr_reviewer/reviews
