@@ -103,7 +103,7 @@ fi
 
 echo "Enables z shell plugin"
 add_to_profile '# Enables z shell plugin' \
-	". $WORKSTATION_DIR/bin/z.sh"
+  ". $WORKSTATION_DIR/bin/z.sh"
 
 echo "sets vi mode for bash"
 add_to_profile '# sets vi mode' \
