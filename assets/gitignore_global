@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# Editor junk
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Rust
+target/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+

@@ -26,6 +26,11 @@ git config color.status.header "white normal dim"
 git config --global color.status.untracked "magenta"
 
 
+echo "Setting up global gitignore"
+[ -e ~/.gitignore_global ] && rm -f ~/.gitignore_global 
+git config --global core.excludesFile ~/.gitignore_global
+ln -fs $WORKSTATION_DIR/assets/gitignore_global ~/.gitignore_global
+
 # Force unset osxkeychain cache
 git config --system --unset credential.helper
 
