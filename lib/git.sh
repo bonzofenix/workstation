@@ -35,7 +35,7 @@ ln -fs $WORKSTATION_DIR/assets/gitignore_global ~/.gitignore_global
 git config --system --unset credential.helper
 
 echo  "Configuring authors file"
-[ -e ~/.authors ] && rm -f ~/.authors
-ln -fs $WORKSTATION_DIR/assets/git-authors ~/.git-authors
+[ -e ~/.authors ] || echo "Complete and replace ~/.git-authors with your own authors file. Find template at $WORKSTATION_DIR/assets/git-authors"
+
 
 set -e
