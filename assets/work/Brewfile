@@ -121,3 +121,5 @@ cask "obsidian"
 cask "visual-studio-code"
 
 
+tap "hashicorp/tap"
+brew "hashicorp/tap/vault"
