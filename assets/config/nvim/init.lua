@@ -20,6 +20,9 @@ require("autocmds")
 -- Load your keymaps
 require("keymaps")
 
+-- Load your commands
+require("commands")
+
 -- Load your colorscheme
 vim.cmd.colorscheme("gruvbox")
 
