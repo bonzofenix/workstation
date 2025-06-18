@@ -79,6 +79,10 @@ add_to_profile '# Infinite bash history' \
                'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"'
 
 
+add_to_profile '# Enable bash completion' \
+               'export BASH_DEFAULT_TIMEOUT_MS=900000' \
+               'export BASH_MAX_TIMEOUT_MS=900000' 
+
 echo "Configuring custom aliases"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
 ln -fs $WORKSTATION_DIR/assets/aliases.bash ~/.aliases.bash
