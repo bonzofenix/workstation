@@ -65,6 +65,7 @@ brew "yq"
 
 # Git
 brew "git"
+brew "git-filter-repo"
 
 # Git Duet
 tap "git-duet/tap"
