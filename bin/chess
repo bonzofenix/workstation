@@ -1,0 +1,194 @@
+#!/bin/bash
+
+# Chess clock script - manages two timers that alternate on pause
+
+#--- Configuration ---
+CHESS_FILE="${HOME}/.local/share/chess"
+CHESS_CONFIG="${CHESS_FILE}.config"
+
+#--- Chess functions ---
+
+function chess_start {
+    # Start new chess game with time in hours
+    local hours="${1:-1}"
+    local seconds=$((hours * 3600))
+
+    test -e "$(dirname -- "$CHESS_FILE")" || mkdir -p "$(dirname -- "$CHESS_FILE")"
+
+    # Initialize both clocks with same time, white goes first
+    echo "WHITE_TIME=$seconds" > "$CHESS_CONFIG"
+    echo "BLACK_TIME=$seconds" >> "$CHESS_CONFIG"
+    echo "ACTIVE=WHITE" >> "$CHESS_CONFIG"
+    echo "$(date +%s)" > "$CHESS_FILE"
+
+    echo "Chess clock started: ${hours}h per player"
+}
+
+function chess_stop {
+    # Stop chess game
+    rm -f "$CHESS_FILE" "$CHESS_CONFIG"
+    echo "Chess clock stopped"
+}
+
+function chess_pause {
+    # Switch active player (pause current, start other)
+    if [[ ! -f "$CHESS_FILE" ]]; then
+        echo "No active chess game"
+        return 1
+    fi
+
+    # Load config
+    source "$CHESS_CONFIG"
+
+    # Calculate elapsed time since last pause
+    local last_time=$(cat "$CHESS_FILE")
+    local now=$(date +%s)
+    local elapsed=$((now - last_time))
+
+    # Deduct time from active player
+    if [[ "$ACTIVE" == "WHITE" ]]; then
+        WHITE_TIME=$((WHITE_TIME - elapsed))
+        ACTIVE="BLACK"
+    else
+        BLACK_TIME=$((BLACK_TIME - elapsed))
+        ACTIVE="WHITE"
+    fi
+
+    # Check for time out
+    if [[ $WHITE_TIME -le 0 ]]; then
+        echo "White ran out of time! Black wins!"
+        chess_stop
+        return
+    elif [[ $BLACK_TIME -le 0 ]]; then
+        echo "Black ran out of time! White wins!"
+        chess_stop
+        return
+    fi
+
+    # Save new state
+    echo "WHITE_TIME=$WHITE_TIME" > "$CHESS_CONFIG"
+    echo "BLACK_TIME=$BLACK_TIME" >> "$CHESS_CONFIG"
+    echo "ACTIVE=$ACTIVE" >> "$CHESS_CONFIG"
+    echo "$now" > "$CHESS_FILE"
+}
+
+function chess_continue {
+    # Alias for pause (since pause switches between players)
+    chess_pause
+}
+
+function chess_clock {
+    # Display current time for both players
+    if [[ ! -f "$CHESS_FILE" ]]; then
+        echo "  --:--:-- --:--:--"
+        return
+    fi
+
+    # Load config
+    source "$CHESS_CONFIG"
+
+    # Calculate current time for active player
+    local last_time=$(cat "$CHESS_FILE")
+    local now=$(date +%s)
+    local elapsed=$((now - last_time))
+
+    local white_time=$WHITE_TIME
+    local black_time=$BLACK_TIME
+
+    if [[ "$ACTIVE" == "WHITE" ]]; then
+        white_time=$((WHITE_TIME - elapsed))
+        [[ $white_time -lt 0 ]] && white_time=0
+    else
+        black_time=$((BLACK_TIME - elapsed))
+        [[ $black_time -lt 0 ]] && black_time=0
+    fi
+
+    # Format times
+    local white_hours=$((white_time / 3600))
+    local white_mins=$(((white_time % 3600) / 60))
+    local white_secs=$((white_time % 60))
+
+    local black_hours=$((black_time / 3600))
+    local black_mins=$(((black_time % 3600) / 60))
+    local black_secs=$((black_time % 60))
+
+    # Add indicator for active player
+    local white_prefix="W"
+    local black_prefix="B"
+
+    if [[ "$ACTIVE" == "WHITE" ]]; then
+        white_prefix="W*"
+    else
+        black_prefix="B*"
+    fi
+
+    printf "%3s%02d:%02d:%02d %3s%02d:%02d:%02d\n" \
+        "$white_prefix" $white_hours $white_mins $white_secs \
+        "$black_prefix" $black_hours $black_mins $black_secs
+}
+
+function chess_status {
+    # Continuously display clock
+    while true; do
+        chess_clock
+        sleep 1
+    done
+}
+
+function chess_usage {
+    cat <<END
+chess [-h] [start HOURS | stop | pause | continue | clock | status | usage]
+
+chess - a simple chess clock timer.
+
+Actions:
+
+start HOURS
+    Start a new chess game with HOURS per player (default: 1).
+stop
+    Stop the current chess game.
+pause
+    Switch to the other player's clock.
+continue
+    Same as pause - switch to the other player's clock.
+clock
+    Display current time remaining for both players.
+    Format: WHH:MM:SS BHH:MM:SS
+    An asterisk (*) indicates the active player.
+status
+    Continuously display the clock status.
+usage
+    Print this usage message.
+
+-h
+    Print this usage message.
+END
+}
+
+#--- Command-line interface ---
+
+action=
+while getopts h arg; do
+    case $arg in
+        h|?)
+            action=usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+actions="start stop pause continue clock status usage"
+for act in $actions; do
+    if [[ $act == "$1" ]]; then
+        action=$act
+        shift
+        break
+    fi
+done
+
+if [[ -n $action ]]; then
+    chess_"$action" "$@"
+else
+    [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
+    chess_usage
+fi
