@@ -42,10 +42,7 @@ fi
 #--- Configuration (can be set via environment variables) ---
 
 [[ -n $POMO_FILE ]] && POMO=$POMO_FILE || POMO=$HOME/.local/share/pomo
-
-# if pomo_work_Time variable is not set, then set it to the default value
-WORK_TIME="${POMO_WORK_TIME:-50}"
-BREAK_TIME=${POMO_BREAK_TIME:-10}
+POMO_CONFIG="${POMO}.config"
 
 #--- Pomodoro functions ---
 
@@ -57,11 +54,14 @@ function pomo_start {
     set +e
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
+    # Save work and break times to config
+    echo "WORK_TIME=$WORK_TIME" > "$POMO_CONFIG"
+    echo "BREAK_TIME=$BREAK_TIME" >> "$POMO_CONFIG"
 }
 
 function pomo_stop {
     # Stop pomo cycles.
-    rm -f "$POMO"
+    rm -f "$POMO" "$POMO_CONFIG"
 }
 
 function pomo_ispaused {
@@ -260,13 +260,41 @@ while getopts h arg; do
 done
 shift $((OPTIND-1))
 
+# Load saved config if it exists (for clock, status, etc to use saved times)
+if [[ -f "$POMO_CONFIG" ]]; then
+    source "$POMO_CONFIG"
+else
+    # Use defaults or environment values
+    WORK_TIME="${POMO_WORK_TIME:-25}"
+    BREAK_TIME=${POMO_BREAK_TIME:-5}
+fi
+
+# Check if first argument is an action
 actions="start stop pause clock usage notify status"
 for act in $actions; do
     if [[ $act == "$1" ]]; then
         action=$act
+        shift
         break
     fi
 done
+
+# If action is start, check for custom work and break times (these override saved config)
+if [[ "$action" == "start" ]]; then
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        WORK_TIME="$1"
+        shift
+        if [[ "$1" =~ ^[0-9]+$ ]]; then
+            BREAK_TIME="$1"
+            shift
+        else
+            BREAK_TIME=${POMO_BREAK_TIME:-5}
+        fi
+    else
+        WORK_TIME="${POMO_WORK_TIME:-25}"
+        BREAK_TIME=${POMO_BREAK_TIME:-5}
+    fi
+fi
 
 if [[ -n $action ]]; then
     pomo_"$action"
