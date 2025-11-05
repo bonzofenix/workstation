@@ -3,9 +3,11 @@
 set -eu
 
 ALL=0
-while getopts "aw" opt; do
+RAW=0
+while getopts "awr" opt; do
   case $opt in
     a) ALL=1 ;;
+    r) RAW=1 ;;
   esac
 done
 
@@ -47,7 +49,13 @@ while IFS= read -r pr; do
   running=$(grep -c "IN_PROGRESS" <<<"$checks" || true)
 
   choices+=("${repo} - ${number} - [✅$green ❌$red ⏳$running] ${title}")
-  
+
+  if [[ "$RAW" -eq 1 ]]; then
+    echo "PR #${number}: ${title}"
+    echo "Repository: ${repo}"
+    echo "Link: https://${github_hostname}/${repo}/pull/${number}"
+    echo ""
+  fi
 done < <(gh search prs "${GH_OPTS[@]}" | jq -c '.[]')
 
 if [[ ${#choices[@]} -eq 0 ]]; then
@@ -55,6 +63,9 @@ if [[ ${#choices[@]} -eq 0 ]]; then
   exit 0
 fi
 
+if [[ "$RAW" -eq 1 ]]; then
+  exit 0
+fi
 
 selected_pr=$(printf "%s\n" "${choices[@]}" | gum choose)
 [[ -z "$selected_pr" ]] && exit 1
