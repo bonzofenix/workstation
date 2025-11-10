@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+git fetch --prune
+
+# Find branches that are merged
+merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}')
+
+# Find branches where upstream is gone
+gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}')
+
+# Combine both lists and remove duplicates
+branches=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$')
+
+if [[ -z "$branches" ]]; then
+  echo "No merged or gone branches to delete."
+  exit 0
+fi
+
+echo "The following branches will be deleted:"
+echo "$branches"
+echo
+
+gum confirm "Delete these branches?" || exit 1
+
+echo "$branches" | xargs -n 1 git branch -D
+
+echo "✓ Deleted merged and gone branches"
