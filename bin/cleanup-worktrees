@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+git fetch --prune
+
+# Get list of all worktrees with their branches (excluding main worktree)
+worktrees_info=$(git worktree list --porcelain | awk '
+  BEGIN { skip_first = 1 }
+  /^worktree / {
+    path = $2
+    if (skip_first) {
+      skip_first = 0
+      next
+    }
+  }
+  /^branch / {
+    branch = $2
+    gsub("refs/heads/", "", branch)
+    print branch "|" path
+  }
+')
+
+if [[ -z "$worktrees_info" ]]; then
+  echo "No worktrees found (excluding main worktree)."
+  exit 0
+fi
+
+# Find branches that are merged
+merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+
+# Find branches where upstream is gone
+gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+
+# Combine both lists and remove duplicates
+branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$' || true)
+
+if [[ -z "$branches_to_cleanup" ]]; then
+  echo "No merged or gone branches found. No worktrees to clean up."
+  exit 0
+fi
+
+# Filter worktrees whose branches are in the cleanup list
+worktrees_to_remove=""
+while IFS='|' read -r branch path; do
+  if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
+    worktrees_to_remove+="${branch} (${path})"$'\n'
+  fi
+done <<< "$worktrees_info"
+
+if [[ -z "$worktrees_to_remove" ]]; then
+  echo "No worktrees associated with merged or gone branches."
+  exit 0
+fi
+
+echo "The following worktrees will be deleted:"
+echo "$worktrees_to_remove"
+echo
+
+gum confirm "Delete these worktrees?" || exit 1
+
+# Remove each worktree
+while IFS='|' read -r branch path; do
+  if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
+    echo "Removing worktree: $branch ($path)"
+    git worktree remove "$path" || git worktree remove -f "$path"
+  fi
+done <<< "$worktrees_info"
+
+echo
+if gum confirm "Also delete the associated branches?"; then
+  # Delete the branches
+  while IFS='|' read -r branch path; do
+    if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
+      git branch -D "$branch" 2>/dev/null || true
+    fi
+  done <<< "$worktrees_info"
+  echo "✓ Deleted worktrees and branches"
+else
+  echo "✓ Deleted worktrees (branches preserved)"
+fi
