@@ -50,6 +50,7 @@ git config --global alias.st status
 git config --global alias.di diff --color-words
 git config --global alias.co checkout
 git config --global alias.ci 'duet-commit --signoff'
+git config --global alias.cp 'cherry-pick'
 git config --global alias.br "branch --sort=-committerdate"
 git config --global alias.sta stash
 git config --global alias.llog "log --date=local"
