@@ -60,4 +60,4 @@ alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum
 alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " -f2 | gum choose --limit 1)'
 
 alias [redacted]='[redacted] -iv=[redacted-host]:latest'
-alias product-start-dev-global='python3 <(docker run --rm "[redacted-host]:develop-master" /usr/bin/env startup) --image="[redacted-host]:develop-master"'
+alias product-start-dev-global='python <(docker run --rm "[redacted-host]:develop-master" /usr/bin/env startup) --image="[redacted-host]:develop-master"'
