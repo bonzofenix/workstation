@@ -24,6 +24,9 @@ vim.opt.clipboard = "unnamed"
 vim.opt.splitright = true
 vim.opt.wildmode = { "longest", "list" }
 vim.opt.laststatus = 2
+
+-- Auto-reload files changed outside of Neovim
+vim.opt.autoread = true
 -- vim.g.ackprg = "ag --vimgrep"
 
 -- set up folds through treesitter
