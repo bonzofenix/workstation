@@ -42,3 +42,22 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
+-- Auto-reload files when changed externally
+-- This is especially useful when working with external tools like Claude Code
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+  group = general,
+  callback = function()
+    if vim.fn.mode() ~= "c" then
+      vim.cmd("checktime")
+    end
+  end,
+})
+
+-- Notification when file is changed outside of Neovim
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+  group = general,
+  callback = function()
+    vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN)
+  end,
+})
+
