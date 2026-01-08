@@ -1,15 +1,18 @@
-# ShellCheck Auto-Fix Agent
+# Reviewdog Auto-Fix Agent
 
-An intelligent agent that automatically monitors your PR for shellcheck failures, fixes them using Claude AI, and continuously iterates until all checks pass.
+An intelligent agent that automatically monitors your PR for reviewdog linter failures, fixes them using Claude AI, and continuously iterates until all checks pass.
+
+Supports any linter that reviewdog runs: shellcheck, golangci-lint, eslint, and more.
 
 ## Features
 
 - Automatically detects open PRs for the current branch
-- Runs shellcheck locally to identify issues
-- Uses Claude AI to fix shellcheck violations
+- Runs linters locally to identify issues (currently supports shellcheck)
+- Uses Claude AI to fix linter violations
 - Commits and pushes fixes automatically
-- Continuously monitors until all checks pass
+- Continuously monitors until all reviewdog checks pass
 - Minimal, targeted fixes (doesn't refactor unnecessarily)
+- Works with any GitHub repository
 
 ## Prerequisites
 
@@ -39,8 +42,8 @@ An intelligent agent that automatically monitors your PR for shellcheck failures
 
 2. Copy the agent script:
    ```bash
-   cp shellcheck_agent.py ~/bin/shellcheck-agent
-   chmod +x ~/bin/shellcheck-agent
+   cp reviewdog_agent.py ~/bin/reviewdog-agent
+   chmod +x ~/bin/reviewdog-agent
    ```
 
 3. Install Python dependencies globally or in a virtual environment:
@@ -62,8 +65,8 @@ An intelligent agent that automatically monitors your PR for shellcheck failures
 
 1. Copy and make executable:
    ```bash
-   sudo cp shellcheck_agent.py /usr/local/bin/shellcheck-agent
-   sudo chmod +x /usr/local/bin/shellcheck-agent
+   sudo cp reviewdog_agent.py /usr/local/bin/reviewdog-agent
+   sudo chmod +x /usr/local/bin/reviewdog-agent
    ```
 
 2. Install dependencies:
@@ -75,30 +78,30 @@ An intelligent agent that automatically monitors your PR for shellcheck failures
 
 1. Create a dedicated directory:
    ```bash
-   mkdir -p ~/.local/shellcheck-agent
+   mkdir -p ~/.local/reviewdog-agent
    ```
 
 2. Set up a virtual environment:
    ```bash
-   python3 -m venv ~/.local/shellcheck-agent/venv
-   source ~/.local/shellcheck-agent/venv/bin/activate
+   python3 -m venv ~/.local/reviewdog-agent/venv
+   source ~/.local/reviewdog-agent/venv/bin/activate
    pip install anthropic
    ```
 
 3. Copy the script:
    ```bash
-   cp shellcheck_agent.py ~/.local/shellcheck-agent/
-   chmod +x ~/.local/shellcheck-agent/shellcheck_agent.py
+   cp reviewdog_agent.py ~/.local/reviewdog-agent/
+   chmod +x ~/.local/reviewdog-agent/reviewdog_agent.py
    ```
 
 4. Create a wrapper script in ~/bin:
    ```bash
-   cat > ~/bin/shellcheck-agent << 'EOF'
+   cat > ~/bin/reviewdog-agent << 'EOF'
 #!/bin/bash
-source ~/.local/shellcheck-agent/venv/bin/activate
-python3 ~/.local/shellcheck-agent/shellcheck_agent.py "$@"
+source ~/.local/reviewdog-agent/venv/bin/activate
+python3 ~/.local/reviewdog-agent/reviewdog_agent.py "$@"
 EOF
-   chmod +x ~/bin/shellcheck-agent
+   chmod +x ~/bin/reviewdog-agent
    ```
 
 ## Configuration
@@ -115,7 +118,7 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 2. Create and push a PR (or work on an existing PR)
 3. Run the agent:
    ```bash
-   shellcheck-agent
+   reviewdog-agent
    ```
 
 The agent will:
@@ -142,7 +145,7 @@ You can modify the agent behavior by editing the script:
 
 ### "ANTHROPIC_API_KEY not set"
 - Set the environment variable: `export ANTHROPIC_API_KEY="your-key"`
-- Or pass it when running: `ANTHROPIC_API_KEY="your-key" shellcheck-agent`
+- Or pass it when running: `ANTHROPIC_API_KEY="your-key" reviewdog-agent`
 
 ### "shellcheck: command not found"
 - Install shellcheck: `brew install shellcheck`
@@ -157,17 +160,17 @@ You can modify the agent behavior by editing the script:
 ### Basic usage
 ```bash
 cd ~/my-project
-shellcheck-agent
+reviewdog-agent
 ```
 
 ### Use with a specific API key
 ```bash
-ANTHROPIC_API_KEY="sk-xxx" shellcheck-agent
+ANTHROPIC_API_KEY="sk-xxx" reviewdog-agent
 ```
 
 ### Run in background (with nohup)
 ```bash
-nohup shellcheck-agent > shellcheck-agent.log 2>&1 &
+nohup reviewdog-agent > reviewdog-agent.log 2>&1 &
 ```
 
 ## How It Works

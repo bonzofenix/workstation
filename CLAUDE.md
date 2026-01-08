@@ -19,6 +19,7 @@ make git-aliases      # Setup git aliases
 make configurations   # Link configuration files
 make osx-configurations # Setup macOS preferences
 make nix              # Setup Nix package manager
+make agents           # Install all agent dependencies
 
 # Optional flags
 NO_BREW=true make install  # Skip homebrew installation
@@ -111,6 +112,16 @@ The workstation includes both simple AI-powered scripts and autonomous agents:
 2. Add files: `README.md`, `requirements.txt`, agent script
 3. Create wrapper: `bin/your-agent-name` that calls the agent
 4. Update `lib/agents/README.md`
+5. Run `make agents` to install dependencies
+
+**Agent Installation:**
+- `make agents` finds all `requirements.txt` files in `lib/agents/` and installs them
+- Automatically included in `make install`
+- Uses `pip3 install --user --break-system-packages` for modern Python environments
+- Wrapper scripts in `bin/` use system Python (not Nix/direnv project-specific Python)
+  - Priority order: `~/.asdf/shims/python3`, `~/.asdf/shims/python`, `/opt/homebrew/bin/python3`, `/usr/local/bin/python3`, `/usr/bin/python3`
+  - Unsets `VIRTUAL_ENV` and `PYTHONPATH` to avoid environment conflicts
+  - See `lib/agents/README.md` for wrapper script template
 
 ## Common Development Patterns
 
