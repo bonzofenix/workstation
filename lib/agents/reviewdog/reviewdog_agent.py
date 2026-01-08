@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Automated ShellCheck Fix Agent
+Automated Reviewdog Fix Agent
 
-This agent continuously monitors the current branch's PR for shellcheck failures,
+This agent continuously monitors the current branch's PR for reviewdog linter failures,
 automatically fixes them using Claude API, commits, and pushes until all checks pass.
+Supports any linter that reviewdog runs (shellcheck, golangci-lint, etc.).
 """
 
 import json
@@ -21,7 +22,7 @@ except ImportError:
     sys.exit(1)
 
 
-class ShellCheckAgent:
+class ReviewdogAgent:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize the agent with Claude API credentials."""
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -51,6 +52,28 @@ class ShellCheckAgent:
         if code != 0:
             raise RuntimeError("Failed to get current branch")
         return stdout.strip()
+
+    def _get_repo_info(self) -> Tuple[str, str]:
+        """Get the GitHub org and repo name from git remote."""
+        code, stdout, _ = self._run_command(
+            ["git", "remote", "get-url", "origin"]
+        )
+        if code != 0:
+            raise RuntimeError("Failed to get git remote URL")
+
+        remote_url = stdout.strip()
+
+        # Handle both HTTPS and SSH URLs
+        # SSH: git@github.com:org/repo.git
+        # HTTPS: https://github.com/org/repo.git
+        import re
+        match = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(\.git)?$', remote_url)
+        if not match:
+            raise RuntimeError(f"Could not parse GitHub org/repo from: {remote_url}")
+
+        org = match.group(1)
+        repo = match.group(2)
+        return org, repo
 
     def get_pr_for_branch(self) -> Optional[int]:
         """Get the PR number for the current branch."""
@@ -103,6 +126,7 @@ class ShellCheckAgent:
     def run_shellcheck_locally(self) -> List[Dict]:
         """Run shellcheck locally to get detailed error information."""
         print("Running shellcheck locally to detect issues...")
+        # TODO: This currently only runs shellcheck. Could be extended to run other linters.
 
         # Find all shell scripts
         code, stdout, _ = self._run_command(
@@ -223,7 +247,7 @@ Make minimal changes - only fix the shellcheck issues, don't refactor or change 
 
         return len(fixed_files) > 0
 
-    def commit_and_push(self, message: str = "Fix shellcheck issues"):
+    def commit_and_push(self, message: str = "Fix reviewdog linter issues"):
         """Commit changes and push to the remote branch."""
         print("\nCommitting and pushing changes...")
 
@@ -291,7 +315,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"""
     def run(self, max_iterations: int = 10):
         """Main agent loop."""
         print("=" * 60)
-        print("ShellCheck Auto-Fix Agent")
+        print("Reviewdog Auto-Fix Agent")
         print("=" * 60)
         print(f"Current branch: {self.current_branch}")
 
@@ -303,7 +327,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"""
             return False
 
         print(f"PR number: #{self.pr_number}")
-        print(f"PR URL: https://github.com/cloudfoundry/app-autoscaler/pull/{self.pr_number}")
+
+        # Get repo info for PR URL
+        try:
+            org, repo = self._get_repo_info()
+            print(f"PR URL: https://github.com/{org}/{repo}/pull/{self.pr_number}")
+        except Exception as e:
+            print(f"Note: Could not generate PR URL: {e}")
 
         iteration = 0
         while iteration < max_iterations:
@@ -371,7 +401,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"""
 def main():
     """Entry point for the agent."""
     try:
-        agent = ShellCheckAgent()
+        agent = ReviewdogAgent()
         success = agent.run()
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Wrapper script for Reviewdog Agent
+
+# Get the directory where this script lives
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+AGENT_PATH="$SCRIPT_DIR/../lib/agents/reviewdog/reviewdog_agent.py"
+
+# Check if the agent exists
+if [ ! -f "$AGENT_PATH" ]; then
+    echo "Error: Reviewdog agent not found at $AGENT_PATH"
+    exit 1
+fi
+
+# Find system Python, avoiding Nix/direnv overrides
+# Try common system Python locations (prioritize asdf, then Homebrew, then system)
+SYSTEM_PYTHON=""
+for py_path in "$HOME/.asdf/shims/python3" "$HOME/.asdf/shims/python" /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+    if [ -x "$py_path" ]; then
+        SYSTEM_PYTHON="$py_path"
+        break
+    fi
+done
+
+# Fallback: use PATH but unset Nix/direnv variables first
+if [ -z "$SYSTEM_PYTHON" ]; then
+    # Temporarily unset environment variables that might affect Python resolution
+    SYSTEM_PYTHON=$(env -u VIRTUAL_ENV -u PYTHONPATH -u NIX_PATH which python3 2>/dev/null)
+fi
+
+if [ -z "$SYSTEM_PYTHON" ] || [ ! -x "$SYSTEM_PYTHON" ]; then
+    echo "Error: Could not find system Python3"
+    exit 1
+fi
+
+# Execute the agent with system Python, clearing Nix/direnv environment
+exec env -u VIRTUAL_ENV -u PYTHONPATH "$SYSTEM_PYTHON" "$AGENT_PATH" "$@"

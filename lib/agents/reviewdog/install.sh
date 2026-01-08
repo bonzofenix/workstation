@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "======================================"
-echo "ShellCheck Agent - Global Installation"
+echo "Reviewdog Agent - Global Installation"
 echo "======================================"
 echo
 
@@ -68,14 +68,14 @@ case $choice in
         mkdir -p ~/bin
 
         # Copy script
-        cp shellcheck_agent.py ~/bin/shellcheck-agent
-        chmod +x ~/bin/shellcheck-agent
+        cp reviewdog_agent.py ~/bin/reviewdog-agent
+        chmod +x ~/bin/reviewdog-agent
 
         # Install dependencies
         echo "Installing Python dependencies..."
         pip3 install --user anthropic
 
-        echo -e "${GREEN}✓ Installed to ~/bin/shellcheck-agent${NC}"
+        echo -e "${GREEN}✓ Installed to ~/bin/reviewdog-agent${NC}"
         echo
         echo "Make sure ~/bin is in your PATH. Add this to ~/.zshrc or ~/.bashrc if not present:"
         echo "  export PATH=\"\$HOME/bin:\$PATH\""
@@ -88,14 +88,14 @@ case $choice in
         echo
         echo "Installing to /usr/local/bin (requires sudo)..."
 
-        sudo cp shellcheck_agent.py /usr/local/bin/shellcheck-agent
-        sudo chmod +x /usr/local/bin/shellcheck-agent
+        sudo cp reviewdog_agent.py /usr/local/bin/reviewdog-agent
+        sudo chmod +x /usr/local/bin/reviewdog-agent
 
         # Install dependencies
         echo "Installing Python dependencies..."
         pip3 install anthropic
 
-        echo -e "${GREEN}✓ Installed to /usr/local/bin/shellcheck-agent${NC}"
+        echo -e "${GREEN}✓ Installed to /usr/local/bin/reviewdog-agent${NC}"
         ;;
 
     3)
@@ -103,31 +103,31 @@ case $choice in
         echo "Installing as standalone package with virtualenv..."
 
         # Create directory structure
-        mkdir -p ~/.local/shellcheck-agent
+        mkdir -p ~/.local/reviewdog-agent
 
         # Create virtualenv
         echo "Creating virtual environment..."
-        python3 -m venv ~/.local/shellcheck-agent/venv
+        python3 -m venv ~/.local/reviewdog-agent/venv
 
         # Install dependencies
         echo "Installing dependencies..."
-        ~/.local/shellcheck-agent/venv/bin/pip install anthropic
+        ~/.local/reviewdog-agent/venv/bin/pip install anthropic
 
         # Copy script
-        cp shellcheck_agent.py ~/.local/shellcheck-agent/
-        chmod +x ~/.local/shellcheck-agent/shellcheck_agent.py
+        cp reviewdog_agent.py ~/.local/reviewdog-agent/
+        chmod +x ~/.local/reviewdog-agent/reviewdog_agent.py
 
         # Create wrapper in ~/bin
         mkdir -p ~/bin
-        cat > ~/bin/shellcheck-agent << 'EOF'
+        cat > ~/bin/reviewdog-agent << 'EOF'
 #!/bin/bash
-source ~/.local/shellcheck-agent/venv/bin/activate
-python3 ~/.local/shellcheck-agent/shellcheck_agent.py "$@"
+source ~/.local/reviewdog-agent/venv/bin/activate
+python3 ~/.local/reviewdog-agent/reviewdog_agent.py "$@"
 EOF
-        chmod +x ~/bin/shellcheck-agent
+        chmod +x ~/bin/reviewdog-agent
 
-        echo -e "${GREEN}✓ Installed to ~/.local/shellcheck-agent${NC}"
-        echo -e "${GREEN}✓ Wrapper created at ~/bin/shellcheck-agent${NC}"
+        echo -e "${GREEN}✓ Installed to ~/.local/reviewdog-agent${NC}"
+        echo -e "${GREEN}✓ Wrapper created at ~/bin/reviewdog-agent${NC}"
         echo
         echo "Make sure ~/bin is in your PATH. Add this to ~/.zshrc or ~/.bashrc if not present:"
         echo "  export PATH=\"\$HOME/bin:\$PATH\""
@@ -149,6 +149,6 @@ echo "======================================"
 echo
 echo "Usage:"
 echo "  cd /path/to/your/repo"
-echo "  shellcheck-agent"
+echo "  reviewdog-agent"
 echo
-echo "For more information, see SHELLCHECK_AGENT_README.md"
+echo "For more information, see README.md"
