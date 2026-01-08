@@ -38,11 +38,11 @@ DEBUG=true make install    # Enable debug output
   - `nix.sh` - Sets up Nix package manager
   - `pr_reviewer/` - Python tool for AI-powered PR reviews
   - `agents/` - Autonomous AI agents for automated tasks
-    - `shellcheck/` - Auto-fixes shellcheck issues in PRs using Claude AI
+    - `reviewdog/` - Auto-fixes reviewdog linter issues in PRs using Claude AI
 
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
   - Git workflow: `cleanup-branches`, `cleanup-worktrees`, `delete-branch`, `worktrees`, `new-worktree`
-  - AI-powered: `autodiff`, `autorefactor`, `claude-cost`, `shellcheck-agent`
+  - AI-powered: `autodiff`, `autorefactor`, `claude-cost`, `reviewdog-agent`
   - Development: `bosh-*`, `cf-*`, `docker-*` scripts
   - Note: Agent wrappers in `bin/` call the actual agent code in `lib/agents/`
 
@@ -105,7 +105,8 @@ The workstation includes both simple AI-powered scripts and autonomous agents:
 - `pr_reviewer.py` - Reviews PRs using GPT-4 (in `lib/pr_reviewer/`)
 
 **Autonomous Agents** (in `lib/agents/`):
-- `shellcheck-agent` - Continuously monitors PRs, auto-fixes shellcheck issues using Claude API, commits, and iterates until checks pass
+- `reviewdog-agent` - Continuously monitors PRs, auto-fixes reviewdog linter issues using Claude API, commits, and iterates until checks pass
+  - Supports any reviewdog linter: shellcheck, golangci-lint, eslint, etc.
 
 **Adding New Agents:**
 1. Create directory: `lib/agents/your-agent-name/`
