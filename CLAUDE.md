@@ -19,7 +19,6 @@ make git-aliases      # Setup git aliases
 make configurations   # Link configuration files
 make osx-configurations # Setup macOS preferences
 make nix              # Setup Nix package manager
-make agents           # Install all agent dependencies
 
 # Optional flags
 NO_BREW=true make install  # Skip homebrew installation
@@ -37,14 +36,11 @@ DEBUG=true make install    # Enable debug output
   - `osx-configurations.sh` - Configures macOS system preferences
   - `nix.sh` - Sets up Nix package manager
   - `pr_reviewer/` - Python tool for AI-powered PR reviews
-  - `agents/` - Autonomous AI agents for automated tasks
-    - `reviewdog/` - Auto-fixes reviewdog linter issues in PRs using Claude AI
 
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
   - Git workflow: `cleanup-branches`, `cleanup-worktrees`, `delete-branch`, `worktrees`, `new-worktree`
-  - AI-powered: `autodiff`, `autorefactor`, `claude-cost`, `reviewdog-agent`
+  - AI-powered: `autodiff`, `autorefactor`, `claude-cost`
   - Development: `bosh-*`, `cf-*`, `docker-*` scripts
-  - Note: Agent wrappers in `bin/` call the actual agent code in `lib/agents/`
 
 - **`assets/`** - Configuration files and dotfiles
   - `aliases.bash` - Custom bash aliases loaded globally
@@ -95,34 +91,14 @@ The repo uses git worktrees extensively with dedicated scripts:
 
 ### AI Integration
 
-The workstation includes both simple AI-powered scripts and autonomous agents:
+The workstation includes simple AI-powered scripts:
 
-**Simple AI Scripts** (use `sgpt` or OpenAI API):
+**AI Scripts** (use `sgpt` or OpenAI API):
 - `autodiff` - Generates PR descriptions from diffs
 - `autorefactor` - Refactors code using clean code principles
 - `autocommit` - Auto-generates commit messages (alias in `aliases.bash`)
 - `autoreset` - Soft resets and re-commits with new AI message
 - `pr_reviewer.py` - Reviews PRs using GPT-4 (in `lib/pr_reviewer/`)
-
-**Autonomous Agents** (in `lib/agents/`):
-- `reviewdog-agent` - Continuously monitors PRs, auto-fixes reviewdog linter issues using Claude API, commits, and iterates until checks pass
-  - Supports any reviewdog linter: shellcheck, golangci-lint, eslint, etc.
-
-**Adding New Agents:**
-1. Create directory: `lib/agents/your-agent-name/`
-2. Add files: `README.md`, `requirements.txt`, agent script
-3. Create wrapper: `bin/your-agent-name` that calls the agent
-4. Update `lib/agents/README.md`
-5. Run `make agents` to install dependencies
-
-**Agent Installation:**
-- `make agents` finds all `requirements.txt` files in `lib/agents/` and installs them
-- Automatically included in `make install`
-- Uses `pip3 install --user --break-system-packages` for modern Python environments
-- Wrapper scripts in `bin/` use system Python (not Nix/direnv project-specific Python)
-  - Priority order: `~/.asdf/shims/python3`, `~/.asdf/shims/python`, `/opt/homebrew/bin/python3`, `/usr/local/bin/python3`, `/usr/bin/python3`
-  - Unsets `VIRTUAL_ENV` and `PYTHONPATH` to avoid environment conflicts
-  - See `lib/agents/README.md` for wrapper script template
 
 ## Common Development Patterns
 
