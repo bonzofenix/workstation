@@ -1,0 +1,126 @@
+#!/bin/zsh
+set -euo pipefail
+
+# Check dependencies
+for cmd in gum jq curl; do
+    command -v $cmd &>/dev/null || { echo "Error: $cmd not installed"; exit 1; }
+done
+
+# Load credentials from environment
+if [[ -z "${AICORE_BASE_URL:-}" || -z "${AICORE_CLIENT_ID:-}" || -z "${AICORE_CLIENT_SECRET:-}" || -z "${AICORE_AUTH_URL:-}" ]]; then
+    echo "Error: Missing AICORE_* environment variables"
+    exit 1
+fi
+
+API_URL="${AICORE_BASE_URL}/v2"
+AUTH_URL="${AICORE_AUTH_URL}/oauth/token"
+
+# Get access token
+echo "✓ Generating token..."
+TOKEN=$(curl -s -X POST "${AUTH_URL}" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=client_credentials&client_id=${AICORE_CLIENT_ID}&client_secret=${AICORE_CLIENT_SECRET}" \
+    | jq -r '.access_token')
+
+[[ -z "$TOKEN" || "$TOKEN" == "null" ]] && { echo "✗ Failed to get token"; exit 1; }
+
+# Select model
+MODEL=$(gum choose --header "Select Claude model:" \
+    "Claude 4.5 Sonnet" \
+    "Claude 4.5 Haiku" \
+    "Claude 4 Sonnet" \
+    "Claude 4 Opus")
+
+case "$MODEL" in
+    "Claude 4.5 Sonnet") MODEL_NAME="anthropic--claude-4.5-sonnet" ;;
+    "Claude 4.5 Haiku") MODEL_NAME="anthropic--claude-4.5-haiku" ;;
+    "Claude 4 Sonnet")  MODEL_NAME="anthropic--claude-4-sonnet" ;;
+    "Claude 4 Opus")    MODEL_NAME="anthropic--claude-4-opus" ;;
+esac
+
+CONFIG_NAME=$(gum input --placeholder "Configuration name" --value "${MODEL_NAME}-config")
+
+# Confirm
+gum style --border rounded --padding "1" \
+    "Model: $MODEL_NAME" \
+    "Config: $CONFIG_NAME"
+
+gum confirm "Deploy?" || exit 0
+
+# Create configuration
+echo "✓ Creating configuration..."
+PAYLOAD=$(jq -n \
+    --arg name "$CONFIG_NAME" \
+    --arg model "$MODEL_NAME" \
+    '{
+        name: $name,
+        executableId: "aws-bedrock",
+        scenarioId: "foundation-models",
+        versionId: "1",
+        parameterBindings: [{key: "modelName", value: $model}]
+    }')
+
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${API_URL}/lm/configurations" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -H "AI-Resource-Group: default" \
+    -d "$PAYLOAD")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+RESPONSE=$(echo "$RESPONSE" | sed '$d')
+
+if [[ "$HTTP_CODE" != "201" ]]; then
+    echo "✗ Failed (HTTP $HTTP_CODE)"
+    echo "$RESPONSE" | jq -r '.message // .'
+    exit 1
+fi
+
+CONFIG_ID=$(echo "$RESPONSE" | jq -r '.id')
+echo "✓ Configuration ID: $CONFIG_ID"
+
+# Deploy
+echo "✓ Deploying..."
+RESPONSE=$(curl -s -X POST "${API_URL}/lm/deployments" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -H "AI-Resource-Group: default" \
+    -d "{\"configurationId\": \"$CONFIG_ID\"}")
+
+DEPLOYMENT_ID=$(echo "$RESPONSE" | jq -r '.id')
+[[ -z "$DEPLOYMENT_ID" || "$DEPLOYMENT_ID" == "null" ]] && { echo "✗ Deployment failed"; echo "$RESPONSE" | jq '.'; exit 1; }
+
+echo "✓ Deployment ID: $DEPLOYMENT_ID"
+
+# Wait for deployment
+echo "✓ Waiting for deployment (max 10 min)..."
+for i in {1..60}; do
+    STATUS=$(curl -s -X GET "${API_URL}/lm/deployments/${DEPLOYMENT_ID}" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "AI-Resource-Group: default" \
+        | jq -r '.status')
+
+    case "$STATUS" in
+        RUNNING)
+            echo ""
+            gum style --border double --padding "1" --foreground 82 \
+                "✓ Deployment Complete!" \
+                "" \
+                "Deployment ID: $DEPLOYMENT_ID" \
+                "Configuration ID: $CONFIG_ID"
+            exit 0
+            ;;
+        PENDING|UNKNOWN)
+            echo -n "."
+            sleep 10
+            ;;
+        *)
+            echo ""
+            echo "✗ Deployment failed: $STATUS"
+            exit 1
+            ;;
+    esac
+done
+
+echo ""
+echo "⚠ Timeout. Check: ${API_URL}/lm/deployments/${DEPLOYMENT_ID}"
+exit 1
