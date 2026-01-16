@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 
+# npm install -g moises 
+#
+# add npm prefix -g to PATH
+#
+
+export PATH=$PATH:$(npm config get prefix)/bin
 mkdir -p moises_result
 moises process file instrumental "$1" moises_result

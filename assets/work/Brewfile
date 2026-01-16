@@ -107,6 +107,8 @@ brew "htop"
 
 brew "rsync"
 
+brew "ffmpeg"
+
 cask "spotify"
 
 cask "microsoft-teams"

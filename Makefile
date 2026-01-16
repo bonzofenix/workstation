@@ -2,6 +2,7 @@ SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c ${SHELLFLAGS}
 NO_BREW?=false
 DEBUG?=false
+default: install
 
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
@@ -32,7 +33,6 @@ configurations:
 
 osx-configurations:
 	@DEBUG="${DEBUG}" ./lib/osx-configurations.sh
-
 
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
