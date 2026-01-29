@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Check for required dependencies
+command -v claude >/dev/null 2>&1 || { echo "Error: claude not installed. Install Claude CLI first." >&2; exit 1; }
+
+# Check if there are staged changes
+if ! git diff --staged --quiet; then
+  # Generate commit message using Claude
+  MSG=$(git diff --staged | claude \
+    --print \
+    --no-session-persistence \
+    --system-prompt 'You only output git commit messages. Output ONLY the commit message in imperative mood, nothing else. Stay high-level and combine smaller changes to overarching topics. Skip reformatting changes.' \
+    'Generate commit message:')
+
+  # Commit with the generated message, allowing user to edit
+  git commit -e -m "${MSG}"
+else
+  echo "No staged changes to commit. Use 'git add' first." >&2
+  exit 1
+fi
