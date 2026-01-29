@@ -58,7 +58,7 @@ add_to_profile '# Adding ASDF env vars to path' \
                'export ASDFINSTALLS=$HOME/.asdf/installs'
 
 
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+[ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
@@ -151,8 +151,8 @@ echo "Installing NeoVim configs"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
 ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
 
-git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
-git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
+[ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
+[ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
 
 echo 'Setting LANG for UTF-8 tmux support'
 add_to_profile '# Setting UTF-8 tmux support' \
