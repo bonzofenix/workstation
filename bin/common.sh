@@ -27,7 +27,7 @@ function error() {
   red='\033[0;31m'
   reset='\033[0m'
 
-  echo -e "${green}$1${reset}"
+  echo -e "${red}$1${reset}"
 }
 
 function check_if_exists(){
