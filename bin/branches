@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+# Check for required dependencies
+command -v gum >/dev/null 2>&1 || { echo "Error: gum not installed. Install with: brew install gum" >&2; exit 1; }
+
 selected_branch=$( git branch --sort=-committerdate --format "%(refname:short)" |gum choose)
 git checkout "$selected_branch"
 

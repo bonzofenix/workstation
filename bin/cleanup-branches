@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Check for required dependencies
+command -v gum >/dev/null 2>&1 || { echo "Error: gum not installed. Install with: brew install gum" >&2; exit 1; }
+
 git fetch --prune
 
 # Find branches that are merged
