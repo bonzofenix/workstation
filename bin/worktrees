@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+# Check for required dependencies
+command -v gum >/dev/null 2>&1 || { echo "Error: gum not installed. Install with: brew install gum" >&2; exit 1; }
+
 # Get list of worktrees and format them nicely
 # Format: branch name (path)
 worktree_list=$(git worktree list --porcelain | awk '

@@ -2,6 +2,9 @@
 
 source ~/workstation/bin/common.sh
 
+# Check for required dependencies
+command -v gum >/dev/null 2>&1 || { echo "Error: gum not installed. Install with: brew install gum" >&2; exit 1; }
+
 function delete-branch() {
   git fetch -a
   local branch_name=$( git branch --sort=-committerdate --format "%(refname:short)" |gum choose)
