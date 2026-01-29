@@ -2,4 +2,4 @@
 set -eu
 
 selected_tag=$(git tag --sort=-committerdate --format "%(refname:short)" | gum choose)
-git checkout $selected_tag
+git checkout "$selected_tag"

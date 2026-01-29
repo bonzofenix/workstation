@@ -6,4 +6,4 @@ today="$(date +'%d/%m/%Y')"
 tomorrow="$(date -v+1d +'%d/%m/%Y')"
 
 
-gcalcli agenda $today $tomorrow
+gcalcli agenda "$today" "$tomorrow"

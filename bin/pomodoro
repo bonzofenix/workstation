@@ -108,7 +108,7 @@ function pomo_stat {
         now=$(${DATE_CMD} +%s)
         running=$((now-pomo_start))
     fi
-    echo $running
+    echo "$running"
 }
 
 function pomo_clock {

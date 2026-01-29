@@ -10,7 +10,7 @@ rm -rf ~/.gitconfig
 
 
 echo "Setting global Git configurations"
-git config --global core.editor $(which nvim)
+git config --global core.editor "$(which nvim)"
 git config --global transfer.fsckobjects true
 git config --global hub.protocol https
 git config --global push.default simple
@@ -29,7 +29,7 @@ git config --global color.status.untracked "magenta"
 echo "Setting up global gitignore"
 [ -e ~/.gitignore_global ] && rm -f ~/.gitignore_global 
 git config --global core.excludesFile ~/.gitignore_global
-ln -fs $WORKSTATION_DIR/assets/gitignore_global ~/.gitignore_global
+ln -fs "$WORKSTATION_DIR/assets/gitignore_global" ~/.gitignore_global
 
 # Force unset osxkeychain cache
 git config --system --unset credential.helper
@@ -37,7 +37,7 @@ git config --system --unset credential.helper
 echo  "Configuring authors file"
 if [ ! -e ~/.git-authors ]; then
   echo "Creating ~/.git-authors from template"
-  cp $WORKSTATION_DIR/assets/git-authors ~/.git-authors
+  cp "$WORKSTATION_DIR/assets/git-authors" ~/.git-authors
   echo "Please edit ~/.git-authors with your own author information"
 else
   echo "~/.git-authors already exists, skipping template copy"

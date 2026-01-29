@@ -1,0 +1,9 @@
+# ShellCheck configuration for workstation repository
+
+# SC1090: Can't follow non-constant source
+# We use dynamic sourcing like "source ~/workstation/bin/common.sh" throughout
+disable=SC1090
+
+# SC2154: Variable referenced but not assigned
+# Common with sourced files and environment variables
+disable=SC2154

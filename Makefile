@@ -39,3 +39,7 @@ git:
 
 claude-skills:
 	@DEBUG="${DEBUG}" ./lib/claude-skills.sh
+
+lint:
+	@echo "Running shellcheck on all scripts..."
+	@./bin/lint

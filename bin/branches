@@ -2,5 +2,5 @@
 set -eu
 
 selected_branch=$( git branch --sort=-committerdate --format "%(refname:short)" |gum choose)
-git checkout $selected_branch
+git checkout "$selected_branch"
 

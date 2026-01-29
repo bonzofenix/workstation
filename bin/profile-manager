@@ -279,12 +279,13 @@ function profile-manager() {
     return 1
   fi
 
-  profile-manager.$cmd $@
+  profile-manager.$cmd "$@"
   return $?
 }
 
 if [[ ${BASH_SOURCE[0]} != $0 ]]; then
-  export -f $( profile-manager._functions )
+  # shellcheck disable=SC2046
+  export -f $(profile-manager._functions)
 else
   profile-manager "${@:-}"
   exit $?

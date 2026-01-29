@@ -2,7 +2,7 @@
 
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export WORKSTATION_DIR="$SCRIPT_DIR/.."
-source $SCRIPT_DIR/common.sh
+source "$SCRIPT_DIR/common.sh"
 
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
@@ -61,7 +61,7 @@ add_to_profile '# Adding ASDF env vars to path' \
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
-ln -fs $WORKSTATION_DIR/assets/tmux.conf ~/.tmux.conf
+ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 
 
 
@@ -85,7 +85,7 @@ add_to_profile '# Enable bash completion' \
 
 echo "Configuring custom aliases"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
-ln -fs $WORKSTATION_DIR/assets/aliases.bash ~/.aliases.bash
+ln -fs "$WORKSTATION_DIR/assets/aliases.bash" ~/.aliases.bash
 
 add_to_profile '# Load custom aliases' \
                'source ~/.aliases.bash'
@@ -149,7 +149,7 @@ add_to_profile '# sets devbox' \
 
 echo "Installing NeoVim configs"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
-ln -fs $WORKSTATION_DIR/assets/config/nvim ~/.config/nvim
+ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
 
 git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
 git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim

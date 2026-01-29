@@ -27,7 +27,7 @@ function concourse-login() {
     error "$concourse_url ENV variable not defined"
   fi
 
-  fly -t $env login -n main -c ${!concourse_url}
+  fly -t "$env" login -n main -c "${!concourse_url}"
 }
 
 concourse-login "${@:-}"

@@ -31,19 +31,19 @@ function error() {
 }
 
 function check_if_exists(){
-  ERROR_MSG=$1
-  CONTENT=$2
+  ERROR_MSG="$1"
+  CONTENT="$2"
 
   if [[ -z "$CONTENT" ]] || [[ "$CONTENT" == "null" ]]; then
-    echo $ERROR_MSG
+    echo "$ERROR_MSG"
     exit 1
   fi
 }
 
 function check_if_file_exists(){
-  FILE=$1
+  FILE="$1"
 
-  if [[ ! -f $FILE ]]; then
+  if [[ ! -f "$FILE" ]]; then
     log "Required file $FILE not found..."
     exit 1
   fi

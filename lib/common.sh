@@ -30,13 +30,13 @@ function add_to_file(){
   local file_changed="false"
 
   for file_line in "${@:2}"; do
-    if ! grep -q "${file_line//\"/\\\"}" $file; then
-      echo $file_line >> $file
+    if ! grep -q "${file_line//\"/\\\"}" "$file"; then
+      echo "$file_line" >> "$file"
       file_changed="true"
     fi
   done
 
-  [ "$file_changed" == "true" ] && echo >> $file
+  [ "$file_changed" == "true" ] && echo >> "$file"
   return 0
 }
 
