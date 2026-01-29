@@ -12,30 +12,30 @@ function create_temp_config() {
   local agent_file=$PIPELINE_DIR/$pipeline/travel-agent.yml
   temp_pipeline_file=$TMP_DIR/$pipeline.yml
 
-  mkdir -p $TMP_DIR
+  mkdir -p "$TMP_DIR"
 
-  local git_url=$( bosh int $agent_file --path /git_project )
-  local git_project=$( echo $git_url | xargs -I {} basename {} .git )
+  local git_url=$(bosh int "$agent_file" --path /git_project)
+  local git_project=$(echo "$git_url" | xargs -I {} basename {} .git)
   local local_git_project_folder="$HOME/workspace/$git_project"
 
-  if [ ! -d $local_git_project_folder ]; then
-    git clone $git_url $local_git_project_folder
+  if [ ! -d "$local_git_project_folder" ]; then
+    git clone "$git_url" "$local_git_project_folder"
   fi
 
 
-  cp $agent_file $temp_pipeline_file
-  sed -i.old '/git_project/d' $temp_pipeline_file > /dev/null
-  echo "git_project: $local_git_project_folder" >> $temp_pipeline_file
+  cp "$agent_file" "$temp_pipeline_file"
+  sed -i.old '/git_project/d' "$temp_pipeline_file" > /dev/null
+  echo "git_project: $local_git_project_folder" >> "$temp_pipeline_file"
 
-  echo $temp_pipeline_file
+  echo "$temp_pipeline_file"
 }
 
 function book_pipeline(){
   local pipeline_name=$1
-  local agent_file=$( create_temp_config $pipeline_name )
+  local agent_file=$(create_temp_config "$pipeline_name")
 
-  local git_url=$(bosh int $agent_file --path /git_project)
-  local git_project=$( echo $git_url | xargs -I {} basename {} .git )
+  local git_url=$(bosh int "$agent_file" --path /git_project)
+  local git_project=$(echo "$git_url" | xargs -I {} basename {} .git)
   local settings_file=$PIPELINE_DIR/$pipeline_name/settings.yml
   local default_settings_file=$PIPELINE_DIR/$git_project.settings.yml
   local book_args=""
@@ -48,12 +48,14 @@ function book_pipeline(){
     book_args="$book_args $settings_file"
   fi
 
-  travel-agent book $agent_file $book_args
+  # shellcheck disable=SC2086
+  travel-agent book "$agent_file" $book_args
 
 }
 
 prompt="Available Travel Agent pipeline:"
-options=( $(tree -d -L 1 -i --noreport $PIPELINE_DIR | sed 1d) )
+# shellcheck disable=SC2207
+options=($(tree -d -L 1 -i --noreport "$PIPELINE_DIR" | sed 1d))
 
 if [[ -z "$1" ]]; then
   PS3="$prompt "
@@ -65,7 +67,7 @@ if [[ -z "$1" ]]; then
     elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
 
       echo "Booking $pipeline_name pipeline"
-      book_pipeline $pipeline_name
+      book_pipeline "$pipeline_name"
       break
 
     else
@@ -73,5 +75,5 @@ if [[ -z "$1" ]]; then
     fi
   done
 else
-  book_pipeline $1
+  book_pipeline "$1"
 fi

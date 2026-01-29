@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Check dependencies
 for cmd in gum jq curl; do
-    command -v $cmd &>/dev/null || { echo "Error: $cmd not installed"; exit 1; }
+    command -v "$cmd" &>/dev/null || { echo "Error: $cmd not installed"; exit 1; }
 done
 
 # Load credentials from environment

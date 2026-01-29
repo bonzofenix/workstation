@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# Helper script to run shellcheck on workstation scripts
+
+set -euo pipefail
+
+echo "Running shellcheck on all workstation scripts..."
+echo ""
+
+# Count issues by severity
+errors=0
+warnings=0
+info=0
+
+# Run shellcheck on all bin and lib scripts
+while IFS= read -r script; do
+  if [[ -f "$script" ]]; then
+    output=$(shellcheck "$script" 2>&1 || true)
+
+    if [[ -n "$output" ]]; then
+      echo "$output"
+      echo ""
+
+      # Count by severity
+      errors=$((errors + $(echo "$output" | grep -c "error" || echo "0")))
+      warnings=$((warnings + $(echo "$output" | grep -c "warning" || echo "0")))
+      info=$((info + $(echo "$output" | grep -c "info" || echo "0")))
+    fi
+  fi
+done < <(find bin lib -type f \( -name "*.sh" -o -executable \) 2>/dev/null)
+
+echo "================================"
+echo "Summary:"
+echo "  Errors:   $errors"
+echo "  Warnings: $warnings"
+echo "  Info:     $info"
+echo "================================"
+
+if [[ $errors -gt 0 ]]; then
+  exit 1
+fi
+
+exit 0

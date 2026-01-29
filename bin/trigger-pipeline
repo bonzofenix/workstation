@@ -8,7 +8,7 @@ if [ -z "$CONCOURSE_TARGET" ]; then
 fi
 
 function trigger-pipeline(){
-  payload=$(fly -t $CONCOURSE_TARGET pipelines --json)
+  payload=$(fly -t "$CONCOURSE_TARGET" pipelines --json)
   pipeline=$1
   jobs=()
 
@@ -22,12 +22,12 @@ function trigger-pipeline(){
     payload=$(fly -t app-autoscaler-release jobs -p "$pipeline" --json)
     job=$(echo "$payload" | jq ".[] | .name" -r | gum choose)
   else
-    group=$(echo $groups | jq -r ".[] | .name" | gum choose)
+    group=$(echo "$groups" | jq -r ".[] | .name" | gum choose)
     job=$(echo "$groups" | jq ".[] | select(.name==\"$group\")  | .jobs[]" -r | gum choose)
   fi
 
 
-  fly -t $CONCOURSE_TARGET tj -j $pipeline/$job -w
+  fly -t "$CONCOURSE_TARGET" tj -j "$pipeline/$job" -w
 }
 
 

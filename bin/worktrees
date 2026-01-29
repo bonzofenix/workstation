@@ -25,4 +25,4 @@ selected_path=$(echo "$selected" | sed 's/.*(\(.*\)).*/\1/')
 cd "$selected_path"
 
 # Start a new shell in the worktree directory
-exec $SHELL
+exec "$SHELL"

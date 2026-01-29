@@ -15,7 +15,7 @@ function select-option(){
       exit
 
     elif (( REPLY > 0 && REPLY <= ${#opts[@]} )) ; then
-      echo $opt
+      echo "$opt"
       break
 
     else
@@ -25,17 +25,18 @@ function select-option(){
 }
 
 function pause-pipeline(){
-  payload=$(fly -t $ENV pipelines --json)
+  payload=$(fly -t "$ENV" pipelines --json)
 
   pipelines=$(echo "$payload" | jq ".[] |.name" -r | sort)
+  # shellcheck disable=SC2086
   pipeline=$(select-option $pipelines)
 
   if [[ "$pipeline" == "all" ]]; then
-    for p in $pipelines; do
-      fly -t $ENV pp -p $p
-    done
+    while IFS= read -r p; do
+      fly -t "$ENV" pp -p "$p"
+    done <<< "$pipelines"
   else
-    fly -t $ENV pp -p $pipeline
+    fly -t "$ENV" pp -p "$pipeline"
   fi
 
 }

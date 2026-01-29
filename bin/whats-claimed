@@ -3,12 +3,12 @@
 source ~/workstation/bin/common.sh
 
 function check_locks {
-  [[ -z "$(ls $1/claimed/)" ]] && return
+  [[ -z "$(ls "$1/claimed/")" ]] && return
   echo -e "$1 locks: \n"
-  for lock in $(ls $1/claimed/*);do
+  while IFS= read -r lock; do
 
 
-    msg=$(git log -n 1 --graph --pretty=format:'%s' --abbrev-commit  -- $lock)
+    msg=$(git log -n 1 --graph --pretty=format:'%s' --abbrev-commit  -- "$lock")
     resource=$(echo "$msg" | cut -d ' ' -f2 )
     env=$(echo "$msg" | cut -d ' ' -f6 )
     build=$(echo "$msg" | cut -d ' ' -f4 )
@@ -16,7 +16,7 @@ function check_locks {
     job=$(echo "$resource" | cut -d '/' -f2 )
 
     echo -e "$env: \t $CONCOURSE_URL/teams/main/pipelines/$pipeline/jobs/$job/builds/$build"
-  done
+  done < <(find "$1/claimed/" -type f)
 }
 
 
@@ -28,7 +28,7 @@ function whats-claimed() {
 
   pushd ~/workspace/locks > /dev/null
     git pull -r > /dev/null 2>&1
-    check_locks $1
+    check_locks "$1"
   popd > /dev/null
 }
 

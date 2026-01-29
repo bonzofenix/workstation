@@ -8,9 +8,9 @@ if [ -z "$CONCOURSE_TARGET" ]; then
 fi
 
 function delete-pipeline(){
-  payload=$(fly -t $CONCOURSE_TARGET pipelines --json)
+  payload=$(fly -t "$CONCOURSE_TARGET" pipelines --json)
   pipeline=$(echo "$payload" | jq ".[] |.name" -r | sort | gum choose)
-  fly -t $CONCOURSE_TARGET dp -p $pipeline
+  fly -t "$CONCOURSE_TARGET" dp -p "$pipeline"
 }
 
 

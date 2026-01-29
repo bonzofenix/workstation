@@ -11,7 +11,7 @@ set -eu
 ##
 
 function docker-push() {
-  docker push $@
+  docker push "$@"
 }
 
 docker-push "${@:-}"

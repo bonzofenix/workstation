@@ -6,7 +6,7 @@ function delete-branch() {
   git fetch -a
   local branch_name=$( git branch --sort=-committerdate --format "%(refname:short)" |gum choose)
   gum confirm "Delete branch $branch_name?" || return 1
-  git branch -d $branch_name
+  git branch -d "$branch_name"
 }
 
 delete-branch

@@ -46,6 +46,7 @@ selected_branch=$(echo "$selected" | sed 's/ (.*//')
 # Confirm deletion
 if gum confirm "Delete worktree at $selected_path and remove branch $selected_branch?"; then
   # Remove the worktree
+  # shellcheck disable=SC2086
   git worktree remove $FORCE_FLAG "$selected_path"
 
   # Ask if user wants to delete the branch as well
