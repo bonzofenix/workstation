@@ -52,7 +52,7 @@ alias chatgpt='~/.asdf/shims/gpt'
 alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" '
 
 commit_command="Generate a concise git commit message that summarizes the key changes. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes"
-alias autocommit="MSG=\"\$(git diff --staged | sgpt '$commit_command')\" && git commit -e -m \${MSG}"
+alias autocommit="MSG=\"\$(git diff --staged | claude --print --no-session-persistence --system-prompt 'You only output git commit messages. Output ONLY the commit message in imperative mood, nothing else. Stay high-level and combine smaller changes to overarching topics. Skip reformatting changes.' 'Generate commit message:')\" && git commit -e -m \"\${MSG}\""
 alias autoreset="git reset --soft HEAD~1; autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'

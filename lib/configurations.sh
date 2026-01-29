@@ -94,6 +94,10 @@ echo "Enable git duet"
 add_to_profile '# git duet works globally' \
                 'export GIT_DUET_GLOBAL=true'
 
+echo "Enable Claude Code notifications"
+add_to_profile '# Enable Claude Code notifications' \
+               'export CLAUDE_NOTIFY=1'
+
 echo "Configuring GPG"
 add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
