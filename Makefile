@@ -7,7 +7,7 @@ default: install
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
 
-install: cache-password homebrew git git-aliases configurations osx-configurations nix
+install: cache-password homebrew git git-aliases configurations osx-configurations nix claude-skills
 	@echo "Reloading Bash..."
 	@source ~/.bash_profile
 
@@ -36,3 +36,6 @@ osx-configurations:
 
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
+
+claude-skills:
+	@DEBUG="${DEBUG}" ./lib/claude-skills.sh
