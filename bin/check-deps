@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Workstation Dependency Checker
+# Validates that required CLI tools are installed and provides installation instructions
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RESET='\033[0m'
+
+# Track results
+MISSING_CRITICAL=()
+MISSING_OPTIONAL=()
+ALL_PRESENT=true
+
+# Helper function to check if command exists
+check_command() {
+  local cmd=$1
+  local category=$2
+  local install_hint=$3
+
+  if command -v "$cmd" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓${RESET} ${cmd}"
+    return 0
+  else
+    echo -e "${RED}✗${RESET} ${cmd} - ${YELLOW}${install_hint}${RESET}"
+
+    if [ "$category" = "critical" ]; then
+      MISSING_CRITICAL+=("$cmd: $install_hint")
+    else
+      MISSING_OPTIONAL+=("$cmd: $install_hint")
+    fi
+
+    ALL_PRESENT=false
+    return 1
+  fi
+}
+
+echo "========================================"
+echo "Workstation Dependency Checker"
+echo "========================================"
+echo ""
+
+# CRITICAL DEPENDENCIES - Required for core functionality
+echo -e "${BLUE}Critical Dependencies (Required):${RESET}"
+echo "These are essential for workstation installation and core scripts"
+echo ""
+
+check_command "git" "critical" "Should be pre-installed on macOS, or: brew install git"
+check_command "curl" "critical" "Should be pre-installed on macOS"
+check_command "brew" "critical" "Install from: https://brew.sh"
+check_command "gum" "critical" "brew install gum"
+check_command "jq" "critical" "brew install jq"
+check_command "tmux" "critical" "brew install tmux"
+check_command "nvim" "critical" "brew install neovim"
+
+echo ""
+
+# HIGH-PRIORITY DEPENDENCIES - Used by many scripts
+echo -e "${BLUE}High-Priority Dependencies (Highly Recommended):${RESET}"
+echo "Required by multiple utility scripts"
+echo ""
+
+check_command "gh" "optional" "brew install gh"
+check_command "asdf" "optional" "brew install asdf"
+check_command "direnv" "optional" "brew install direnv"
+check_command "devbox" "optional" "brew tap josephpage/jetpack-io && brew install devbox"
+check_command "tree" "optional" "brew install tree"
+check_command "rg" "optional" "brew install ripgrep"
+
+echo ""
+
+# WORKFLOW-SPECIFIC DEPENDENCIES - Only needed for certain workflows
+echo -e "${BLUE}Workflow-Specific Dependencies (Optional):${RESET}"
+echo "Only needed if you use specific workflows"
+echo ""
+
+echo "Git workflows:"
+check_command "git-duet" "optional" "brew tap git-duet/tap && brew install git-duet"
+
+echo ""
+echo "AI-powered scripts:"
+check_command "claude" "optional" "Install Claude CLI from https://claude.ai/cli"
+check_command "sgpt" "optional" "pip install shell-gpt"
+
+echo ""
+echo "Cloud/Infrastructure (CF, Bosh, Concourse):"
+check_command "cf" "optional" "Install from https://github.com/cloudfoundry/cli"
+check_command "bosh" "optional" "Install from https://bosh.io/docs/cli-v2-install/"
+check_command "fly" "optional" "Install from your Concourse instance"
+
+echo ""
+echo "Containers:"
+check_command "docker" "optional" "brew install --cask docker"
+check_command "kubectl" "optional" "brew install kubectl"
+
+echo ""
+
+# SUMMARY
+echo "========================================"
+echo "Summary"
+echo "========================================"
+
+if [ "$ALL_PRESENT" = true ]; then
+  echo -e "${GREEN}✓ All dependencies are installed!${RESET}"
+  echo ""
+  echo "Your workstation is ready to use."
+  exit 0
+else
+  echo -e "${YELLOW}⚠ Some dependencies are missing${RESET}"
+  echo ""
+
+  if [ ${#MISSING_CRITICAL[@]} -gt 0 ]; then
+    echo -e "${RED}Critical (installation will fail):${RESET}"
+    for dep in "${MISSING_CRITICAL[@]}"; do
+      echo "  • $dep"
+    done
+    echo ""
+  fi
+
+  if [ ${#MISSING_OPTIONAL[@]} -gt 0 ]; then
+    echo -e "${YELLOW}Optional (some scripts won't work):${RESET}"
+    for dep in "${MISSING_OPTIONAL[@]}"; do
+      echo "  • $dep"
+    done
+    echo ""
+  fi
+
+  echo "Quick fix for Homebrew packages:"
+  echo "  cd ~/workstation && brew bundle --file=assets/work/Brewfile"
+  echo ""
+
+  if [ ${#MISSING_CRITICAL[@]} -gt 0 ]; then
+    echo -e "${RED}Please install critical dependencies before running 'make install'${RESET}"
+    exit 1
+  else
+    echo -e "${YELLOW}You can proceed with installation, but some scripts may not work.${RESET}"
+    exit 0
+  fi
+fi
