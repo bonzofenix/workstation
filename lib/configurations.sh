@@ -133,6 +133,10 @@ echo "Adds direnv hook"
 add_to_rc '# Adds direnv hook' \
           'eval "$(direnv hook zsh)"'
 
+echo "Disable completion beeps"
+add_to_rc '# Specifically stop completion beeps' \
+          'unsetopt LIST_BEEP'
+
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
 
