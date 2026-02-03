@@ -52,6 +52,7 @@ alias chatgpt='~/.asdf/shims/gpt'
 alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" '
 
 alias autocommit="~/workstation/bin/autocommit"
+alias autocommit!="autocommit && git push"
 alias autoreset="git reset --soft HEAD~1 && autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
