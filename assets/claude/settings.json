@@ -1,0 +1,105 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "env": {
+    "ANTHROPIC_MODEL": "anthropic--claude-4.5-opus",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "anthropic--claude-4.5-opus",
+    "ANTHROPIC_BASE_URL": "https://YOUR_ANTHROPIC_PROXY_URL",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_BUG_COMMAND": "1"
+  },
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh api:*)",
+      "Bash(gh pr checks:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "keybindings": {
+    "sendToBackground": "cmd+b cmd+b"
+  },
+  "defaultMode": "plan",
+  "model": "opus",
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Zug zug",
+      "Work work",
+      "Something need doing",
+      "Ready to work",
+      "Me busy, leave me alone",
+      "Yes, me lord",
+      "What you want",
+      "Job's done soon",
+      "Off I go then",
+      "Dabu",
+      "Lok'tar ogar",
+      "For the Horde",
+      "More work",
+      "Me not that kind of orc",
+      "Swobu"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
