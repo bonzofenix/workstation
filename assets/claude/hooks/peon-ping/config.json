@@ -1,0 +1,17 @@
+{
+  "active_pack": "peon",
+  "volume": 0.5,
+  "enabled": true,
+  "tmux_alert_style": "fg=white,bg=red,bold",
+  "categories": {
+    "greeting": true,
+    "acknowledge": true,
+    "complete": true,
+    "error": true,
+    "permission": true,
+    "resource_limit": true,
+    "annoyed": true
+  },
+  "annoyed_threshold": 3,
+  "annoyed_window_seconds": 10
+}
