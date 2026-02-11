@@ -4,9 +4,6 @@
     "command": "bash ~/.claude/statusline-command.sh"
   },
   "env": {
-    "ANTHROPIC_MODEL": "anthropic--claude-4.5-opus",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "anthropic--claude-4.5-opus",
-    "ANTHROPIC_BASE_URL": "https://YOUR_ANTHROPIC_PROXY_URL",
     "DISABLE_TELEMETRY": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_BUG_COMMAND": "1"
