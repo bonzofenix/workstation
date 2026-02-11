@@ -27,15 +27,17 @@ TOKEN=$(curl -s -X POST "${AUTH_URL}" \
 # Select model
 MODEL=$(gum choose --header "Select Claude model:" \
     "Claude 4.5 Sonnet" \
+    "Claude 4.5 Opus" \
     "Claude 4.5 Haiku" \
     "Claude 4 Sonnet" \
     "Claude 4 Opus")
 
 case "$MODEL" in
     "Claude 4.5 Sonnet") MODEL_NAME="anthropic--claude-4.5-sonnet" ;;
-    "Claude 4.5 Haiku") MODEL_NAME="anthropic--claude-4.5-haiku" ;;
-    "Claude 4 Sonnet")  MODEL_NAME="anthropic--claude-4-sonnet" ;;
-    "Claude 4 Opus")    MODEL_NAME="anthropic--claude-4-opus" ;;
+    "Claude 4.5 Opus")   MODEL_NAME="anthropic--claude-4.5-opus" ;;
+    "Claude 4.5 Haiku")  MODEL_NAME="anthropic--claude-4.5-haiku" ;;
+    "Claude 4 Sonnet")   MODEL_NAME="anthropic--claude-4-sonnet" ;;
+    "Claude 4 Opus")     MODEL_NAME="anthropic--claude-4-opus" ;;
 esac
 
 CONFIG_NAME=$(gum input --placeholder "Configuration name" --value "${MODEL_NAME}-config")
