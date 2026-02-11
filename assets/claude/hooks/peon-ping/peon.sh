@@ -60,14 +60,18 @@ for key in ['hook_event_name', 'notification_type', 'cwd', 'session_id', 'permis
     print(var_name + '=' + shlex.quote(event.get(key, '')))
 " <<< "$INPUT" 2>/dev/null)"
 
-# Skip non-interactive agent/teammate sessions (permission_mode != default)
-# Track by session_id since Notification events lack permission_mode
+# Skip non-interactive agent/teammate sessions
+# Agent modes: acceptEdits, ignoreEdits, bypassPermissions, delegate, etc.
+# Normal interactive modes: default, plan (these should get sounds)
 IS_AGENT_SESSION=$(/usr/bin/python3 -c "
 import json, os
 
 state_file = '$STATE_FILE'
 session_id = '$SESSION_ID'
 perm_mode = '$PERMISSION_MODE'
+
+# These permission modes indicate non-interactive agent sessions
+AGENT_MODES = {'acceptEdits', 'ignoreEdits', 'bypassPermissions', 'delegate'}
 
 try:
     state = json.load(open(state_file))
@@ -76,7 +80,7 @@ except:
 
 agent_sessions = set(state.get('agent_sessions', []))
 
-if perm_mode and perm_mode != 'default':
+if perm_mode in AGENT_MODES:
     agent_sessions.add(session_id)
     state['agent_sessions'] = list(agent_sessions)
     os.makedirs(os.path.dirname(state_file) or '.', exist_ok=True)
