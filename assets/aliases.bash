@@ -61,3 +61,5 @@ alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " 
 
 alias start-product='python3 <(docker run --rm "cf.common.repositories.cloud.sap/product-cf-hcp:develop-master" /usr/bin/env startup) --image="cf.common.repositories.cloud.sap/product-cf-hcp:develop-master"'
 alias attach-product='docker exec -it $(docker ps --filter "ancestor=cf.common.repositories.cloud.sap/product-cf-hcp:develop-master" --format "{{.Names}}" | head -1) bash -c "cd /mnt/landscape-aws-dev10/products/product-cf-hcp && exec bash"'
+
+alias obsidian='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/wiki'
