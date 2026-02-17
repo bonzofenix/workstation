@@ -116,6 +116,14 @@ add_to_profile '# Adding tmux to run by default on new terminal' \
                '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
 fi
 
+# Install Oh My Zsh if not already installed
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo "Installing Oh My Zsh"
+    RUNZSH=CHSH= sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
+else
+    echo "Oh My Zsh already installed"
+fi
+
 echo "Enables z shell plugin"
 add_to_profile '# Enables z shell plugin' \
   ". $WORKSTATION_DIR/bin/z.sh"
