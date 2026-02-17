@@ -4,6 +4,13 @@ export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null &&
 export WORKSTATION_DIR="$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/common.sh"
 
+# Detect Homebrew prefix based on architecture
+if [ -d "/opt/homebrew" ]; then
+  HOMEBREW_PREFIX="/opt/homebrew"
+else
+  HOMEBREW_PREFIX="/usr/local"
+fi
+
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
 
@@ -18,7 +25,7 @@ add_to_profile '# Add ~/bin binaries' \
 
 echo 'Adding coreutil path'
 add_to_profile '# Add gnubin for coreutil tooling to path' \
-               'path=("/usr/local/opt/coreutils/libexec/gnubin" $path)'
+               'path=("'"$HOMEBREW_PREFIX"'/opt/coreutils/libexec/gnubin" $path)'
 
 echo "Adds asdf to path"
 add_to_profile '# Adds asdf bin path' \
@@ -50,7 +57,7 @@ add_to_profile '# Adds local bin to path' \
 
 echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
-               'path=("opt/homebrew/opt/openssl@1.1/bin" $path)'
+               'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@1.1/bin" $path)'
 
 echo 'Adding ASDF env vars to path'
 add_to_profile '# Adding ASDF env vars to path' \
@@ -106,7 +113,7 @@ add_to_profile '# configure GPG' \
 echo 'Enabling TMUX to run by default'
 if ! grep -q 'TMUX' ~/.bash_profile; then
 add_to_profile '# Adding tmux to run by default on new terminal' \
-               '[ -z $TMUX ] && /opt/homebrew/bin/tmux new -As base'
+               '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
 fi
 
 echo "Enables z shell plugin"
