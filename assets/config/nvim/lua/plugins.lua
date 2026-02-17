@@ -15,12 +15,6 @@ return require("lazy").setup({
   { "godlygeek/tabular" },
   { "preservim/vim-markdown" },
 
-  -- Copilot
-  { "github/copilot.vim",
-    lazy = false,
-    build = ":Copilot setup"
-  },
-
   -- Go development
   { "fatih/vim-go",
     ft = "go",

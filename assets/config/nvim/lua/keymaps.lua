@@ -27,13 +27,6 @@ vim.cmd [[map <leader>z <Plug>(zoom-toggle)]]
 -- Git blame
 vim.cmd [[map <leader>g :Git blame<Enter>]]
 
--- Copilot navigation
-vim.cmd [[
-imap <silent> <C-j> <Plug>(copilot-next)
-imap <silent> <C-k> <Plug>(copilot-previous)
-imap <silent> <C-l> <Plug>(copilot-accept-word)
-]]
-
 -- Whitespace and cleanup maps
 vim.cmd [[
 map ;fws :%s/\s\+$//
