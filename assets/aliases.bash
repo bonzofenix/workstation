@@ -59,7 +59,4 @@ alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum
 
 alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " -f2 | gum choose --limit 1)'
 
-alias start-product='python3 <(docker run --rm "[redacted-host]:develop-master" /usr/bin/env startup) --image="[redacted-host]:develop-master"'
-alias attach-product='docker exec -it $(docker ps --filter "ancestor=[redacted-host]:develop-master" --format "{{.Names}}" | head -1) bash -c "cd /mnt/landscape-aws-dev10/products/[redacted] && exec bash"'
-
 alias obsidian='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/wiki'
