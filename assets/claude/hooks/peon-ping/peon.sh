@@ -212,6 +212,22 @@ fi
 # Build tab title with optional attention marker
 TAB_TITLE="${SHOW_MARKER:+● }${PROJECT}: ${TAB_STATUS}"
 
+# Get tmux window ID once for reuse
+WINDOW_ID=""
+if [ -n "${TMUX_PANE:-}" ]; then
+  WINDOW_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{window_id}')
+
+  # Store original window name if not already stored
+  ORIGINAL_NAME=$(tmux show-window-option -t "$WINDOW_ID" -v @claude_original_name 2>/dev/null || echo "")
+  if [ -z "$ORIGINAL_NAME" ]; then
+    ORIGINAL_NAME=$(tmux display-message -t "$WINDOW_ID" -p '#{window_name}')
+    tmux set-option -w -t "$WINDOW_ID" @claude_original_name "$ORIGINAL_NAME"
+  fi
+
+  # Set window name with attention marker
+  tmux rename-window -t "$WINDOW_ID" "$TAB_TITLE"
+fi
+
 # Update Terminal.app tab title via AppleScript
 if [ -n "$SESSION_TTY" ]; then
   osascript - "$TAB_TITLE" "$SESSION_TTY" <<'APPLESCRIPT' &
@@ -245,8 +261,7 @@ if [ -n "$SOUND_CATEGORY" ]; then
 fi
 
 # Highlight tmux window when attention needed
-if [ -n "$TRIGGER_ALERT" ] && [ -n "${TMUX_PANE:-}" ]; then
-  WINDOW_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{window_id}')
+if [ -n "$TRIGGER_ALERT" ] && [ -n "$WINDOW_ID" ]; then
   tmux set-window-option -t "$WINDOW_ID" window-status-style "$TMUX_ALERT_STYLE"
   tmux set-option -w -t "$WINDOW_ID" @claude_alert 1
 fi

@@ -20,7 +20,7 @@
     ]
   },
   "hooks": {
-    "SessionStart": [
+    "Notification": [
       {
         "matcher": "",
         "hooks": [
@@ -32,7 +32,7 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "SessionStart": [
       {
         "matcher": "",
         "hooks": [
@@ -56,7 +56,7 @@
         ]
       }
     ],
-    "Notification": [
+    "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
@@ -73,16 +73,18 @@
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
+  "alwaysThinkingEnabled": false,
+  "defaultMode": "plan",
   "enabledPlugins": {
-    "gopls-lsp@claude-plugins-official": true,
+    "atlassian@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "everything-claude-code@everything-claude-code": true
+    "gopls-lsp@claude-plugins-official": true
   },
-  "alwaysThinkingEnabled": true,
+  "gitAttribution": false,
+  "includeCoAuthoredBy": false,
   "keybindings": {
     "sendToBackground": "cmd+b cmd+b"
   },
-  "defaultMode": "plan",
   "spinnerVerbs": {
     "mode": "replace",
     "verbs": [

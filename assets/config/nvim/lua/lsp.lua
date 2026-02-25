@@ -1,6 +1,6 @@
 local lspconfig = require("lspconfig")
 
--- 🔧 Shared on_attach for all LSPs
+-- Shared on_attach for all LSPs
 local on_attach = function(_, bufnr)
   local keymap = vim.keymap.set
   local opts = { buffer = bufnr }
@@ -11,21 +11,25 @@ local on_attach = function(_, bufnr)
   keymap("n", "<leader>rn", vim.lsp.buf.rename, opts)
   keymap("n", "<leader>ca", vim.lsp.buf.code_action, opts)
 
-  -- Optional: format on save
+  -- Format on save (skip shell scripts to preserve tabs)
   vim.api.nvim_create_autocmd("BufWritePre", {
     buffer = bufnr,
     callback = function()
+      local ft = vim.bo.filetype
+      if ft == "sh" or ft == "bash" then
+        return
+      end
       vim.lsp.buf.format({ async = false })
     end,
   })
 end
 
--- 🌞 Ruby: Solargraph
+-- Ruby: Solargraph
 lspconfig.solargraph.setup({
   on_attach = on_attach,
 })
 
--- 🐹 Go: Gopls
+-- Go: Gopls
 lspconfig.gopls.setup({
   on_attach = on_attach,
   settings = {
