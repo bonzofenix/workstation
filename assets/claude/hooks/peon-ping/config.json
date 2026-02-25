@@ -1,6 +1,6 @@
 {
   "active_pack": "peon",
-  "volume": 0.5,
+  "volume": 0,
   "enabled": true,
   "tmux_alert_style": "fg=white,bg=red,bold",
   "categories": {
