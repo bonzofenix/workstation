@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -eu
+
+function start_cf-hcp-oci() {
+  local -r tag="${1:-master}"
+  local -r image="cf.common.repositories.cloud.sap/product-cf-hcp:${tag}"
+
+  echo "Using image: ${image}"
+
+  # Check if image exists locally
+  if docker image inspect "${image}" &> /dev/null
+  then
+    echo 'Image already exists locally.'
+    echo -n 'Do you want to pull the latest version? [y/N]: '
+    read -r answer
+    case "${answer}" in
+      [Yy]|[Yy][Ee][Ss])
+        echo 'Pulling latest image...'
+        docker pull "${image}"
+        ;;
+      *)
+        echo 'Using existing local image.'
+        ;;
+    esac
+  else
+    echo 'Image not found locally. Pulling...'
+    docker pull "${image}"
+  fi
+
+  echo "Starting product with image: ${image}"
+  python3 <(docker run --rm "${image}" /usr/bin/env startup) --image="${image}" "${@:2}"
+}
+
+echo 'ℹ️ Use `start_cf-hcp-oci <tag> [args…]` to start product with interactive image update prompt. Default tag: master' 1>&2
+
+product_version=$(cat product.yml | yq .product.version)
+start_cf-hcp-oci "develop-${product_version}" $@
