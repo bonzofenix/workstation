@@ -29,7 +29,14 @@ function start_cf-hcp-oci() {
   fi
 
   echo "Starting product with image: ${image}"
-  python3 <(docker run --rm "${image}" /usr/bin/env startup) --image="${image}" "${@:2}"
+
+  # Extract startup script to a temporary file to avoid process substitution issues
+  local startup_script=$(mktemp)
+  trap "rm -f ${startup_script}" EXIT
+
+  docker run --rm "${image}" /usr/bin/env startup 2>/dev/null > "${startup_script}"
+  chmod +x "${startup_script}"
+  python3 "${startup_script}" --image="${image}" "${@:2}"
 }
 
 echo 'ℹ️ Use `start_cf-hcp-oci <tag> [args…]` to start product with interactive image update prompt. Default tag: master' 1>&2
