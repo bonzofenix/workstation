@@ -8,7 +8,7 @@ function main() {
   local workstation_dir="$HOME/workstation"
   local skills_source_dir="$workstation_dir/assets/claude/skills"
   local global_skills_dir="$HOME/.claude/skills"
-  local skills=(analyze-ci code-audit smart-pr simplify unresolved-comments)
+  local skills=(analyze-ci code-audit smart-pr unresolved-comments)
 
   echo "Setting up global Claude Code skills..."
 
