@@ -21,7 +21,7 @@ brew "tmux"
 brew "wget"
 
 # Terminals
-cask "iterm2"
+cask "ghostty"
 
 # Browsers
 cask "google-chrome"

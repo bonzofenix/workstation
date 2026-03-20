@@ -38,8 +38,8 @@ defaults write com.apple.Terminal Shell -string "/bin/bash"
 defaults write -g com.apple.keyboard.fnState -boolean false
 
 echo
-echo "Configuring iTerm"
-cp assets/com.googlecode.iterm2.plist ~/Library/Preferences
+echo "Configuring Ghostty"
+# Ghostty uses TOML configuration, see assets/config/ghostty/ if needed
 
 softwareupdate --install-rosetta --agree-to-license || true
 
