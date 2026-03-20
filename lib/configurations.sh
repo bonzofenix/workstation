@@ -170,6 +170,10 @@ echo "Installing NeoVim configs"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
 ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
 
+echo "Installing Ghostty config"
+[ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty
+ln -fs "$WORKSTATION_DIR/assets/config/ghostty" ~/.config/ghostty
+
 [ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
 [ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
 

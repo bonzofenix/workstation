@@ -47,6 +47,7 @@ DEBUG=true make install    # Enable debug output
   - `tmux.conf` - tmux configuration
   - `gitignore_global` - Global git ignore patterns
   - `config/nvim/` - Neovim configuration
+  - `config/ghostty/` - Ghostty terminal configuration
   - `work/Brewfile` - Work-specific Homebrew packages
   - `personal/Brewfile` - Personal Homebrew packages
 
