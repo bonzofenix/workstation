@@ -80,6 +80,9 @@ brew "ripgrep"
 # asdf
 brew "asdf"
 
+# uv - fast Python package manager
+brew "uv"
+
 # Neovim
 brew "neovim"
 
