@@ -4,7 +4,14 @@ set -eu
 
 function start_cf-hcp-oci() {
   local -r tag="${1:-master}"
-  local -r image="cf.common.repositories.cloud.sap/product-cf-hcp:${tag}"
+
+  if [[ -z "${PRODUCT_DOCKER_REGISTRY:-}" ]]; then
+    echo "Error: PRODUCT_DOCKER_REGISTRY environment variable not set"
+    echo "Please set it in your ~/.bash_profile or ~/.zshrc"
+    exit 1
+  fi
+
+  local -r image="${PRODUCT_DOCKER_REGISTRY}/product-cf-hcp:${tag}"
 
   echo "Using image: ${image}"
 
@@ -40,6 +47,13 @@ function start_cf-hcp-oci() {
 }
 
 echo 'ℹ️ Use `start_cf-hcp-oci <tag> [args…]` to start product with interactive image update prompt. Default tag: master' 1>&2
+echo 'ℹ️ Use `start-product [version]` to start product. If no version provided, reads from product.yml' 1>&2
 
-product_version=$(cat product.yml | yq .product.version)
-start_cf-hcp-oci "develop-${product_version}" $@
+if [ $# -gt 0 ]; then
+  # Use the provided version parameter
+  start_cf-hcp-oci "$1" "${@:2}"
+else
+  # Default behavior: read version from product.yml
+  product_version=$(cat product.yml | yq .product.version)
+  start_cf-hcp-oci "develop-${product_version}"
+fi
