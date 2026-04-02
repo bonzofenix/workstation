@@ -138,6 +138,6 @@
   "defaultMode": "plan",
   "gitAttribution": false,
   "keybindings": {
-    "sendToBackground": "cmd+j cmd+j"
+    "sendToBackground": "ctrl+g ctrl+g"
   }
 }
