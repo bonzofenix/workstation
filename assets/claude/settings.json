@@ -1,9 +1,11 @@
 {
   "env": {
-    "DISABLE_TELEMETRY": "1",
+    "DISABLE_BUG_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
-    "DISABLE_BUG_COMMAND": "1"
+    "DISABLE_TELEMETRY": "1",
+    "ENABLE_TOOL_SEARCH": "false"
   },
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
@@ -16,9 +18,29 @@
       "Bash(cf api:*)",
       "Bash(cf auth:*)",
       "Bash(gh run view:*)",
-      "Bash(gh run watch:*)"
+      "Bash(gh run watch:*)",
+      "Bash",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(pwd)",
+      "Bash(git status)",
+      "Bash(python3:*)",
+      "Bash(pip *)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "MultiEdit(*)",
+      "Grep",
+      "Glob"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(git push*)",
+      "Bash(*sudo*)",
+      "Bash(*env*)"
     ]
   },
+  "model": "opus[1m]",
   "hooks": {
     "Notification": [
       {
@@ -73,17 +95,24 @@
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
-  "alwaysThinkingEnabled": false,
-  "defaultMode": "plan",
   "enabledPlugins": {
     "atlassian@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true
   },
-  "gitAttribution": false,
-  "includeCoAuthoredBy": false,
-  "keybindings": {
-    "sendToBackground": "cmd+b cmd+b"
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "*.githubusercontent.com",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "npmjs.org",
+        "registry.npmjs.org",
+        "raw.githubusercontent.com"
+      ]
+    }
   },
   "spinnerVerbs": {
     "mode": "replace",
@@ -104,5 +133,11 @@
       "Me not that kind of orc",
       "Swobu"
     ]
+  },
+  "alwaysThinkingEnabled": false,
+  "defaultMode": "plan",
+  "gitAttribution": false,
+  "keybindings": {
+    "sendToBackground": "cmd+j cmd+j"
   }
 }
