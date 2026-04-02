@@ -36,7 +36,7 @@ When invoked with a command argument:
 # View logs
 /run-in-container "tail -f /var/log/app.log"
 
-# Start an interactive shell (when no command specified)
+# trys to run the last thing this skill was used for in the current session
 /run-in-container
 ```
 
