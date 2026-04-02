@@ -1,8 +1,11 @@
---Set indentation behavior for 2 spaces
+-- Enable EditorConfig support (must come before setting options)
+vim.g.editorconfig = true
+
+--Set indentation behavior for 2 spaces (default, can be overridden by .editorconfig)
 vim.opt.tabstop = 2        -- Visual tab width (2 spaces)
 vim.opt.softtabstop = 2    -- How many spaces a tab feels like when editing
 vim.opt.shiftwidth = 2     -- Number of spaces for indentation
-vim.opt.expandtab = true   -- Use spaces instead of tabs
+vim.opt.expandtab = true   -- Use spaces instead of tabs (default, can be overridden by .editorconfig)
 
 vim.opt.autoindent = true
 vim.opt.formatoptions:append("o")
