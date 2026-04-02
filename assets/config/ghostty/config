@@ -1,0 +1,34 @@
+# Ghostty Terminal Configuration
+
+# Font configuration
+font-family = "JetBrains Mono"
+font-size = 13
+
+# Theme
+theme = "gruvbox"
+
+# Window configuration
+window-padding-x = 8
+window-padding-y = 8
+
+# Cursor
+cursor-style = block
+cursor-style-blink = false
+
+# Mouse
+mouse-hide-while-typing = true
+
+# Shell integration
+shell-integration = true
+shell-integration-features = cursor,sudo,title
+
+# Keybindings
+keybind = super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+keybind = super+n=new_window
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+
+# macOS specific
+macos-titlebar-style = tabs
+macos-option-as-alt = true
