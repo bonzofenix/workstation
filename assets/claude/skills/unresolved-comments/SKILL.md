@@ -4,9 +4,13 @@ description: Fetch and display only unresolved comments from a GitHub pull reque
 allowed-tools:
   - Bash(gh pr view*)
   - Bash(gh api*)
+  - Read
+  - Edit
+  - Write
+  - Bash(git*)
 ---
 
-Fetch and display ONLY unresolved comments from a GitHub pull request.
+Fetch and display ONLY unresolved comments from a GitHub pull request, then assist with addressing them.
 
 ## Steps
 
@@ -43,7 +47,7 @@ Fetch and display ONLY unresolved comments from a GitHub pull request.
 
 3. Filter threads where `isResolved: false`
 4. Parse and format unresolved comments
-5. Return formatted output with no additional text
+5. Display formatted output
 
 ## Output Format
 
@@ -61,6 +65,24 @@ Fetch and display ONLY unresolved comments from a GitHub pull request.
 
 If no unresolved comments exist, return "No unresolved comments found."
 
+## Comment Resolution Workflow
+
+For each unresolved comment:
+
+1. **Analyze the comment**: Read the relevant code context
+2. **Provide your assessment**: 
+   - Explain whether the suggestion makes sense
+   - Discuss trade-offs and implications
+   - Give your recommendation (apply or skip)
+3. **Let user decide**: Present options and wait for user input
+4. **If applying the fix**:
+   - Make the code change
+   - Commit with message format: "fix: address review comment - [brief description]"
+   - Reply with: "Fixed in {commit_hash}"
+5. **If skipping**:
+   - Provide a concise explanation for the user to reply with
+   - Format: 1-2 sentences explaining why the suggestion wasn't applied
+
 ## Important Notes
 
 - Only show threads where `isResolved: false`
@@ -69,4 +91,3 @@ If no unresolved comments exist, return "No unresolved comments found."
 - Show file and line number context
 - Note outdated comments using `isOutdated` field
 - Use jq to parse GraphQL JSON responses
-- No explanatory text, only formatted comments
