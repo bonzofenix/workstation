@@ -2,10 +2,11 @@
 name: good-morning
 description: Show all your open PRs from GitHub.com and GitHub Enterprise with status, reviews, and CI jobs
 allowed-tools:
-  - Bash(gh pr list*)
+  - Bash(gh search prs*)
   - Bash(gh pr view*)
   - Bash(gh api*)
   - Bash(gh pr checks*)
+  - Bash(gh auth status*)
 ---
 
 # Good Morning - PR Dashboard
@@ -20,15 +21,19 @@ Display all your open PRs from both GitHub.com and GitHub Enterprise (github.too
 
 ### Step 1: Fetch Open PRs from GitHub.com
 
+Use `gh search prs` instead of `gh pr list` to search across all repositories:
+
 ```bash
-gh pr list --author @me --state open --json number,title,url,repository,isDraft,reviewDecision --limit 100
+gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt --limit 100
 ```
 
 ### Step 2: Fetch Open PRs from GitHub Enterprise
 
 ```bash
-GH_HOST=github.tools.sap gh pr list --author @me --state open --json number,title,url,repository,isDraft,reviewDecision --limit 100
+GH_HOST=github.tools.sap gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt --limit 100
 ```
+
+Note: `gh pr list` requires being in a git repository and uses `repository` field which is not available. Use `gh search prs` instead which works from any directory and provides the `repository` field with `nameWithOwner`.
 
 ### Step 3: For Each PR, Gather Detailed Information
 
