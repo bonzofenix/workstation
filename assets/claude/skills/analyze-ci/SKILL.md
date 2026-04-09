@@ -21,20 +21,23 @@ Analyzes logs from failed GitHub Action jobs for the current branch's PR.
 
 When invoked:
 1. Detects the PR number for current branch
-2. Checks status of all CI checks
-3. Identifies failed jobs
-4. Fetches and analyzes logs from failed jobs
-5. Provides summary with root causes and error snippets
+2. **Checks if PR is already merged** (exits early if merged)
+3. Checks status of all CI checks
+4. Identifies failed jobs
+5. Fetches and analyzes logs from failed jobs
+6. Provides summary with root causes and error snippets
 
 ## How it Works
 
 Uses GitHub CLI to:
 - Detect current PR: `gh pr view --json number`
+- **Check merge status: `gh pr view --json state,mergedAt,mergedBy`**
 - List checks: `gh pr checks <pr-number>`
 - View run details: `gh run view <run-id>`
 - Fetch logs: `gh api repos/.../actions/jobs/<job-id>/logs`
 
 Output includes:
+- **PR merge status** (if already merged, reports merge time and author)
 - PR number and branch
 - Failed job names
 - Root cause analysis
