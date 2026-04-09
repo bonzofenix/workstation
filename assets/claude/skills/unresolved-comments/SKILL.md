@@ -83,6 +83,25 @@ For each unresolved comment:
    - Provide a concise explanation for the user to reply with
    - Format: 1-2 sentences explaining why the suggestion wasn't applied
 
+## Code References in Replies
+
+When replying to comments, **always include GitHub permalink references** to support claims:
+
+- Link to the changed code: `[methodName](https://github.com/OWNER/REPO/blob/BRANCH/path/file.go#L42)`
+- Link to line ranges: `#L10-L25` for multi-line references
+- Link to relevant test cases when tests were added
+- Link to third-party library source when explaining library behavior
+- Build links using the PR's head branch: `https://github.com/OWNER/REPO/blob/BRANCH/path`
+
+Example reply:
+```
+Switched to Bearer auth via [`HTTPAuthClient().Do()`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L177).
+Uses [`doAuthRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L174) for /introspect
+and [`doUaaRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L185) for /userinfo.
+```
+
+This makes it easy for reviewers to verify claims without searching the codebase.
+
 ## Important Notes
 
 - Only show threads where `isResolved: false`
