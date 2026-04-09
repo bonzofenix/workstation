@@ -7,10 +7,10 @@ command -v gum >/dev/null 2>&1 || { echo "Error: gum not installed. Install with
 git fetch --prune
 
 # Find branches that are merged
-merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}')
+merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}' || true)
 
 # Find branches where upstream is gone
-gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}')
+gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $1}' || true)
 
 # Combine both lists and remove duplicates
 branches=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$')
