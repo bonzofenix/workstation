@@ -19,6 +19,8 @@
       "Bash(cf auth:*)",
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr list*)",
       "Bash",
       "Bash(ls *)",
       "Bash(mkdir *)",
