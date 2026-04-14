@@ -2,155 +2,166 @@
 name: good-morning
 description: Show all your open PRs from GitHub.com and GitHub Enterprise with status, reviews, and CI jobs
 allowed-tools:
+  - Bash(python* pr-dashboard.py)
   - Bash(gh search prs*)
   - Bash(gh pr view*)
   - Bash(gh api*)
   - Bash(gh pr checks*)
-  - Bash(gh auth status*)
 ---
 
 # Good Morning - PR Dashboard
 
-Display all your open PRs from both GitHub.com and GitHub Enterprise (github.tools.sap) in a comprehensive table showing:
+Display all your open PRs from GitHub.com and any configured GitHub Enterprise hosts in a comprehensive dashboard showing:
 - PR link and title
-- Review status (who needs to review)
+- Review status (approved, changes requested, pending)
 - CI job status (passing/failing/pending)
-- Unresolved comments indicator
+- Unresolved comments count
+- Draft status
 
-## Steps
+## Configuration
 
-### Step 1: Fetch Open PRs from GitHub.com
-
-Use `gh search prs` instead of `gh pr list` to search across all repositories:
-
-```bash
-gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt --limit 100
-```
-
-### Step 2: Fetch Open PRs from GitHub Enterprise
+Add to `~/.bash_profile` or `~/.zshrc`:
 
 ```bash
-GH_HOST=github.tools.sap gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt --limit 100
+export GITHUB_REMOTES="github.com,github.enterprise.local"
 ```
 
-Note: `gh pr list` requires being in a git repository and uses `repository` field which is not available. Use `gh search prs` instead which works from any directory and provides the `repository` field with `nameWithOwner`.
+The script will fetch PRs from all configured hosts in parallel.
 
-### Step 3: For Each PR, Gather Detailed Information
+## Implementation
 
-For each PR, run in parallel:
+Run the Python script and display its full output directly in your response:
 
-**a) Get reviewers and review status:**
+```bash
+python3 ~/.claude/skills/good-morning/pr-dashboard.py
+```
+
+**IMPORTANT**: After running the script, you MUST display the complete output in your response text (not just in the tool result). Copy the entire dashboard output and present it to the user so they can see and click the URLs directly.
+
+The script:
+- Reads GitHub hosts from `GITHUB_REMOTES` environment variable
+- Fetches PRs from all configured hosts in parallel
+- Fetches detailed PR information (reviews, checks, comments) in parallel using ThreadPoolExecutor
+- Categorizes PRs into priority buckets
+- Formats output with clear status indicators
+
+## Manual Steps (if script unavailable)
+
+### Step 1: Fetch Open PRs
+
+```bash
+# GitHub.com
+gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt,isDraft --limit 100
+
+# Enterprise
+GH_HOST=github.tools.sap gh search prs --author=@me --state=open --json number,title,url,repository,updatedAt,isDraft --limit 100
+```
+
+### Step 2: For Each PR, Gather Details (in parallel)
+
+**a) Reviews and review requests:**
 ```bash
 gh pr view <number> -R <repo> --json reviews,reviewRequests
 ```
 
-**b) Get CI checks:**
+**b) CI checks (use `state` field, not `status`):**
 ```bash
-gh pr checks <number> -R <repo> --json name,status,conclusion
+gh pr checks <number> -R <repo> --json name,state
 ```
 
-**c) Get unresolved comments count:**
+**c) Unresolved comments:**
 ```bash
-gh api graphql -f query='
-{
+gh api graphql -f query='{
   repository(owner: "OWNER", name: "REPO") {
     pullRequest(number: NUMBER) {
       reviewThreads(first: 100) {
-        nodes {
-          isResolved
-        }
+        nodes { isResolved }
       }
     }
   }
 }'
 ```
 
-Count threads where `isResolved: false`.
+For Enterprise PRs, prefix with `GH_HOST=github.tools.sap`.
 
-For Enterprise PRs, add `GH_HOST=github.tools.sap` before commands.
+### Step 3: Categorize PRs
 
-### Step 4: Categorize CI Job Status
+**Needs Attention:**
+- Has changes requested, OR
+- Has failing CI checks, OR
+- Has unresolved comments
 
-For each PR, summarize CI jobs:
-- **Passing**: All checks successful
-- **Failing**: Any check failed
-- **Pending**: Jobs still running
-- **N/A**: No checks configured
+**Awaiting Review:**
+- Has pending review requests, OR
+- No reviewers assigned
 
-Count jobs in each category: "3 passing, 1 failing"
+**Approved and Passing:**
+- Approved by reviewers AND
+- All CI checks passing
 
-### Step 5: Determine Review Status
+### Step 4: Display Summary
 
-Parse reviews and reviewRequests to show:
-- **Approved**: ✅ + reviewer names
-- **Changes requested**: ❌ + reviewer names  
-- **Pending review**: 👀 + reviewer names
-- **No reviewers**: ⚠️ (if no one assigned)
-
-### Step 6: Display Results Table
-
-Format as a markdown table:
-
-```markdown
-## GitHub.com PRs
-
-| PR | Title | Reviews | CI Status | Comments |
-|----|-------|---------|-----------|----------|
-| [#123](url) | Fix auth bug | ✅ @alice, 👀 @bob | ✅ 5 passing | ✅ None |
-| [#124](url) | Add feature | ❌ @charlie | ❌ 2 passing, 1 failing | ⚠️ 3 unresolved |
-
-## GitHub Enterprise (github.tools.sap) PRs
-
-| PR | Title | Reviews | CI Status | Comments |
-|----|-------|---------|-----------|----------|
-| [#456](url) | Update deps | 👀 @dave | ⏳ 3 pending | ✅ None |
 ```
-
-### Step 7: Add Summary Statistics
-
-At the top, show:
-```markdown
 # Good Morning! ☀️
 
-**Summary**: X open PRs (Y on GitHub.com, Z on Enterprise)
-- ✅ N approved and passing
-- ⚠️ N needing attention (failing CI or unresolved comments)
-- 👀 N awaiting review
+**📊 X total open PRs** (Y on GitHub.com, Z on Enterprise)
+
+---
+
+## 🚨 Top Priority - Needs Attention:
+
+- 🚧 https://github.com/owner/repo/pull/123 - Title | ❌ Changes requested by @reviewer | 3 failing checks | 5 unresolved comments
+
+---
+
+## 👀 Awaiting Review:
+
+- https://github.com/owner/repo/pull/456 - Title | 👀 Waiting on @reviewer | ⏳ 2 pending checks
+
+---
+
+## ✅ Approved and Passing:
+
+- https://github.com/owner/repo/pull/789 - Title | ✅ Approved by @reviewer | ✅ All 15 checks passing
+
+---
+
+**Key Issues to Address:**
+- 🔥 **N PRs with changes requested** need updates
+- ⚠️ **N failing CI checks** across all PRs
+- 💬 **N total unresolved comments**
 ```
 
 ## Display Symbols
 
-- ✅ Green check: Approved/Passing/No issues
-- ❌ Red X: Changes requested/Failing
-- ⏳ Hourglass: Pending/Running
-- 👀 Eyes: Awaiting review
-- ⚠️ Warning: Needs attention
-- 🚧 Draft PR indicator
+- ✅ Approved/Passing
+- ❌ Changes requested/Failing
+- ⏳ Pending/Running
+- 👀 Awaiting review
+- ⚠️ No reviewers
+- 🚧 Draft PR
 
 ## Error Handling
 
 - **No PRs found**: "No open PRs found. Great job! 🎉"
-- **GitHub Enterprise unavailable**: Note which host failed, continue with available data
-- **API rate limits**: Show partial data with note about rate limit
-- **Network errors**: Display error and available cached data if any
+- **Host unavailable**: Continue with available data, note error
+- **API rate limit**: Show partial data with note
+- **Network errors**: Display error and retry
 
-## Performance Optimization
+## Performance
 
-- Fetch PR lists in parallel (GitHub.com and Enterprise simultaneously)
-- For each PR's detailed data, batch API calls where possible
-- Use `--json` format for efficient parsing
-- Limit to 100 PRs per host (configurable)
-
-## Usage
-
-```bash
-/good-morning           # Show all open PRs
-```
+- Python script uses ThreadPoolExecutor for parallel API calls
+- Fetches up to 10 PR details concurrently
+- Batch GraphQL queries where possible
+- 30-second timeout per API call
 
 ## Notes
 
-- Draft PRs are marked with 🚧
-- PRs are sorted by update time (most recent first)
-- CI status shows aggregate of all checks
-- Review status shows latest state from each reviewer
-- Enterprise host is hardcoded to `github.tools.sap`
+- **IMPORTANT**: Output uses explicit URLs (not markdown links) for direct clickability in terminals
+- **IMPORTANT**: Must set `GITHUB_REMOTES` environment variable in `~/.bash_profile` or `~/.zshrc`
+- Check field is `state`, not `status` (SUCCESS/FAILURE/PENDING/SKIPPED)
+- PRs sorted by priority (changes requested, failing checks, unresolved comments)
+- Supports multiple GitHub Enterprise hosts
+- Format: `- [draft emoji] URL - Title | status indicators`
+- Standup briefing appended at bottom: finds most recent commit day, lists substantive commits per PR
+- Noise commits filtered: merge commits and CI trigger/re-run commits excluded from standup
