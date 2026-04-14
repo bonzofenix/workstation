@@ -18,6 +18,7 @@ allowed-tools:
   - Bash(npx *)
   - Bash(go fmt*)
   - Bash(gofmt*)
+  - Bash(*poll-ci.sh*)
 ---
 
 # Analyze CI
@@ -81,19 +82,19 @@ If all passed and none pending → report success and stop.
 If any checks have `bucket: "pending"`:
 
 1. List which checks are still running with their start times
-2. Tell the user: "N checks still running. Waiting for completion..."
-3. Run:
+2. Tell the user: "N checks still running. Polling until completion..."
+3. **Do NOT use `gh pr checks --watch`** — it blocks as a single long-lived command, hits bash timeout limits (15min max), and dies on transient network errors.
+4. Instead, run `poll-ci.sh` from the skill directory (`~/.claude/skills/analyze-ci/poll-ci.sh`) in background:
    ```bash
-   gh pr checks --watch --interval 30
+   ~/.claude/skills/analyze-ci/poll-ci.sh --interval 30 --timeout 3600
    ```
-   This blocks until all checks complete, printing updates every 30 seconds.
-4. After watch completes, re-fetch final status:
+   Run with `run_in_background: true` and `timeout: 3600000` (1 hour).
+   The script polls every 30s, retries on network errors, and exits when all checks complete or timeout is reached.
+5. When the background task completes, read its output file and re-fetch final status:
    ```bash
    gh pr checks --json name,state,bucket,workflow,link
    ```
-5. If all passed after waiting → report success and stop
-
-If the user interrupts the watch, report whatever status is available at that point and proceed to analyze any failures found so far.
+6. If all passed after waiting → report success and stop
 
 ## Step 4: Analyze Failures
 
