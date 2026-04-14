@@ -37,7 +37,6 @@
     ],
     "deny": [
       "Bash(rm *)",
-      "Bash(git push*)",
       "Bash(*sudo*)",
       "Bash(*env*)"
     ]
