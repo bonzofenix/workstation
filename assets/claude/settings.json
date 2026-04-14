@@ -12,6 +12,7 @@
       "Bash(grep:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
+      "Bash(git push:*)",
       "Bash(gh pr view:*)",
       "Bash(gh api:*)",
       "Bash(gh pr checks:*)",
@@ -37,7 +38,6 @@
     ],
     "deny": [
       "Bash(rm *)",
-      "Bash(git push*)",
       "Bash(*sudo*)",
       "Bash(*env*)"
     ]
