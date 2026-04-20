@@ -539,6 +539,13 @@ def main():
         for line in format_standup_briefing(all_prs, target_date):
             print(line)
 
+    # Merged PRs section
+    working_days = get_last_n_working_days(2)
+    merged_prs = fetch_merged_prs(github_hosts, working_days[-1])  # Fetch since oldest working day
+    print("---")
+    for line in format_merged_prs(merged_prs, working_days):
+        print(line)
+
 
 if __name__ == "__main__":
     main()
