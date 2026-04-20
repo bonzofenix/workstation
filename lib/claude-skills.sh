@@ -8,14 +8,16 @@ function main() {
   local workstation_dir="$HOME/workstation"
   local skills_source_dir="$workstation_dir/assets/claude/skills"
   local global_skills_dir="$HOME/.claude/skills"
-  local skills=(analyze-ci code-audit smart-pr unresolved-comments)
 
   echo "Setting up global Claude Code skills..."
 
   mkdir -p "$global_skills_dir"
 
-  for skill in "${skills[@]}"; do
-    local source="$skills_source_dir/$skill"
+  # Dynamically find all skill directories
+  for source in "$skills_source_dir"/*; do
+    [ -d "$source" ] || continue
+
+    local skill=$(basename "$source")
     local target="$global_skills_dir/$skill"
 
     if [ -L "$target" ]; then
