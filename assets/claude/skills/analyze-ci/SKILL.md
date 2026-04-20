@@ -65,15 +65,23 @@ Categorize each check by `bucket`:
 - `pending` → still running
 - `skipping` / `cancel` → skipped/cancelled
 
-Display summary:
+Display summary on a single line with check names:
 
+```bash
+gh pr checks --json name,state,bucket,workflow | jq -r '
+  group_by(.bucket) | 
+  map({bucket: .[0].bucket, count: length, items: map(.name)}) | 
+  .[] | 
+  "\(.bucket | ascii_upcase): \(.count) - \(.items | join(", "))"
+'
 ```
-CI Status:
-  ✅ Passed:  N
-  🟡 Pending: N
-  ❌ Failed:  N
-  ⏭️  Skipped: N
-```
+
+Format: **CI Status:** ✅ N passed | 🟡 N pending | ❌ N failed
+
+Then list check names per bucket:
+- **Passed:** check1, check2, check3
+- **Pending:** check4, check5
+- **Failed:** check6
 
 If all passed and none pending → report success and stop.
 
