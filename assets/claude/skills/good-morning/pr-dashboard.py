@@ -332,8 +332,9 @@ def fetch_merged_prs(github_hosts: List[Optional[str]], since_date: str) -> List
         cmd = [
             "gh", "search", "prs",
             "--author=@me",
-            "--state=merged",
-            "--merged", f">={since_date}",
+            "--state=closed",
+            "--merged",
+            f"--merged-at=>={since_date}",
             "--json", "number,title,url,repository,mergedAt",
             "--limit", "100"
         ]
