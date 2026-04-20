@@ -20,14 +20,7 @@ function main() {
     local skill=$(basename "$source")
     local target="$global_skills_dir/$skill"
 
-    if [ -L "$target" ]; then
-      echo "  Skill /$skill already linked"
-    elif [ -e "$target" ]; then
-      echo "  Warning: $target exists and is not a symlink, skipping"
-    else
-      ln -s "$source" "$target"
-      echo "  Linked skill: /$skill"
-    fi
+    link_if_missing "$source" "$target" "Skill /$skill"
   done
 
   echo "✓ Claude Code skills configured globally"
