@@ -70,9 +70,18 @@ Uses GitHub CLI and APIs to:
 🔗 View new issues: https://sonarcloud.io/project/issues?id=project&pullRequest=1062&issueStatuses=OPEN,CONFIRMED
 ```
 
+## Policy
+
+**DO NOT introduce new SonarCloud issues.** If new issues are detected:
+- Review each issue in the analysis output
+- Fix all new issues before proceeding with the PR
+- Re-run SonarCloud analysis to verify issues are resolved
+
+Quality Gate passing does NOT mean issues should be ignored - all new issues must be addressed.
+
 ## Tips
 
 - Run this after CI checks complete and SonarCloud has posted results
 - For inline code issues, visit the SonarCloud dashboard link provided
 - Some issues may be "Code Smells" (minor) vs "Bugs" (critical)
-- Quality Gate passing means issues are not blocking, but should still be reviewed
+- Fix new issues immediately rather than accumulating technical debt

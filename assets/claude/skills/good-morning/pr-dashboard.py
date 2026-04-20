@@ -307,6 +307,54 @@ def get_most_recent_commit_date(all_prs: List[PR]) -> Optional[str]:
     return latest
 
 
+def get_last_n_working_days(n: int) -> List[str]:
+    """Get last N working days (Mon-Fri) as YYYY-MM-DD strings."""
+    from datetime import datetime, timedelta
+
+    dates = []
+    current = datetime.now()
+
+    while len(dates) < n:
+        # Skip weekends (5=Saturday, 6=Sunday)
+        if current.weekday() < 5:
+            dates.append(current.strftime("%Y-%m-%d"))
+        current -= timedelta(days=1)
+
+    return dates
+
+
+def fetch_merged_prs(github_hosts: List[Optional[str]], since_date: str) -> List[Dict]:
+    """Fetch merged PRs from all hosts since a given date."""
+    merged_prs = []
+
+    for host in github_hosts:
+        env = {"GH_HOST": host} if host else None
+        cmd = [
+            "gh", "search", "prs",
+            "--author=@me",
+            "--state=merged",
+            "--merged", f">={since_date}",
+            "--json", "number,title,url,repository,mergedAt",
+            "--limit", "100"
+        ]
+
+        result = run_command(cmd, env)
+        if isinstance(result, dict) and "error" in result:
+            print(f"Warning: Failed to fetch merged PRs from {host or 'github.com'}: {result['error']}", file=sys.stderr)
+            continue
+
+        for pr in result:
+            merged_prs.append({
+                "number": pr["number"],
+                "title": pr["title"],
+                "url": pr["url"],
+                "repository": pr["repository"]["nameWithOwner"],
+                "merged_at": pr["mergedAt"]
+            })
+
+    return merged_prs
+
+
 def format_standup_briefing(all_prs: List[PR], target_date: str) -> List[str]:
     """Build standup briefing lines for commits on target_date."""
     from datetime import datetime
@@ -338,6 +386,43 @@ def format_standup_briefing(all_prs: List[PR], target_date: str) -> List[str]:
 
     if not found_any:
         lines.append("No substantive commits found (only merges/CI triggers).\n")
+
+    return lines
+
+
+def format_merged_prs(merged_prs: List[Dict], working_days: List[str]) -> List[str]:
+    """Format merged PRs section for the last N working days."""
+    from datetime import datetime
+
+    lines = []
+    lines.append("\n## ✅ Recently Merged (Last 2 Working Days):\n")
+
+    if not merged_prs:
+        lines.append("No PRs merged.\n")
+        return lines
+
+    # Group by date
+    prs_by_date = {}
+    for pr in merged_prs:
+        merged_date = pr["merged_at"][:10]  # YYYY-MM-DD
+        if merged_date not in prs_by_date:
+            prs_by_date[merged_date] = []
+        prs_by_date[merged_date].append(pr)
+
+    # Display by working day (most recent first)
+    found_any = False
+    for date in working_days:
+        if date in prs_by_date:
+            found_any = True
+            date_display = datetime.strptime(date, "%Y-%m-%d").strftime("%B %d")
+            lines.append(f"**{date_display}:**\n")
+            for pr in prs_by_date[date]:
+                short_repo = pr["repository"].split("/")[-1]
+                lines.append(f"- {pr['url']} - **{short_repo}#{pr['number']}**: {pr['title']}")
+            lines.append("")
+
+    if not found_any:
+        lines.append("No PRs merged.\n")
 
     return lines
 
