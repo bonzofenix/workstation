@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-git fetch --prune
+# Check if in git repo
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  gum style --foreground 196 "Error: Not in a git repository"
+  exit 1
+fi
+
+# Parse flags
+ALL=false
+if [[ "${1:-}" == "--all" ]]; then
+  ALL=true
+fi
+
+gum spin --spinner dot --title "Fetching remotes..." -- git fetch --all --prune 2>&1 || gum style --foreground 214 "Warning: Some remotes failed to fetch"
 
 # Get list of all worktrees with their branches (excluding main worktree)
 worktrees_info=$(git worktree list --porcelain | awk '
@@ -21,39 +33,49 @@ worktrees_info=$(git worktree list --porcelain | awk '
 ')
 
 if [[ -z "$worktrees_info" ]]; then
-  echo "No worktrees found (excluding main worktree)."
+  gum style --foreground 240 "No worktrees found (excluding main worktree)."
   exit 0
 fi
 
-# Find branches that are merged
-merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
-
-# Find branches where upstream is gone
-gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
-
-# Combine both lists and remove duplicates
-branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$' || true)
-
-if [[ -z "$branches_to_cleanup" ]]; then
-  echo "No merged or gone branches found. No worktrees to clean up."
-  exit 0
-fi
-
-# Filter worktrees whose branches are in the cleanup list
-worktrees_to_remove=""
-while IFS='|' read -r branch path; do
-  if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
+if [[ "$ALL" == true ]]; then
+  # Cleanup all worktrees
+  worktrees_to_remove=""
+  while IFS='|' read -r branch path; do
     worktrees_to_remove+="${branch} (${path})"$'\n'
+  done <<< "$worktrees_info"
+
+  branches_to_cleanup=$(echo "$worktrees_info" | cut -d'|' -f1)
+else
+  # Find branches that are merged
+  merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+
+  # Find branches where upstream is gone
+  gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+
+  # Combine both lists and remove duplicates
+  branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$' || true)
+
+  if [[ -z "$branches_to_cleanup" ]]; then
+    gum style --foreground 240 "No merged or gone branches found. No worktrees to clean up."
+    exit 0
   fi
-done <<< "$worktrees_info"
+
+  # Filter worktrees whose branches are in the cleanup list
+  worktrees_to_remove=""
+  while IFS='|' read -r branch path; do
+    if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
+      worktrees_to_remove+="${branch} (${path})"$'\n'
+    fi
+  done <<< "$worktrees_info"
+fi
 
 if [[ -z "$worktrees_to_remove" ]]; then
-  echo "No worktrees associated with merged or gone branches."
+  gum style --foreground 240 "No worktrees associated with merged or gone branches."
   exit 0
 fi
 
-echo "The following worktrees will be deleted:"
-echo "$worktrees_to_remove"
+gum style --bold --foreground 212 "Worktrees to delete:"
+echo "$worktrees_to_remove" | gum style --foreground 248
 echo
 
 gum confirm "Delete these worktrees?" || exit 1
@@ -61,8 +83,7 @@ gum confirm "Delete these worktrees?" || exit 1
 # Remove each worktree
 while IFS='|' read -r branch path; do
   if echo "$branches_to_cleanup" | grep -q "^${branch}$"; then
-    echo "Removing worktree: $branch ($path)"
-    git worktree remove "$path" || git worktree remove -f "$path"
+    gum spin --spinner dot --title "Removing $branch..." -- git worktree remove "$path" 2>/dev/null || git worktree remove -f "$path"
   fi
 done <<< "$worktrees_info"
 
@@ -74,7 +95,7 @@ if gum confirm "Also delete the associated branches?"; then
       git branch -D "$branch" 2>/dev/null || true
     fi
   done <<< "$worktrees_info"
-  echo "✓ Deleted worktrees and branches"
+  gum style --foreground 82 "✓ Deleted worktrees and branches"
 else
-  echo "✓ Deleted worktrees (branches preserved)"
+  gum style --foreground 82 "✓ Deleted worktrees (branches preserved)"
 fi
