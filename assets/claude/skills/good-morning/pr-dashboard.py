@@ -335,7 +335,7 @@ def fetch_merged_prs(github_hosts: List[Optional[str]], since_date: str) -> List
             "--state=closed",
             "--merged",
             f"--merged-at=>={since_date}",
-            "--json", "number,title,url,repository,mergedAt",
+            "--json", "number,title,url,repository,closedAt",
             "--limit", "100"
         ]
 
@@ -350,7 +350,7 @@ def fetch_merged_prs(github_hosts: List[Optional[str]], since_date: str) -> List
                 "title": pr["title"],
                 "url": pr["url"],
                 "repository": pr["repository"]["nameWithOwner"],
-                "merged_at": pr["mergedAt"]
+                "merged_at": pr["closedAt"]
             })
 
     return merged_prs
