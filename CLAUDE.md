@@ -71,7 +71,7 @@ The setup configures both bash and zsh:
 
 ### Git Configuration
 
-- **Default branch**: `develop` (not main/master)
+- **Default branch**: `main`
 - **Git duet** enabled globally for pair programming
 - **Extensive aliases** defined in `lib/git.sh`:
   - `git st` - status
@@ -133,7 +133,7 @@ Key environment variables set by the installation:
 
 ## Important Notes
 
-- The workstation uses **`develop`** as the default branch, not `main` or `master`
+- The workstation uses **`main`** as the default branch
 - Many git workflow scripts filter out `develop` in addition to `main`/`master`
 - TMUX starts automatically on new terminal sessions
 - Direnv and devbox are configured for per-project environments
