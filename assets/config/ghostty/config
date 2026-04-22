@@ -5,7 +5,7 @@ font-family = "JetBrains Mono"
 font-size = 13
 
 # Theme
-theme = "gruvbox"
+theme = "Gruvbox Dark"
 
 # Window configuration
 window-padding-x = 8
@@ -19,7 +19,7 @@ cursor-style-blink = false
 mouse-hide-while-typing = true
 
 # Shell integration
-shell-integration = true
+shell-integration = detect
 shell-integration-features = cursor,sudo,title
 
 # Keybindings
