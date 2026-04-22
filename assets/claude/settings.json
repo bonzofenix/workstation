@@ -37,8 +37,7 @@
     ],
     "deny": [
       "Bash(rm *)",
-      "Bash(*sudo*)",
-      "Bash(*env*)"
+      "Bash(*sudo*)"
     ]
   },
   "model": "sonnet[1m]",
