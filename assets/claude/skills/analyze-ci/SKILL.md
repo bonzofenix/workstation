@@ -18,7 +18,7 @@ allowed-tools:
   - Bash(npx *)
   - Bash(go fmt*)
   - Bash(gofmt*)
-  - Bash(*poll-ci.sh*)
+  - Bash(*poll_ci.py*)
 ---
 
 # Analyze CI
@@ -92,9 +92,9 @@ If any checks have `bucket: "pending"`:
 1. List which checks are still running with their start times
 2. Tell the user: "N checks still running. Polling until completion..."
 3. **Do NOT use `gh pr checks --watch`** — it blocks as a single long-lived command, hits bash timeout limits (15min max), and dies on transient network errors.
-4. Instead, run `poll-ci.sh` from the skill directory (`~/.claude/skills/analyze-ci/poll-ci.sh`) in background:
+4. Instead, run `poll_ci.py` from the skill directory (`~/.claude/skills/analyze-ci/poll_ci.py`) in background:
    ```bash
-   ~/.claude/skills/analyze-ci/poll-ci.sh --interval 30 --timeout 3600
+   python3 ~/.claude/skills/analyze-ci/poll_ci.py --interval 30 --timeout 3600
    ```
    Run with `run_in_background: true` and `timeout: 3600000` (1 hour).
    The script polls every 30s, retries on network errors, and exits when all checks complete or timeout is reached.
