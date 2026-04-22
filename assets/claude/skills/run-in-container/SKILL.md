@@ -2,6 +2,7 @@
 name: run-in-container
 description: Execute commands in running product-cf-hcp containers
 allowed-tools:
+  - Bash(python3 *run_in_container.py*)
   - Bash(docker ps*)
   - Bash(docker exec*)
   - Bash(docker inspect*)
