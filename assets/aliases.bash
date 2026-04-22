@@ -40,8 +40,6 @@ alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
 alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0:1" out.mp4'
 
-alias docker_prune='sudo docker system prune -a'
-
 alias k9s='k9s --context foo'
 
 alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 --no-playlist '

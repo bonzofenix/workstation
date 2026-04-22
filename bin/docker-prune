@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# docker-prune - Remove all unused Docker containers, networks, images, and volumes
+#
+
+set -euo pipefail
+
+docker system prune -a "$@"
+
+# Check if Docker Desktop disk image exists and show size
+DOCKER_DISK="$HOME/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+if [[ -f "$DOCKER_DISK" ]]; then
+    DISK_SIZE=$(du -h "$DOCKER_DISK" | cut -f1)
+    echo ""
+    echo "Docker VM disk: $DISK_SIZE"
+    echo ""
+
+    if command -v gum &> /dev/null; then
+        if gum confirm "Optimize Docker disk to reclaim space?"; then
+            echo "Opening Docker Desktop settings..."
+            echo "→ Go to Resources → Disk image location → Click 'Optimize'"
+            open -a "Docker Desktop" --args --show-settings
+        fi
+    else
+        echo "To reclaim space: Docker Desktop → Settings → Resources → Optimize"
+    fi
+fi
