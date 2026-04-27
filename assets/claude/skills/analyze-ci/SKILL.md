@@ -5,6 +5,7 @@ allowed-tools:
   - Bash(gh pr view*)
   - Bash(gh pr checks*)
   - Bash(gh run view*)
+  - Bash(gh run rerun*)
   - Bash(gh api*)
   - Read
   - Grep
@@ -141,6 +142,20 @@ Suggest only when **ANY** of these are true:
 - Error relates to build config, dependencies, or infrastructure
 - Error is a flaky test or timing issue
 - Error is a security scan finding
+
+### Infra Failure + Auto-Retrigger
+
+If all failures are classified as infrastructure/environment issues (CF route 404, route/space conflicts, deploy service down, network errors, external service unavailable), **automatically retrigger** the failed run:
+
+```bash
+# Extract run ID from the failed check link, then:
+gh run rerun <run-id> --failed
+```
+
+Report to user:
+> All failures are CI infrastructure issues (not code). Retriggered failed jobs. Monitor with `/analyze-ci`.
+
+Do **not** retrigger if any failure is code-related (compilation, test assertion, lint, type error).
 
 ### Auto-fix Workflow
 
