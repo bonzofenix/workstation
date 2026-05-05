@@ -122,12 +122,6 @@
         "source": "github",
         "repo": "anthropics/skills"
       }
-    },
-    "bonzofenix-workstation": {
-      "source": {
-        "source": "github",
-        "repo": "bonzofenix/workstation"
-      }
     }
   },
   "sandbox": {
