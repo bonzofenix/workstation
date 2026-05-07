@@ -83,6 +83,9 @@ brew "shellcheck"
 # uv - fast Python package manager
 brew "uv"
 
+# node
+brew "node"
+
 # Neovim
 brew "neovim"
 
