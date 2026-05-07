@@ -27,13 +27,6 @@ echo 'Adding coreutil path'
 add_to_profile '# Add gnubin for coreutil tooling to path' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/coreutils/libexec/gnubin" $path)'
 
-echo "Adds asdf to path"
-add_to_profile '# Adds asdf bin path' \
-               'path=("$HOME/.asdf/shims" $path)'
-
-echo "Configures asdf golang mod version"
-add_to_profile '# Sets asdf golang' \
-               'export ASDF_GOLANG_MOD_VERSION_ENABLED=true'
 
 echo "Configures git duet to set git user config"
 add_to_profile '# Sets git duet' \
@@ -59,10 +52,6 @@ echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@1.1/bin" $path)'
 
-echo 'Adding ASDF env vars to path'
-add_to_profile '# Adding ASDF env vars to path' \
-               'export ASDFROOT=$HOME/.asdf' \
-               'export ASDFINSTALLS=$HOME/.asdf/installs'
 
 
 [ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

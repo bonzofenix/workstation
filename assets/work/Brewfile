@@ -77,8 +77,8 @@ brew "git-duet"
 # Ripgrep
 brew "ripgrep"
 
-# asdf
-brew "asdf"
+# shellcheck
+brew "shellcheck"
 
 # uv - fast Python package manager
 brew "uv"
