@@ -21,3 +21,12 @@ done
 
 add_to_profile '# Bun global bin' \
                'path=("$HOME/.bun/bin" $path)'
+
+OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki"
+
+if command -v qmd >/dev/null 2>&1 && [ -d "$OBSIDIAN_VAULT_PATH" ]; then
+  echo "Setting up qmd Obsidian collection..."
+  qmd collection add "$OBSIDIAN_VAULT_PATH" --name obsidian 2>/dev/null || true
+  qmd context add qmd://obsidian "My personal Obsidian knowledge base, notes, projects, and ideas" 2>/dev/null || true
+  qmd embed
+fi
