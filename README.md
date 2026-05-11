@@ -38,7 +38,7 @@ git config credential.https://github.tools.sap.username SAP_USER
 
 - **Shell configuration**: bash/zsh with vi mode, TMUX auto-start, custom aliases
 - **Git setup**: Git duet, extensive aliases, default branch `develop`
-- **Development tools**: Neovim, direnv, asdf, devbox, GitHub Copilot
+- **Development tools**: Neovim, direnv, devbox, GitHub Copilot
 - **Custom scripts**: 50+ utilities in `bin/` (worktree management, AI-powered tools)
 - **AI integration**: autodiff, autorefactor, autocommit, pr_reviewer
 

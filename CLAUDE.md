@@ -67,7 +67,7 @@ The setup configures both bash and zsh:
 - Uses `add_to_profile` function to safely add configuration without duplication
 - Default shell uses vi mode keybindings
 - TMUX automatically starts on new terminal sessions
-- PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, ASDF shims, coreutils
+- PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
 
 ### Git Configuration
 
@@ -127,7 +127,6 @@ Key environment variables set by the installation:
 - `EDITOR=nvim` - Default editor
 - `GIT_DUET_GLOBAL=true` - Git duet works globally
 - `GIT_DUET_SET_GIT_USER_CONFIG=1` - Duet sets git user config
-- `ASDF_GOLANG_MOD_VERSION_ENABLED=true` - ASDF golang mod support
 - `HISTCONTROL=ignoredups` - Only ignore duplicate commands in history
 - Infinite bash history saved to `~/.bash_eternal_history`
 
