@@ -7,7 +7,7 @@ default: install
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
 
-install: check-dependencies cache-password homebrew git git-aliases configurations osx-configurations nix claude-skills claude-configs
+install: check-dependencies cache-password homebrew git git-aliases configurations osx-configurations nix npm-globals claude-skills claude-configs
 	@echo "Reloading Bash..."
 	@source ~/.bash_profile
 
@@ -27,6 +27,9 @@ block-content:
 
 nix:
 	@DEBUG="${DEBUG}" ./lib/nix.sh
+
+npm-globals:
+	@DEBUG="${DEBUG}" ./lib/npm-globals.sh
 
 git-aliases:
 	@DEBUG="${DEBUG}" ./lib/git.sh
