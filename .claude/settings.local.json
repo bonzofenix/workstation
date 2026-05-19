@@ -5,5 +5,8 @@
       "Bash(gh api:*)",
       "Bash(xargs curl -sL)"
     ]
-  }
+  },
+  "disabledMcpjsonServers": [
+    "garmin-health"
+  ]
 }

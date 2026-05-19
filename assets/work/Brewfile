@@ -99,9 +99,6 @@ brew "pam-reattach"
 # reattach-to-user-namespace
 brew "reattach-to-user-namespace"
 
-cask "1password"
-
-cask "1password-cli"
 
 brew "watch"
 
