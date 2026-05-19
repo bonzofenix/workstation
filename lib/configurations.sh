@@ -174,6 +174,10 @@ echo "Installing Ghostty config"
 [ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty
 ln -fs "$WORKSTATION_DIR/assets/config/ghostty" ~/.config/ghostty
 
+echo "Configuring TERM for ghostty/tmux compatibility"
+add_to_profile '# TERM for ghostty/tmux compatibility' \
+               'export TERM=xterm-256color'
+
 [ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
 [ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
 

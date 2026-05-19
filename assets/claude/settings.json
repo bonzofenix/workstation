@@ -42,7 +42,7 @@
       "Bash(*env*)"
     ]
   },
-  "model": "opus[1m]",
+  "model": "sonnet[1m]",
   "hooks": {
     "Notification": [
       {
@@ -150,5 +150,6 @@
   "gitAttribution": false,
   "keybindings": {
     "sendToBackground": "ctrl+g ctrl+g"
-  }
+  },
+  "theme": "dark-ansi"
 }
