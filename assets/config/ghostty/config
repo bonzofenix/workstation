@@ -5,7 +5,7 @@ font-family = "JetBrains Mono"
 font-size = 13
 
 # Theme
-theme = "Gruvbox Dark"
+theme = dark:Catppuccin Frappe,light:Catppuccin Latte
 
 # Window configuration
 window-padding-x = 8
