@@ -40,7 +40,11 @@
       "Bash(*sudo*)"
     ]
   },
-  "model": "claude-sonnet-4-6",
+  "model": "claude-opus-4-6",
+  "skillOverrides": {
+    "atlassian:search-company-knowledge": "off",
+    "atlassian:triage-issue": "off"
+  },
   "hooks": {
     "Notification": [
       {
@@ -94,10 +98,6 @@
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
-  },
-  "skillOverrides": {
-    "atlassian:search-company-knowledge": "off",
-    "atlassian:triage-issue": "off"
   },
   "enabledPlugins": {
     "atlassian@claude-plugins-official": true,
@@ -163,7 +163,8 @@
     ]
   },
   "alwaysThinkingEnabled": false,
-  "theme": "light-ansi",
+  "effortLevel": "high",
+  "theme": "dark",
   "editorMode": "vim",
   "defaultMode": "plan",
   "gitAttribution": false,
