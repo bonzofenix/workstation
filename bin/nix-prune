@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# nix-prune - Clean up unused Nix packages and generations
+
+set -euo pipefail
+
+DAYS="${1:-7}"
+
+gum style --border rounded --border-foreground 212 --padding "1 2" \
+  "$(gum style --bold --foreground 212 'nix-prune') — clean up unused Nix packages"
+
+echo ""
+
+
+# 1. Delete old generations
+gum spin --spinner dot --title "Removing generations older than ${DAYS} days..." -- \
+  nix-collect-garbage --delete-older-than "${DAYS}d" \
+  && gum style --foreground 2 "✓ Old generations removed" \
+  || gum style --foreground 1 "✗ Failed to remove old generations"
+
+# 2. Optimize store
+gum spin --spinner dot --title "Optimizing store (deduplicating)..." -- \
+  nix-store --optimize \
+  && gum style --foreground 2 "✓ Store optimized" \
+  || gum style --foreground 1 "✗ Failed to optimize store"
+
+# 3. Delete build cache
+if [ -d ~/.cache/nix ]; then
+  CACHE_SIZE=$(du -sh ~/.cache/nix 2>/dev/null | cut -f1 || echo "0")
+  gum spin --spinner dot --title "Clearing build cache (${CACHE_SIZE})..." -- \
+    rm -rf ~/.cache/nix \
+    && gum style --foreground 2 "✓ Cleared $CACHE_SIZE from build cache" \
+    || gum style --foreground 1 "✗ Failed to clear build cache"
+else
+  gum style --foreground 244 "ℹ No build cache to clear"
+fi
+
+echo ""
+
