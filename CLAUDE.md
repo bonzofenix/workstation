@@ -101,6 +101,26 @@ The workstation includes simple AI-powered scripts:
 - `autoreset` - Soft resets and re-commits with new AI message
 - `pr_reviewer.py` - Reviews PRs using GPT-4 (in `lib/pr_reviewer/`)
 
+**Claude Code Plugins** (auto-installed during setup):
+
+Official plugins:
+- `gopls-lsp` - Go language server support
+- `ralph-loop` - Loop/recurring task automation
+- `code-simplifier` - Code simplification and refactoring
+- `atlassian` - Jira/Confluence integration
+- `skill-creator` - Create custom Claude Code skills
+
+Community plugins:
+- `caveman` - Ultra-compressed communication mode (saves ~75% tokens)
+- `andrej-karpathy-skills` - Karpathy's coding guidelines and patterns
+- `obsidian-markdown` - Obsidian Flavored Markdown with wikilinks, embeds
+- `obsidian-bases` - Obsidian Bases files (views, filters, formulas)
+- `json-canvas` - JSON Canvas files (nodes, edges, groups)
+- `obsidian-cli` - Obsidian vault interface, plugin/theme development
+- `defuddle` - Extract clean markdown from web pages
+
+Auto-installed during `make configurations` if Claude Code CLI available.
+
 ## Common Development Patterns
 
 ### Working with Scripts in bin/

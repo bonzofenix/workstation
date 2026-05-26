@@ -86,108 +86,155 @@ Then list check names per bucket:
 
 If all passed and none pending → report success and stop.
 
-## Step 3: Wait for Pending Checks
+## Step 3: Wait for Pending Checks — Stream Dispatch on Failure
 
 If any checks have `bucket: "pending"`:
 
 1. List which checks are still running with their start times
-2. Tell the user: "N checks still running. Polling until completion..."
-3. **Do NOT use `gh pr checks --watch`** — it blocks as a single long-lived command, hits bash timeout limits (15min max), and dies on transient network errors.
-4. Instead, run `poll_ci.py` from the skill directory (`~/.claude/skills/analyze-ci/poll_ci.py`) in background:
+2. Tell the user: "N checks still running. Polling every 30s — dispatching fix agents as failures are found..."
+3. **Do NOT use `gh pr checks --watch`** — it blocks as a single long-lived command, hits bash timeout limits, and dies on transient network errors.
+4. Gather **fork context** once now (used by every sub-agent dispatched during polling):
    ```bash
-   python3 ~/.claude/skills/analyze-ci/poll_ci.py --interval 30 --timeout 3600
+   gh pr view --json number,headRefName,baseRefName,title,body
+   git log --oneline -10
+   git diff $(gh pr view --json baseRefName -q .baseRefName)...HEAD --stat
    ```
-   Run with `run_in_background: true` and `timeout: 3600000` (1 hour).
-   The script polls every 30s, retries on network errors, and exits when all checks complete or timeout is reached.
-5. When the background task completes, read its output file and re-fetch final status:
+5. Launch `poll_ci.py` in background (completion signal):
+   ```bash
+   find ~/.claude -name "poll_ci.py" -path "*/analyze-ci/*" | head -1
+   python3 <path> --interval 30 --timeout 3600
+   ```
+   Run with `run_in_background: true`, `timeout: 3600000`.
+6. **Polling loop** — run until `poll_ci.py` background task completes:
+   Every 30s, fetch current check state:
    ```bash
    gh pr checks --json name,state,bucket,workflow,link
    ```
-6. If all passed after waiting → report success and stop
+   For each check that just flipped to `bucket: "fail"` (not seen as failed before this iteration):
+   - Group it with matrix siblings already known to have failed (same base name)
+   - **Immediately dispatch a fix sub-agent** for the group (see sub-agent prompt below)
+   - Track dispatched groups — do not re-dispatch a group already dispatched
+   - Continue polling; do not wait for the agent to finish before polling again
 
-## Step 4: Analyze Failures
+7. When `poll_ci.py` signals completion, do a final fetch to catch any last failures missed between poll ticks, dispatch agents for any new groups not yet dispatched, then proceed.
+8. If all checks passed (no failures ever seen) → report success and stop.
 
-For each failed check:
+## Step 4: Fix Sub-Agents — Dispatch and Collect
 
-1. Extract the run ID from the check link (format: `https://github.com/OWNER/REPO/actions/runs/RUN_ID/...`)
-2. Fetch failed job logs:
-   ```bash
-   gh run view <run-id> --log-failed
-   ```
-3. If logs are too large, fetch specific job logs:
-   ```bash
-   gh api repos/{owner}/{repo}/actions/jobs/{job-id}/logs
-   ```
-4. Parse logs to identify:
-   - **Error type**: compilation, test failure, lint violation, format issue, type error, dependency issue, infra/env problem
-   - **Affected files**: file paths and line numbers from error output
-   - **Error messages**: exact error text
+### 4a: Grouping Rule (apply at dispatch time during polling)
 
-## Step 5: Classify and Fix
+For each newly-failed check:
+1. Extract run ID from link: `https://github.com/OWNER/REPO/actions/runs/RUN_ID/...`
+2. Derive **base job name** by stripping trailing ` (...)` suffix:
+   - `test (postgres-14)` → `test`
+   - `build / lint (node-18)` → `build / lint`
+   - `integration-tests (mysql, ubuntu)` → `integration-tests`
+3. If a group with this base name was already dispatched, skip (matrix sibling handled). If a group exists but agent not yet dispatched, add sibling and dispatch now.
 
-### Auto-fix Criteria
+### 4b: Sub-Agent Prompt (fill in per group at dispatch time)
 
-Auto-fix when **ALL** of these are true:
-- Error identifies exact file and location
-- Fix is mechanical (formatting, linting, import ordering, whitespace, EOF newlines)
-- Fix does not alter program behavior or logic
-- High confidence the fix resolves the CI failure
+Each agent works in isolation — no shared state with other agents.
 
-### Suggest-only Criteria
+```
+You are a CI fix agent. Work independently; do not reference other CI groups.
 
-Suggest only when **ANY** of these are true:
-- Fix requires understanding business logic
-- Multiple valid approaches exist
-- Error is in test assertions or expected values
-- Error relates to build config, dependencies, or infrastructure
-- Error is a flaky test or timing issue
-- Error is a security scan finding
+## Fork Context
+- Repo: <OWNER/REPO>
+- PR branch: <BRANCH_NAME>
+- Base branch: <BASE_BRANCH>
+- PR title: <PR_TITLE>
+- Recent commits:
+<GIT_LOG_ONELINE_10>
+- Changed files (diff stat vs base):
+<GIT_DIFF_STAT>
 
-### Infra Failure + Auto-Retrigger
+## Your Group
+- Base job name: <BASE_JOB_NAME>
+- Is matrix group: <true|false>
+- Checks in this group:
+  - <CHECK_NAME_1> | Run ID: <RUN_ID_1>
+  - <CHECK_NAME_2> | Run ID: <RUN_ID_2>  ← omit if single
 
-If all failures are classified as infrastructure/environment issues (CF route 404, route/space conflicts, deploy service down, network errors, external service unavailable), **automatically retrigger** the failed run:
+## Tasks
+
+1. Fetch failed job logs. If matrix group, fetch all variants in parallel:
+   gh run view <RUN_ID> --log-failed
+   If logs too large:
+   gh api repos/<OWNER/REPO>/actions/jobs/<JOB_ID>/logs
+
+2. Parse logs to identify:
+   - Error type: compilation | test failure | lint | format | type error | dependency | infra/env
+   - Affected files: paths and line numbers
+   - Exact error messages
+   - If matrix: are failures consistent across variants, or variant-specific?
+
+3. Classify fixability:
+   AUTO-FIX if ALL true:
+   - Error identifies exact file and location
+   - Fix is mechanical (formatting, linting, import ordering, whitespace, EOF newlines)
+   - Fix does not alter program behavior or logic
+   - High confidence the fix resolves the failure
+
+   SUGGEST-ONLY if ANY true:
+   - Fix requires understanding business logic
+   - Multiple valid approaches exist
+   - Error is in test assertions or expected values
+   - Error relates to build config, dependencies, or infrastructure
+   - Error is a flaky test or timing issue
+   - Error is a security scan finding
+
+   INFRA if ANY true:
+   - CF route 404, route/space conflicts, deploy service down, network errors, external service unavailable
+
+4. If AUTO-FIX:
+   - Read affected file(s)
+   - If matrix variants fail in different files, fix each separately; otherwise fix once
+   - Run local formatter/linter if available (npx prettier, npx eslint --fix, go fmt)
+   - Stage AND commit immediately:
+     git add <file>
+     git commit -m "fix: resolve <BASE_JOB_NAME> CI failure
+
+     - <what was wrong and what was changed>"
+   Do not leave fixes staged — commit them so parallel agents don't conflict on the index.
+
+5. Return a structured result:
+   {
+     "group": "<BASE_JOB_NAME>",
+     "matrix_variants": ["<CHECK_NAME_1>"],
+     "classification": "auto-fixed | suggest-only | infra | unknown",
+     "error_type": "<type>",
+     "affected_files": ["<path:line>"],
+     "error_snippet": "<exact error text>",
+     "matrix_consistent": true | false | null,
+     "fix_applied": "<description or null>",
+     "suggested_fix": "<description or null>"
+   }
+```
+
+### 4c: Collect Results
+
+After all agents complete (all dispatched during polling + any dispatched after final fetch), collect their structured results. Proceed to Step 4d.
+
+### 4d: Infra-Only Auto-Retrigger
+
+If **all** groups returned `"classification": "infra"`, automatically retrigger all failed run IDs:
 
 ```bash
-# Extract run ID from the failed check link, then:
 gh run rerun <run-id> --failed
 ```
 
-Report to user:
+Report:
 > All failures are CI infrastructure issues (not code). Retriggered failed jobs. Monitor with `/analyze-ci`.
 
-Do **not** retrigger if any failure is code-related (compilation, test assertion, lint, type error).
+Do **not** retrigger if any group is code-related.
 
-### Auto-fix Workflow
+## Step 5: Verify Commits
 
-For each auto-fixable issue:
+Each auto-fix agent commits independently as it finishes. After all agents complete:
 
-1. Read the affected file
-2. Apply the fix using the Edit tool
-3. If a local formatter/linter is available, run it to verify:
-   ```bash
-   # Examples — use whichever applies to the project
-   npx prettier --write <file>
-   npx eslint --fix <file>
-   go fmt <file>
-   ```
-4. Confirm the fix looks correct
-5. Stage the file: `git add <file>`
-
-### Suggest-only Workflow
-
-For each non-auto-fixable issue:
-
-1. Show the root cause and relevant error snippet
-2. Identify the affected file(s) and line number(s)
-3. Describe the specific fix approach
-4. If possible, show the code change needed (but do not apply it)
-
-## Step 6: Commit Fixes
-
-After all auto-fixes are applied:
-
-1. Verify staged changes: `git diff --staged`
-2. Commit with conventional commit format:
+1. Check what was committed: `git log --oneline HEAD~5..HEAD`
+2. Check for anything staged but not committed: `git diff --staged`
+3. If staged changes exist (agent staged but didn't commit), commit them:
    ```bash
    git commit -m "$(cat <<'EOF'
    fix: resolve CI failures
@@ -197,13 +244,12 @@ After all auto-fixes are applied:
    EOF
    )"
    ```
-3. If fixes span categorically different areas (e.g., formatting AND a test snapshot update), use separate commits.
 4. **Do NOT push.** Tell the user:
-   > Fixes committed locally. Review with `git diff HEAD~1` and push when ready.
+   > N fix commit(s) ready locally. Review with `git log --oneline HEAD~N..HEAD` and `git diff HEAD~N` then push when ready.
 
-If no auto-fixes were applied, skip this step.
+If no auto-fixes were applied and nothing is staged, skip this step.
 
-## Step 7: Final Report
+## Step 6: Final Report
 
 ```
 ## CI Analysis Complete
@@ -212,11 +258,13 @@ If no auto-fixes were applied, skip this step.
 
 ### Auto-fixed ✅
 - [file:line] — [what was wrong] → [what was changed]
+  (covers: check-name-1, check-name-2)  ← for matrix groups, list all variants
 
 ### Needs Attention ⚠️
-- **[Check Name]**: [root cause]
+- **[Base Job Name]** *(matrix: variant-1, variant-2)*: [root cause]
   - File: [path:line]
   - Error: [snippet]
+  - Matrix consistent: yes/no
   - Suggested fix: [description]
 
 ### Passed ✅
