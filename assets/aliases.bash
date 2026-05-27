@@ -58,3 +58,4 @@ alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " 
 
 alias obsidian='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/wiki'
 alias minimax-claude='source ~/.minimax-env && claude'
+alias good-morning='claude -p "/good-morning"'
