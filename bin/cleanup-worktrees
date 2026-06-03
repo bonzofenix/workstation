@@ -15,22 +15,42 @@ fi
 
 gum spin --spinner dot --title "Fetching remotes..." -- git fetch --all --prune 2>&1 || gum style --foreground 214 "Warning: Some remotes failed to fetch"
 
-# Get list of all worktrees with their branches (excluding main worktree)
-worktrees_info=$(git worktree list --porcelain | awk '
-  BEGIN { skip_first = 1 }
-  /^worktree / {
-    path = $2
-    if (skip_first) {
-      skip_first = 0
-      next
-    }
-  }
-  /^branch / {
-    branch = $2
-    gsub("refs/heads/", "", branch)
-    print branch "|" path
-  }
-')
+# Parse worktree list once — emit "live" or "prunable" entries
+worktree_raw=$(git worktree list --porcelain)
+
+# Live worktrees: have a branch and a real directory (skip main worktree)
+worktrees_info=$(awk '
+  /^worktree / { path = $2; is_first = (NR == 1) }
+  /^branch /   { branch = $2; gsub("refs/heads/", "", branch) }
+  /^$/          { if (!is_first && branch != "") print branch "|" path; branch = "" }
+' <<< "$worktree_raw")
+
+# Prunable worktrees: directory already gone
+prunable_info=$(awk '
+  /^worktree / { path = $2 }
+  /^branch /   { branch = $2; gsub("refs/heads/", "", branch) }
+  /^prunable / { print branch "|" path; branch = "" }
+' <<< "$worktree_raw")
+
+# Handle prunable worktrees upfront — directory is already gone, just clean registrations
+if [[ -n "$prunable_info" ]]; then
+  gum style --bold --foreground 214 "Prunable worktrees (directory already deleted):"
+  while IFS='|' read -r branch path; do
+    gum style --foreground 248 "  ${branch} (${path})"
+  done <<< "$prunable_info"
+  echo
+  git worktree prune
+  if gum confirm "Delete associated branches for prunable worktrees?"; then
+    while IFS='|' read -r branch path; do
+      if [[ -n "$branch" ]]; then
+        if git branch -D "$branch" 2>/dev/null; then
+          gum style --foreground 82 "  Deleted branch: ${branch}"
+        fi
+      fi
+    done <<< "$prunable_info"
+  fi
+  echo
+fi
 
 if [[ -z "$worktrees_info" ]]; then
   gum style --foreground 240 "No worktrees found (excluding main worktree)."
@@ -38,7 +58,6 @@ if [[ -z "$worktrees_info" ]]; then
 fi
 
 if [[ "$ALL" == true ]]; then
-  # Cleanup all worktrees
   worktrees_to_remove=""
   while IFS='|' read -r branch path; do
     worktrees_to_remove+="${branch} (${path})"$'\n'
