@@ -6,3 +6,5 @@ source "$SCRIPT_DIR/common.sh"
 
 echo 'Installing devbox global packages...'
 devbox global add fly@8.1.1
+
+devbox version update
