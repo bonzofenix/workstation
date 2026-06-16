@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+command -v gh >/dev/null 2>&1     || { echo "Error: gh not installed" >&2; exit 1; }
+command -v claude >/dev/null 2>&1 || { echo "Error: claude not installed" >&2; exit 1; }
+command -v gum >/dev/null 2>&1    || { echo "Error: gum not installed" >&2; exit 1; }
+
+usage() {
+  gum style --foreground 196 \
+    "Usage: claude-worktree <github-pr-url>" \
+    "       claude-worktree <host/owner/repo#number>" \
+    "       claude-worktree <pr-number>  (within current repo)"
+  exit 1
+}
+
+[[ $# -lt 1 ]] && usage
+
+INPUT="$1"
+
+# Parse PR number, repo (with optional host prefix), from various input formats
+if [[ "$INPUT" =~ (github[^/]*)/([^/]+/[^/]+)/pull/([0-9]+) ]]; then
+  REPO="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"  # HOST/OWNER/REPO for --repo flag
+  PR_NUMBER="${BASH_REMATCH[3]}"
+elif [[ "$INPUT" =~ ^([^#]+)#([0-9]+)$ ]]; then
+  REPO="${BASH_REMATCH[1]}"
+  PR_NUMBER="${BASH_REMATCH[2]}"
+elif [[ "$INPUT" =~ ^[0-9]+$ ]]; then
+  REPO=""
+  PR_NUMBER="$INPUT"
+else
+  gum style --foreground 196 "Error: cannot parse PR from: $INPUT" >&2
+  usage
+fi
+
+# Fetch PR metadata — --repo accepts [HOST/]OWNER/REPO so host is handled automatically
+GH_ARGS=(pr view "$PR_NUMBER" --json headRefName,url,title)
+[[ -n "$REPO" ]] && GH_ARGS+=(--repo "$REPO")
+
+PR_JSON=$(gum spin --spinner dot --title "Fetching PR info..." -- gh "${GH_ARGS[@]}" 2>/dev/null) \
+  || { gum style --foreground 196 "Error: PR $PR_NUMBER not found${REPO:+ in $REPO}" >&2; exit 1; }
+
+BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
+PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
+PR_URL=$(echo "$PR_JSON" | jq -r '.url')
+
+gum style --bold "PR:     $PR_TITLE"
+gum style         "Branch: $BRANCH"
+gum style         "URL:    $PR_URL"
+echo
+
+GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) \
+  || { gum style --foreground 196 "Error: not in a git repository" >&2; exit 1; }
+
+WORKTREES_DIR="$(dirname "$GIT_ROOT")/worktrees"
+
+EXISTING=$(git worktree list --porcelain \
+  | awk '/^worktree /{p=$2} $0=="branch refs/heads/'"$BRANCH"'"{print p; exit}')
+
+if [[ -n "$EXISTING" ]]; then
+  gum style --foreground 82 "Reusing existing worktree: $EXISTING"
+  WORKTREE_PATH="$EXISTING"
+else
+  gum spin --spinner dot --title "Fetching branch $BRANCH..." -- git fetch origin "$BRANCH" \
+    || { gum style --foreground 196 "Error: cannot fetch branch '$BRANCH'" >&2; exit 1; }
+
+  WORKTREE_PATH="$WORKTREES_DIR/$BRANCH"
+  mkdir -p "$WORKTREES_DIR"
+  git worktree add "$WORKTREE_PATH" "$BRANCH"
+  gum style --foreground 82 "Created worktree: $WORKTREE_PATH"
+fi
+
+echo
+gum style --bold "Launching claude in $WORKTREE_PATH..."
+cd "$WORKTREE_PATH"
+exec claude
