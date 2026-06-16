@@ -10,7 +10,7 @@ if ! git diff --staged --quiet; then
   MSG=$(git diff --staged | claude \
     --print \
     --no-session-persistence \
-    --system-prompt 'You only output git commit messages. Output ONLY the commit message in imperative mood, nothing else. Stay high-level and combine smaller changes to overarching topics. Skip reformatting changes.' \
+    --system-prompt 'You only output git commit messages. Output ONLY the commit message in imperative mood, nothing else. No backticks, no quotes, no markdown formatting. Stay high-level and combine smaller changes to overarching topics. Skip reformatting changes.' \
     'Generate commit message:')
 
   # Commit with the generated message, allowing user to edit
