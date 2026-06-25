@@ -70,3 +70,6 @@ fi
 
 echo
 gum style --bold "Worktree ready: $WORKTREE_PATH"
+
+cd "$WORKTREE_PATH"
+exec "$SHELL"
