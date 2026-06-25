@@ -2,14 +2,13 @@
 set -euo pipefail
 
 command -v gh >/dev/null 2>&1     || { echo "Error: gh not installed" >&2; exit 1; }
-command -v claude >/dev/null 2>&1 || { echo "Error: claude not installed" >&2; exit 1; }
 command -v gum >/dev/null 2>&1    || { echo "Error: gum not installed" >&2; exit 1; }
 
 usage() {
   gum style --foreground 196 \
-    "Usage: claude-worktree <github-pr-url>" \
-    "       claude-worktree <host/owner/repo#number>" \
-    "       claude-worktree <pr-number>  (within current repo)"
+    "Usage: add-worktree <github-pr-url>" \
+    "       add-worktree <host/owner/repo#number>" \
+    "       add-worktree <pr-number>  (within current repo)"
   exit 1
 }
 
@@ -70,6 +69,4 @@ else
 fi
 
 echo
-gum style --bold "Launching claude in $WORKTREE_PATH..."
-cd "$WORKTREE_PATH"
-exec claude
+gum style --bold "Worktree ready: $WORKTREE_PATH"
