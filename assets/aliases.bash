@@ -54,6 +54,6 @@ alias autoreset="git reset --soft HEAD~1 && autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
 
-alias obsidian='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/wiki'
+alias wiki='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/wiki'
 alias minimax-claude='source ~/.minimax-env && claude'
 alias good-morning='claude -p "/good-morning"'
