@@ -24,11 +24,6 @@ local on_attach = function(_, bufnr)
   })
 end
 
--- Ruby: Solargraph
-lspconfig.solargraph.setup({
-  on_attach = on_attach,
-})
-
 -- Go: Gopls
 lspconfig.gopls.setup({
   on_attach = on_attach,
