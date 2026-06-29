@@ -14,7 +14,6 @@ brew "zsh"
 
 brew "gnupg"
 
-brew "gnupg2"
 
 brew "tmux"
 
@@ -110,16 +109,13 @@ brew "ffmpeg"
 
 cask "spotify"
 
-cask "microsoft-teams"
-
-cask "caffeine"
+cask "amphetamine"
 
 cask "git-credential-manager"
 
 # Browsers
 cask "obsidian"
 
-cask "visual-studio-code"
 
 
 tap "hashicorp/tap"
