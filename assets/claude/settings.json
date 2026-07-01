@@ -110,12 +110,14 @@
   },
   "enabledPlugins": {
     "andrej-karpathy-skills@karpathy-skills": true,
-    "atlassian@claude-plugins-official": false,
+    "atlassian@claude-plugins-official": true,
     "caveman@caveman": true,
     "code-simplifier@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true
+    "pr-review-toolkit@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "obsidian@obsidian-skills": true
   },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
@@ -134,6 +136,24 @@
       "source": {
         "source": "github",
         "repo": "forrestchang/andrej-karpathy-skills"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "ecc": {
+      "source": {
+        "source": "github",
+        "repo": "affaan-m/everything-claude-code"
+      }
+    },
+    "obsidian-skills": {
+      "source": {
+        "source": "github",
+        "repo": "kepano/obsidian-skills"
       }
     }
   },
@@ -174,12 +194,11 @@
   "alwaysThinkingEnabled": false,
   "effortLevel": "high",
   "skipWorkflowUsageWarning": true,
-  "theme": "dark",
+  "theme": "dark-ansi",
   "editorMode": "vim",
   "defaultMode": "plan",
   "gitAttribution": false,
   "keybindings": {
     "sendToBackground": "ctrl+g ctrl+g"
-  },
-  "theme": "dark-ansi"
+  }
 }
