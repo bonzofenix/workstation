@@ -176,6 +176,10 @@ vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 echo "create symlink to icloud folder"
 ln -fs ~/Library/Mobile\ Documents/com~apple~CloudDocs/ ~/icloud
 
+echo "Installing Claude statusline script"
+mkdir -p ~/.claude
+ln -fs "$WORKSTATION_DIR/assets/claude/statusline-command.sh" ~/.claude/statusline-command.sh
+
 echo "Installing Claude Code plugins"
 if command -v claude &> /dev/null; then
   # Add marketplaces
