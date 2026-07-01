@@ -32,12 +32,12 @@ cask "slack"
 cask "vlc"
 
 # Docker For Mac
-cask "docker"
+cask "docker-desktop"
 
 # Ruby tools
 brew "readline"
 
-brew "openssl@1.1"
+brew "openssl@3"
 
 # tree
 brew "tree"
@@ -111,8 +111,6 @@ brew "rsync"
 brew "ffmpeg"
 
 cask "spotify"
-
-cask "amphetamine"
 
 cask "git-credential-manager"
 
