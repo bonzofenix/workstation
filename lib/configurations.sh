@@ -48,7 +48,7 @@ add_to_profile '# set homebrew no auto update' \
 
 
 log_step "Configuring tmux"
-[ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+[ ! -d ~/.tmux/plugins/tpm ] && run_with_spin "Cloning tmux plugin manager..." git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 
@@ -96,7 +96,7 @@ fi
 
 log_step "Configuring Oh My Zsh"
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  RUNZSH=CHSH= sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
+  run_with_spin "Installing Oh My Zsh..." RUNZSH=CHSH= sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
   log_success "Oh My Zsh installed"
 else
   log_success "Oh My Zsh already installed"
@@ -121,9 +121,9 @@ add_to_rc '# Disable zsh beeps' \
 log_step "Configuring Neovim"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
 ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
-[ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
-[ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
-nvim -c ":GoInstallBinaries" -c ":q" </dev/null
+[ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && run_with_spin "Cloning lazy.nvim..." git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
+[ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && run_with_spin "Cloning copilot.vim..." git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
+run_with_spin "Installing Go binaries..." nvim -c ":GoInstallBinaries" -c ":q" </dev/null
 
 log_step "Configuring Ghostty"
 [ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty

@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/common.sh"
 log_section "Devbox"
 
 log_step "Installing global packages"
-devbox global add fly@8.1.1
+run_with_spin "Adding fly to devbox globals..." devbox global add fly@8.1.1
 
 log_step "Updating devbox"
-LAUNCHER_PATH=devbox devbox version update
+run_with_spin "Updating devbox..." env LAUNCHER_PATH=devbox devbox version update
