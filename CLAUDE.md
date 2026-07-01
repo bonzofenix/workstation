@@ -153,7 +153,7 @@ Key environment variables set by the installation:
 ## Important Notes
 
 - The workstation uses **`main`** as the default branch
-- Many git workflow scripts filter out `develop` in addition to `main`/`master`
+- Git workflow scripts filter out `main`/`master` as protected branches
 - TMUX starts automatically on new terminal sessions
 - Direnv and devbox are configured for per-project environments
 - GitHub Copilot is installed for Neovim
