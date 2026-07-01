@@ -17,7 +17,6 @@ if ! command -v brew &>/dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 brew update
-brew doctor
 # sudo chown -R $(whoami) /usr/local/bin
 brew upgrade
 brew cleanup
