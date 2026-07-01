@@ -50,7 +50,7 @@ add_to_profile '# Adds local bin to path' \
 
 echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
-               'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@1.1/bin" $path)'
+               'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@3/bin" $path)'
 
 
 
