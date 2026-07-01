@@ -10,4 +10,4 @@ log_step "Installing global packages"
 devbox global add fly@8.1.1
 
 log_step "Updating devbox"
-devbox version update
+LAUNCHER_PATH=devbox devbox version update
