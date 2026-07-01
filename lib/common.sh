@@ -40,4 +40,20 @@ function add_to_file(){
   return 0
 }
 
+# Create a symlink if target doesn't exist, report status
+link_if_missing() {
+  local source="$1"
+  local target="$2"
+  local name="$3"
+
+  if [ -L "$target" ]; then
+    echo "  $name already linked"
+  elif [ -e "$target" ]; then
+    echo "  Warning: $target exists and is not a symlink, skipping"
+  else
+    ln -s "$source" "$target"
+    echo "  Linked $name"
+  fi
+}
+
 

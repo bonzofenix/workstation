@@ -40,15 +40,12 @@ alias om="om -t '$OM_TARGET' -u '$OM_USERNAME' -p '$OM_PASSWORD'"
 
 alias rec='ffmpeg -f avfoundation -r 30 -s "1280x720" -i "0:1" out.mp4'
 
-alias docker_prune='sudo docker system prune -a'
-
 alias k9s='k9s --context foo'
 
 alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 --no-playlist '
 
 alias bosh-deployments='bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r'
 #alias iacbox='iacbox -iv=iacbox.common.cdn.repositories.cloud.sap/iacbox-dev-test:latest'
-alias chatgpt='~/.asdf/shims/gpt'
 alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" '
 
 alias autocommit="~/workstation/bin/autocommit"
@@ -57,8 +54,7 @@ alias autoreset="git reset --soft HEAD~1 && autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
 
-alias worktrees='cd $(git worktree list --porcelain | grep worktree | cut -d" " -f2 | gum choose --limit 1)'
-
 export OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki"
 alias wiki='cd "$OBSIDIAN_VAULT_PATH"'
 alias minimax-claude='source ~/.minimax-env && claude'
+alias good-morning='claude -p "/good-morning"'

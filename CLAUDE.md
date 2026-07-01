@@ -67,11 +67,11 @@ The setup configures both bash and zsh:
 - Uses `add_to_profile` function to safely add configuration without duplication
 - Default shell uses vi mode keybindings
 - TMUX automatically starts on new terminal sessions
-- PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, ASDF shims, coreutils
+- PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
 
 ### Git Configuration
 
-- **Default branch**: `develop` (not main/master)
+- **Default branch**: `main`
 - **Git duet** enabled globally for pair programming
 - **Extensive aliases** defined in `lib/git.sh`:
   - `git st` - status
@@ -101,6 +101,26 @@ The workstation includes simple AI-powered scripts:
 - `autoreset` - Soft resets and re-commits with new AI message
 - `pr_reviewer.py` - Reviews PRs using GPT-4 (in `lib/pr_reviewer/`)
 
+**Claude Code Plugins** (auto-installed during setup):
+
+Official plugins:
+- `gopls-lsp` - Go language server support
+- `ralph-loop` - Loop/recurring task automation
+- `code-simplifier` - Code simplification and refactoring
+- `atlassian` - Jira/Confluence integration
+- `skill-creator` - Create custom Claude Code skills
+
+Community plugins:
+- `caveman` - Ultra-compressed communication mode (saves ~75% tokens)
+- `andrej-karpathy-skills` - Karpathy's coding guidelines and patterns
+- `obsidian-markdown` - Obsidian Flavored Markdown with wikilinks, embeds
+- `obsidian-bases` - Obsidian Bases files (views, filters, formulas)
+- `json-canvas` - JSON Canvas files (nodes, edges, groups)
+- `obsidian-cli` - Obsidian vault interface, plugin/theme development
+- `defuddle` - Extract clean markdown from web pages
+
+Auto-installed during `make configurations` if Claude Code CLI available.
+
 ## Common Development Patterns
 
 ### Working with Scripts in bin/
@@ -127,13 +147,12 @@ Key environment variables set by the installation:
 - `EDITOR=nvim` - Default editor
 - `GIT_DUET_GLOBAL=true` - Git duet works globally
 - `GIT_DUET_SET_GIT_USER_CONFIG=1` - Duet sets git user config
-- `ASDF_GOLANG_MOD_VERSION_ENABLED=true` - ASDF golang mod support
 - `HISTCONTROL=ignoredups` - Only ignore duplicate commands in history
 - Infinite bash history saved to `~/.bash_eternal_history`
 
 ## Important Notes
 
-- The workstation uses **`develop`** as the default branch, not `main` or `master`
+- The workstation uses **`main`** as the default branch
 - Many git workflow scripts filter out `develop` in addition to `main`/`master`
 - TMUX starts automatically on new terminal sessions
 - Direnv and devbox are configured for per-project environments

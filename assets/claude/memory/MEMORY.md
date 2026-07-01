@@ -1,0 +1,5 @@
+- [Devbox Toolchain](project_devbox_toolchain.md) — Go/build tools only via `devbox run -- <cmd>`
+- [Shellcheck after .sh edits](feedback_shellcheck.md) — run `devbox run -- shellcheck <file>` before every shell script commit
+- [No push during CI](feedback_no_push_during_ci.md) — ask user before pushing when CI is running
+- [Worktrees for PR work](feedback_worktrees.md) — EnterWorktree before any feature/fix/bug/PR checkout that involves writing code
+- [Memory source of truth](reference_memory_source.md) — always write memory to ~/workstation/assets/claude/memory/

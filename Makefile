@@ -43,11 +43,11 @@ osx-configurations:
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
 
-claude-skills:
-	@DEBUG="${DEBUG}" ./lib/claude-skills.sh
-
 claude-configs:
 	@DEBUG="${DEBUG}" ./lib/claude-configs.sh
+
+devbox:
+	@DEBUG="${DEBUG}" ./lib/devbox.sh
 
 lint:
 	@echo "Running shellcheck on all scripts..."

@@ -76,8 +76,8 @@ brew "git-duet"
 # Ripgrep
 brew "ripgrep"
 
-# asdf
-brew "asdf"
+# shellcheck
+brew "shellcheck"
 
 # uv - fast Python package manager
 brew "uv"
@@ -85,6 +85,9 @@ brew "uv"
 # bun - JS runtime / package manager
 brew "oven-sh/bun/bun"
 tap "oven-sh/bun"
+
+# node
+brew "node"
 
 # Neovim
 brew "neovim"

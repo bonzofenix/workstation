@@ -2,7 +2,7 @@
 name: good-morning
 description: Show all your open PRs from GitHub.com and GitHub Enterprise with status, reviews, and CI jobs
 allowed-tools:
-  - Bash(python* pr-dashboard.py)
+  - Bash(python* pr_dashboard.py)
   - Bash(gh search prs*)
   - Bash(gh pr view*)
   - Bash(gh api*)
@@ -33,7 +33,7 @@ The script will fetch PRs from all configured hosts in parallel.
 Run the Python script and display its full output directly in your response:
 
 ```bash
-python3 ~/.claude/skills/good-morning/pr-dashboard.py
+python3 ~/.claude/skills/good-morning/pr_dashboard.py
 ```
 
 **IMPORTANT**: After running the script, you MUST display the complete output in your response text (not just in the tool result). Copy the entire dashboard output and present it to the user so they can see and click the URLs directly.
