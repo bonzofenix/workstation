@@ -66,10 +66,10 @@ if [[ "$ALL" == true ]]; then
   branches_to_cleanup=$(echo "$worktrees_info" | cut -d'|' -f1)
 else
   # Find branches that are merged
-  merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+  merged_branches=$(git branch --merged origin/HEAD | grep -vE '^\*|main$|master$' | awk '{print $2}' || true)
 
   # Find branches where upstream is gone
-  gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$|develop$' | awk '{print $2}' || true)
+  gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$' | awk '{print $2}' || true)
 
   # Combine both lists and remove duplicates
   branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$' || true)
