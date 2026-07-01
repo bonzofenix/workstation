@@ -144,7 +144,7 @@ add_to_rc '# Disable zsh beeps' \
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
 
-add_to_profile '# sets editor' \
+add_to_profile '# enables CGO' \
                'export CGO_ENABLED=1'
 
 if `hash direnv`; then
@@ -174,11 +174,11 @@ echo 'Setting LANG for UTF-8 tmux support'
 add_to_profile '# Setting UTF-8 tmux support' \
                'export LANG=en_US.UTF-8'
 
-vim -c ":GoInstallBinaries" -c ":q" - </dev/null
+nvim -c ":GoInstallBinaries" -c ":q" </dev/null
 
 
 echo "create symlink to icloud folder"
-ln -fs ~/Library/Mobile\ Documents/com~apple~CloudDocs/ ~/icloud
+ln -fs "$HOME/Library/Mobile Documents/com~apple~CloudDocs/" "$HOME/icloud"
 
 echo "Installing Claude statusline script"
 mkdir -p ~/.claude
