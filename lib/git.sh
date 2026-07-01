@@ -21,8 +21,8 @@ git config --global init.defaultBranch main
 
 echo "Enables colors to git output"
 git config --global color.ui true
-git config color.status.changed "blue normal bold"
-git config color.status.header "white normal dim"
+git config --global color.status.changed "blue normal bold"
+git config --global color.status.header "white normal dim"
 git config --global color.status.untracked "magenta"
 
 
@@ -45,9 +45,9 @@ fi
 
 echo
 echo "Setting up Git aliases..."
-git config --global alias.gst git status
+git config --global alias.gst 'git status'
 git config --global alias.st status
-git config --global alias.di diff --color-words
+git config --global alias.di 'diff --color-words'
 git config --global alias.co checkout
 git config --global alias.ci 'duet-commit --signoff'
 git config --global alias.cp 'cherry-pick'
@@ -59,24 +59,22 @@ git config --global alias.lg "log --graph --pretty=format:'%Cred%h%Creset -%C(ye
 git config --global alias.us "submodule update --init --force --recursive"
 git config --global alias.lol "log --graph --decorate --oneline"
 git config --global alias.lola "log --graph --decorate --oneline --all"
-git config --global alias.blog "log origin/master... --left-right"
+git config --global alias.blog "log origin/main... --left-right"
 git config --global alias.amend 'commit --amend --no-edit'
-git config --global alias.ds diff --staged
+git config --global alias.ds 'diff --staged'
 git config --global alias.dsc "diff --stat --name-status --cached"
-git config --global alias.fixup commit --fixup
-git config --global alias.squash commit --squash
-git config --global alias.unstage reset HEAD
-git config --global alias.rum "rebase master@{u}"
+git config --global alias.fixup 'commit --fixup'
+git config --global alias.squash 'commit --squash'
+git config --global alias.unstage 'reset HEAD'
+git config --global alias.rum "rebase main@{u}"
 git config --global credential.helper "cache --timeout=36000"
 git config --global alias.up "pull --rebase --autostash"
-git config --global alias.drv = duet-revert
+git config --global alias.drv duet-revert
 git config --global alias.dmg duet-merge
 git config --global alias.drh "rebase -i --exec 'git duet-commit --amend --reset-author'"
 git config --global alias.discard '!git restore -p && git clean -i'
 git config --global alias.logout 'credential-cache exit'
 git config --global diff.patience true
-git config --global color.ui true
-git config --global ui.color auto
 git config --global hub.protocol https
 git config --global alias.head 'rev-parse --short HEAD'
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-source $SCRIPT_DIR/common.sh
+source "$SCRIPT_DIR/common.sh"
 
 # Detect Homebrew prefix based on architecture
 if [ -d "/opt/homebrew" ]; then
@@ -11,7 +11,7 @@ else
 fi
 
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew update
 brew doctor
 # sudo chown -R $(whoami) /usr/local/bin

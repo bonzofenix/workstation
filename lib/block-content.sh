@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-source $SCRIPT_DIR/common.sh
+source "$SCRIPT_DIR/common.sh"
 
 sudo -v
 add_to_host '127.0.0.1 www.lanacion.com.ar'

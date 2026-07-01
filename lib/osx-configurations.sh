@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 echo
 echo 'Customizing OS X configuration'
 
@@ -41,5 +43,5 @@ echo
 echo "Configuring Ghostty"
 # Ghostty uses TOML configuration, see assets/config/ghostty/ if needed
 
-softwareupdate --install-rosetta --agree-to-license || true
+/usr/bin/pgrep -q oahd || sudo softwareupdate --install-rosetta --agree-to-license || true
 
