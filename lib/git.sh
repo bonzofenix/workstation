@@ -4,47 +4,42 @@ set +e
 
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export WORKSTATION_DIR="$SCRIPT_DIR/.."
+source "$SCRIPT_DIR/common.sh"
 
-echo "Cleanup git configs"
+log_section "Git"
+
+log_step "Cleaning git configs"
 rm -rf ~/.gitconfig
 
-
-echo "Setting global Git configurations"
+log_step "Setting global Git configurations"
 git config --global core.editor "$(which nvim)"
 git config --global transfer.fsckobjects true
 git config --global hub.protocol https
 git config --global push.default simple
 
-
-echo "Setting default branch to main"
 git config --global init.defaultBranch main
-
-echo "Enables colors to git output"
 git config --global color.ui true
 git config --global color.status.changed "blue normal bold"
 git config --global color.status.header "white normal dim"
 git config --global color.status.untracked "magenta"
 
-
-echo "Setting up global gitignore"
-[ -e ~/.gitignore_global ] && rm -f ~/.gitignore_global 
+log_step "Setting up global gitignore"
+[ -e ~/.gitignore_global ] && rm -f ~/.gitignore_global
 git config --global core.excludesFile ~/.gitignore_global
 ln -fs "$WORKSTATION_DIR/assets/gitignore_global" ~/.gitignore_global
 
 # Force unset osxkeychain cache
 git config --system --unset credential.helper
 
-echo  "Configuring authors file"
+log_step "Configuring authors file"
 if [ ! -e ~/.git-authors ]; then
-  echo "Creating ~/.git-authors from template"
   cp "$WORKSTATION_DIR/assets/git-authors" ~/.git-authors
-  echo "Please edit ~/.git-authors with your own author information"
+  log_warning "Please edit ~/.git-authors with your own author information"
 else
-  echo "~/.git-authors already exists, skipping template copy"
+  log_success "~/.git-authors already exists, skipping template copy"
 fi
 
-echo
-echo "Setting up Git aliases..."
+log_step "Setting up Git aliases"
 git config --global alias.gst 'git status'
 git config --global alias.st status
 git config --global alias.di 'diff --color-words'

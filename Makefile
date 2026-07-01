@@ -8,8 +8,8 @@ default: install
 .PHONY: $(MAKECMDGOALS)
 
 install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals claude-configs devbox
-	@echo "Reloading Bash..."
 	@source ~/.bash_profile
+	@gum style --foreground 2 --bold "  Installation complete!"
 
 check-dependencies:
 	@./lib/check-dependencies.sh
