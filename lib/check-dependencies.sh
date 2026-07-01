@@ -6,11 +6,31 @@
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export WORKSTATION_DIR="$SCRIPT_DIR/.."
 
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RESET='\033[0m'
+_has_gum() { command -v gum >/dev/null 2>&1; }
+
+_ok()   {
+  if _has_gum; then
+    gum log --level info "$(gum style --foreground 2 "✓") $*"
+  else
+    echo "✓ $*"
+  fi
+}
+
+_fail() {
+  if _has_gum; then
+    gum log --level error "$(gum style --foreground 1 "✗") $*"
+  else
+    echo "✗ $*" >&2
+  fi
+}
+
+_warn() {
+  if _has_gum; then
+    gum log --level warn "$@"
+  else
+    echo "⚠ $*"
+  fi
+}
 
 MISSING=()
 FAILED=false
@@ -20,34 +40,40 @@ check_critical() {
   local install_hint=$2
 
   if command -v "$cmd" >/dev/null 2>&1; then
-    echo -e "${GREEN}✓${RESET} $cmd is installed"
+    _ok "$cmd is installed"
     return 0
   else
-    echo -e "${RED}✗${RESET} $cmd is missing - $install_hint"
+    _fail "$cmd is missing — $install_hint"
     MISSING+=("$cmd: $install_hint")
     FAILED=true
     return 1
   fi
 }
 
-echo "Checking critical dependencies for installation..."
+if _has_gum; then
+  gum style --foreground 212 --bold --border-foreground 212 --border normal --padding "0 1" " Checking dependencies "
+else
+  echo "Checking critical dependencies for installation..."
+fi
 echo ""
 
-# Check absolutely required tools for installation to proceed
 check_critical "git" "Should be pre-installed on macOS"
 check_critical "curl" "Should be pre-installed on macOS"
 
-# Homebrew is installed by the installation process if missing, so just warn
 if ! command -v brew >/dev/null 2>&1; then
-  echo -e "${YELLOW}⚠${RESET} brew not found - will be installed automatically"
+  _warn "brew not found — will be installed automatically"
 else
-  echo -e "${GREEN}✓${RESET} brew is installed"
+  _ok "brew is installed"
 fi
 
 echo ""
 
 if [ "$FAILED" = true ]; then
-  echo -e "${RED}Installation cannot proceed without critical dependencies.${RESET}"
+  if _has_gum; then
+    gum style --foreground 1 --bold "Installation cannot proceed without critical dependencies."
+  else
+    echo "Installation cannot proceed without critical dependencies." >&2
+  fi
   echo ""
   echo "Missing dependencies:"
   for dep in "${MISSING[@]}"; do
@@ -56,9 +82,9 @@ if [ "$FAILED" = true ]; then
   echo ""
   exit 1
 else
-  echo -e "${GREEN}✓ Critical dependencies are present${RESET}"
+  _ok "Critical dependencies are present"
   echo ""
-  echo "Note: Additional tools (gum, jq, tmux, etc.) will be installed via Homebrew during installation."
+  _warn "Additional tools (gum, jq, tmux, etc.) will be installed via Homebrew during installation."
   echo "Run 'bin/check-deps' after installation to verify all dependencies."
   echo ""
   exit 0

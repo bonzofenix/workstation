@@ -42,6 +42,24 @@ log_warning() {
   fi
 }
 
+log_error() {
+  if _has_gum; then
+    gum log --level error "$@"
+  else
+    echo "  ✗ $*" >&2
+  fi
+}
+
+run_with_spin() {
+  local title="$1"; shift
+  if _has_gum; then
+    gum spin --spinner dot --title "$title" -- "$@"
+  else
+    echo "  • $title"
+    "$@"
+  fi
+}
+
 function add_to_rc(){
   local profile=~/.zshrc
   add_to_file $profile "$@"
