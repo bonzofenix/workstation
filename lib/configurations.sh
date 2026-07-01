@@ -27,13 +27,6 @@ echo 'Adding coreutil path'
 add_to_profile '# Add gnubin for coreutil tooling to path' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/coreutils/libexec/gnubin" $path)'
 
-echo "Adds asdf to path"
-add_to_profile '# Adds asdf bin path' \
-               'path=("$HOME/.asdf/shims" $path)'
-
-echo "Configures asdf golang mod version"
-add_to_profile '# Sets asdf golang' \
-               'export ASDF_GOLANG_MOD_VERSION_ENABLED=true'
 
 echo "Configures git duet to set git user config"
 add_to_profile '# Sets git duet' \
@@ -59,10 +52,6 @@ echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@1.1/bin" $path)'
 
-echo 'Adding ASDF env vars to path'
-add_to_profile '# Adding ASDF env vars to path' \
-               'export ASDFROOT=$HOME/.asdf' \
-               'export ASDFINSTALLS=$HOME/.asdf/installs'
 
 
 [ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -190,4 +179,33 @@ vim -c ":GoInstallBinaries" -c ":q" - </dev/null
 
 echo "create symlink to icloud folder"
 ln -fs ~/Library/Mobile\ Documents/com~apple~CloudDocs/ ~/icloud
+
+echo "Installing Claude statusline script"
+mkdir -p ~/.claude
+ln -fs "$WORKSTATION_DIR/assets/claude/statusline-command.sh" ~/.claude/statusline-command.sh
+
+echo "Installing Claude Code plugins"
+if command -v claude &> /dev/null; then
+  # Add marketplaces
+  echo "Adding Claude Code marketplaces..."
+  claude plugin marketplace add anthropics/claude-plugins-official 2>/dev/null || true
+  claude plugin marketplace add affaan-m/everything-claude-code 2>/dev/null || true
+  claude plugin marketplace add JuliusBrussee/caveman 2>/dev/null || true
+  claude plugin marketplace add forrestchang/andrej-karpathy-skills 2>/dev/null || true
+  claude plugin marketplace add anthropics/skills 2>/dev/null || true
+  claude plugin marketplace add kepano/obsidian-skills 2>/dev/null || true
+
+  # Install plugins
+  echo "Installing Claude Code plugins..."
+  claude plugin install gopls-lsp@claude-plugins-official 2>/dev/null || true
+  claude plugin install ralph-loop@claude-plugins-official 2>/dev/null || true
+  claude plugin install code-simplifier@claude-plugins-official 2>/dev/null || true
+  claude plugin install atlassian@claude-plugins-official 2>/dev/null || true
+  claude plugin install caveman@caveman 2>/dev/null || true
+  claude plugin install andrej-karpathy-skills@karpathy-skills 2>/dev/null || true
+  claude plugin install skill-creator@claude-plugins-official 2>/dev/null || true
+  claude plugin install obsidian@obsidian-skills 2>/dev/null || true
+else
+  echo "Claude Code CLI not found, skipping plugin installation"
+fi
 

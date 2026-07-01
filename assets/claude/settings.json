@@ -1,5 +1,8 @@
 {
   "env": {
+    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1",
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_TELEMETRY": "1",
@@ -9,6 +12,7 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
+      "WebFetch(domain:sonarcloud.io)",
       "Bash(grep:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
@@ -37,12 +41,14 @@
     ],
     "deny": [
       "Bash(rm *)",
-      "Bash(git push*)",
-      "Bash(*sudo*)",
-      "Bash(*env*)"
+      "Bash(*sudo*)"
     ]
   },
   "model": "sonnet[1m]",
+  "skillOverrides": {
+    "atlassian:search-company-knowledge": "off",
+    "atlassian:triage-issue": "off"
+  },
   "hooks": {
     "Notification": [
       {
@@ -63,6 +69,11 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "for d in $HOME/workspace/skills/*/; do name=$(basename \"$d\"); mkdir -p \"$HOME/.claude/skills/$name\"; cp \"$d/SKILL.md\" \"$HOME/.claude/skills/$name/skill.md\" 2>/dev/null || true; done",
             "timeout": 10
           }
         ]
@@ -98,16 +109,31 @@
     "command": "bash ~/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
-    "atlassian@claude-plugins-official": true,
+    "andrej-karpathy-skills@karpathy-skills": true,
+    "atlassian@claude-plugins-official": false,
+    "caveman@caveman": true,
     "code-simplifier@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
-    "caveman@caveman": true
+    "skill-creator@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    },
     "caveman": {
       "source": {
         "source": "github",
         "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "karpathy-skills": {
+      "source": {
+        "source": "github",
+        "repo": "forrestchang/andrej-karpathy-skills"
       }
     }
   },
@@ -146,6 +172,10 @@
     ]
   },
   "alwaysThinkingEnabled": false,
+  "effortLevel": "high",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "editorMode": "vim",
   "defaultMode": "plan",
   "gitAttribution": false,
   "keybindings": {

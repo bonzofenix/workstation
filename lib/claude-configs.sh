@@ -3,22 +3,6 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-# Create a symlink if target doesn't exist, report status
-link_if_missing() {
-  local source="$1"
-  local target="$2"
-  local name="$3"
-
-  if [ -L "$target" ]; then
-    echo "  $name already linked"
-  elif [ -e "$target" ]; then
-    echo "  Warning: $target exists and is not a symlink, skipping"
-  else
-    ln -s "$source" "$target"
-    echo "  Linked $name"
-  fi
-}
-
 function main() {
   local workstation_dir="$HOME/workstation"
   local source_dir="$workstation_dir/assets/claude"
@@ -30,6 +14,13 @@ function main() {
 
   link_if_missing "$source_dir/settings.json" "$target_dir/settings.json" "settings.json"
   link_if_missing "$source_dir/hooks/peon-ping" "$target_dir/hooks/peon-ping" "hooks/peon-ping"
+
+  # Global memory — source of truth lives in workstation repo
+  local home_slug
+  home_slug="${HOME//\//-}"
+  local global_memory_target="$HOME/.claude/projects/${home_slug}"
+  mkdir -p "$global_memory_target"
+  link_if_missing "$source_dir/memory" "$global_memory_target/memory" "global memory"
 
   # Download peon sounds if not present
   local sounds_dir="$source_dir/hooks/peon-ping/packs/peon/sounds"

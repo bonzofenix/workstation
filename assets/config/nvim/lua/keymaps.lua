@@ -27,6 +27,9 @@ vim.cmd [[map <leader>z <Plug>(zoom-toggle)]]
 -- Git blame
 vim.cmd [[map <leader>g :Git blame<Enter>]]
 
+-- Open current file+line in GitHub
+keymap("n", "<leader>gb", ":execute '!gh browse ' . expand('%') . ':' . line('.')<CR>")
+
 -- Whitespace and cleanup maps
 vim.cmd [[
 map ;fws :%s/\s\+$//
