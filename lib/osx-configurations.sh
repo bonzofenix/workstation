@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-echo
-echo 'Customizing OS X configuration'
+export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source "$SCRIPT_DIR/common.sh"
+
+log_section "macOS Configurations"
+log_step "Applying system preferences"
 
 # set menu clock
 # see http://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Format_Patterns
@@ -39,8 +42,7 @@ defaults write com.apple.Terminal Shell -string "/bin/bash"
 # Set default to use function key
 defaults write -g com.apple.keyboard.fnState -boolean false
 
-echo
-echo "Configuring Ghostty"
+log_step "Installing Rosetta (if needed)"
 # Ghostty uses TOML configuration, see assets/config/ghostty/ if needed
 
 /usr/bin/pgrep -q oahd || sudo softwareupdate --install-rosetta --agree-to-license || true

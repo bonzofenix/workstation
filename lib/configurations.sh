@@ -11,192 +11,143 @@ else
   HOMEBREW_PREFIX="/usr/local"
 fi
 
+log_section "Configurations"
+
 touch ~/.bash_profile
 ln -fs ~/.bash_profile ~/.zshenv
 
-echo 'Adding workstation/bin to path'
+log_step "Configuring PATH"
 add_to_profile '# Add workstation binaries' \
                'path+=("$HOME/workstation/bin")'
 
-echo 'Adding ~/bin to path'
 add_to_profile '# Add ~/bin binaries' \
                'path=("$HOME/bin" $path)'
 
-
-echo 'Adding coreutil path'
 add_to_profile '# Add gnubin for coreutil tooling to path' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/coreutils/libexec/gnubin" $path)'
 
-
-echo "Configures git duet to set git user config"
-add_to_profile '# Sets git duet' \
-               'export GIT_DUET_SET_GIT_USER_CONFIG=1'
-
-echo "Configure homebrew to not show env hints"
-add_to_profile '# set homebrew no env hints' \
-               'export HOMEBREW_NO_ENV_HINTS=1'
-
-echo "Configure homebrew to not install cleanup"
-add_to_profile '# set homebrew no install cleanup' \
-               'export HOMEBREW_NO_INSTALL_CLEANUP=1'
-
-echo "Configure homebrew to not auto update"
-add_to_profile '# set homebrew no auto update' \
-               'export HOMEBREW_NO_AUTO_UPDATE=1'
-
-echo "adds local bin to path"
 add_to_profile '# Adds local bin to path' \
                'path=("$HOME/.local/bin" $path)'
 
-echo "Points to openssl instead of libressl"
 add_to_profile '# Points to openssl instead of libressl' \
                'path=("'"$HOMEBREW_PREFIX"'/opt/openssl@3/bin" $path)'
 
+log_step "Configuring environment variables"
+add_to_profile '# Sets git duet' \
+               'export GIT_DUET_SET_GIT_USER_CONFIG=1'
+
+add_to_profile '# set homebrew no env hints' \
+               'export HOMEBREW_NO_ENV_HINTS=1'
+
+add_to_profile '# set homebrew no install cleanup' \
+               'export HOMEBREW_NO_INSTALL_CLEANUP=1'
+
+add_to_profile '# set homebrew no auto update' \
+               'export HOMEBREW_NO_AUTO_UPDATE=1'
 
 
+
+log_step "Configuring tmux"
 [ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-echo 'Setting tmux config'
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 
-
-
-
-echo "Allowing history to track lines beginning with whitespace"
+log_step "Configuring history"
 add_to_profile '# Only ignore duplicates in history' \
                'export HISTCONTROL=ignoredups'
-
-echo "Infinite history"
 add_to_profile '# Infinite bash history' \
                'export HISTTIMEFORMAT="%d/%m/%y %T "' \
                'export HISTSIZE=' \
                'export HISTFILESIZE=' \
                'export HISTFILE=~/.bash_eternal_history' \
                'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"'
-
-
 add_to_profile '# Enable bash completion' \
                'export BASH_DEFAULT_TIMEOUT_MS=900000' \
-               'export BASH_MAX_TIMEOUT_MS=900000' 
+               'export BASH_MAX_TIMEOUT_MS=900000'
 
-echo "Configuring custom aliases"
+log_step "Configuring shell aliases and hooks"
 [[ -L ~/.aliases.bash ]] && rm ~/.aliases.bash
 ln -fs "$WORKSTATION_DIR/assets/aliases.bash" ~/.aliases.bash
-
 add_to_profile '# Load custom aliases' \
                'source ~/.aliases.bash'
-
-echo "Enable git duet"
 add_to_profile '# git duet works globally' \
                 'export GIT_DUET_GLOBAL=true'
-
-echo "Enable Claude Code notifications"
 add_to_profile '# Enable Claude Code notifications' \
                'export CLAUDE_NOTIFY=1'
-
-echo "Configuring GPG"
 add_to_profile '# configure GPG' \
                'GPG_TTY=$(tty)' \
                'export GPG_TTY'
-
-echo 'Enabling TMUX to run by default'
-if ! grep -q 'TMUX' ~/.bash_profile; then
-add_to_profile '# Adding tmux to run by default on new terminal' \
-               '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
-fi
-
-# Install Oh My Zsh if not already installed
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "Installing Oh My Zsh"
-    RUNZSH=CHSH= sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
-else
-    echo "Oh My Zsh already installed"
-fi
-
-echo "Enables z shell plugin"
-add_to_profile '# Enables z shell plugin' \
-  ". $WORKSTATION_DIR/bin/z.sh"
-
-echo "sets vi mode for bash"
-add_to_profile '# sets vi mode' \
-               'set -o vi'
-
-echo "sets vi mode for zsh"
-add_to_rc '# sets vi mode for zsh' \
-               'bindkey -v'
-
-echo "sets search to ctr+r"
-add_to_rc '# sets vi mode for zsh' \
-          'bindkey "^R" history-incremental-search-backward'
-
-echo "Adds fuck alias"
-add_to_rc '# Adds fuck alias' \
-          'eval $(thefuck --alias)'
-
-echo "Adds direnv hook"
-add_to_rc '# Adds direnv hook' \
-          'eval "$(direnv hook zsh)"'
-
-echo "Disable zsh beeps"
-add_to_rc '# Disable zsh beeps' \
-          'unsetopt BEEP'
-
 add_to_profile '# sets editor' \
                'export EDITOR=nvim'
-
 add_to_profile '# enables CGO' \
                'export CGO_ENABLED=1'
+add_to_profile '# sets devbox' \
+               'eval "$(devbox global shellenv)"'
 
-if `hash direnv`; then
+if ! grep -q 'TMUX' ~/.bash_profile; then
+  add_to_profile '# Adding tmux to run by default on new terminal' \
+                 '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
+fi
+
+if hash direnv 2>/dev/null; then
   add_to_profile '# Load direnv' \
                  'eval "$( direnv hook bash )"'
 fi
 
-add_to_profile '# sets devbox' \
-               'eval "$(devbox global shellenv)"'
+log_step "Configuring Oh My Zsh"
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  RUNZSH=CHSH= sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
+  log_success "Oh My Zsh installed"
+else
+  log_success "Oh My Zsh already installed"
+fi
 
-echo "Installing NeoVim configs"
+log_step "Configuring zsh"
+add_to_rc '# Enables z shell plugin' \
+  ". $WORKSTATION_DIR/bin/z.sh"
+add_to_profile '# sets vi mode' \
+               'set -o vi'
+add_to_rc '# sets vi mode for zsh' \
+               'bindkey -v'
+add_to_rc '# sets vi mode for zsh' \
+          'bindkey "^R" history-incremental-search-backward'
+add_to_rc '# Adds fuck alias' \
+          'eval $(thefuck --alias)'
+add_to_rc '# Adds direnv hook' \
+          'eval "$(direnv hook zsh)"'
+add_to_rc '# Disable zsh beeps' \
+          'unsetopt BEEP'
+
+log_step "Configuring Neovim"
 [ -d ~/.config/nvim ] && rm -rf ~/.config/nvim
 ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
-
-echo "Installing Ghostty config"
-[ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty
-ln -fs "$WORKSTATION_DIR/assets/config/ghostty" ~/.config/ghostty
-
-echo "Configuring TERM for ghostty/tmux compatibility"
-add_to_profile '# TERM for ghostty/tmux compatibility' \
-               'export TERM=xterm-256color'
-
 [ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
 [ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
+nvim -c ":GoInstallBinaries" -c ":q" </dev/null
 
-echo 'Setting LANG for UTF-8 tmux support'
+log_step "Configuring Ghostty"
+[ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty
+ln -fs "$WORKSTATION_DIR/assets/config/ghostty" ~/.config/ghostty
+add_to_profile '# TERM for ghostty/tmux compatibility' \
+               'export TERM=xterm-256color'
 add_to_profile '# Setting UTF-8 tmux support' \
                'export LANG=en_US.UTF-8'
 
-nvim -c ":GoInstallBinaries" -c ":q" </dev/null
-
-
-echo "create symlink to icloud folder"
+log_step "Linking iCloud folder"
 ln -fs "$HOME/Library/Mobile Documents/com~apple~CloudDocs/" "$HOME/icloud"
 
-echo "Installing Claude statusline script"
+log_step "Installing Claude statusline script"
 mkdir -p ~/.claude
 ln -fs "$WORKSTATION_DIR/assets/claude/statusline-command.sh" ~/.claude/statusline-command.sh
 
-echo "Installing Claude Code plugins"
+log_step "Installing Claude Code plugins"
 if command -v claude &> /dev/null; then
-  # Add marketplaces
-  echo "Adding Claude Code marketplaces..."
   claude plugin marketplace add anthropics/claude-plugins-official 2>/dev/null || true
   claude plugin marketplace add affaan-m/everything-claude-code 2>/dev/null || true
   claude plugin marketplace add JuliusBrussee/caveman 2>/dev/null || true
   claude plugin marketplace add forrestchang/andrej-karpathy-skills 2>/dev/null || true
   claude plugin marketplace add anthropics/skills 2>/dev/null || true
   claude plugin marketplace add kepano/obsidian-skills 2>/dev/null || true
-
-  # Install plugins
-  echo "Installing Claude Code plugins..."
   claude plugin install gopls-lsp@claude-plugins-official 2>/dev/null || true
   claude plugin install ralph-loop@claude-plugins-official 2>/dev/null || true
   claude plugin install code-simplifier@claude-plugins-official 2>/dev/null || true
@@ -206,6 +157,6 @@ if command -v claude &> /dev/null; then
   claude plugin install skill-creator@claude-plugins-official 2>/dev/null || true
   claude plugin install obsidian@obsidian-skills 2>/dev/null || true
 else
-  echo "Claude Code CLI not found, skipping plugin installation"
+  log_warning "Claude Code CLI not found, skipping plugin installation"
 fi
 

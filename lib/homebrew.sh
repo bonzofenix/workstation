@@ -3,6 +3,8 @@
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source "$SCRIPT_DIR/common.sh"
 
+log_section "Homebrew"
+
 # Detect Homebrew prefix based on architecture
 if [ -d "/opt/homebrew" ]; then
   HOMEBREW_PREFIX="/opt/homebrew"

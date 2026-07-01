@@ -6,6 +6,42 @@ if [[ "${DEBUG}" == "true" ]]; then
   env
 fi
 
+_has_gum() { command -v gum >/dev/null 2>&1; }
+
+log_section() {
+  if _has_gum; then
+    echo
+    gum style --foreground 212 --bold --border-foreground 212 --border normal --padding "0 1" " $* "
+    echo
+  else
+    echo; echo "==> $*"; echo
+  fi
+}
+
+log_step() {
+  if _has_gum; then
+    gum log --level info "$@"
+  else
+    echo "  • $*"
+  fi
+}
+
+log_success() {
+  if _has_gum; then
+    gum log --level info "$(gum style --foreground 2 "✓") $*"
+  else
+    echo "  ✓ $*"
+  fi
+}
+
+log_warning() {
+  if _has_gum; then
+    gum log --level warn "$@"
+  else
+    echo "  ⚠ $*"
+  fi
+}
+
 function add_to_rc(){
   local profile=~/.zshrc
   add_to_file $profile "$@"
@@ -47,12 +83,12 @@ link_if_missing() {
   local name="$3"
 
   if [ -L "$target" ]; then
-    echo "  $name already linked"
+    log_success "$name already linked"
   elif [ -e "$target" ]; then
-    echo "  Warning: $target exists and is not a symlink, skipping"
+    log_warning "$target exists and is not a symlink, skipping"
   else
     ln -s "$source" "$target"
-    echo "  Linked $name"
+    log_success "Linked $name"
   fi
 }
 
