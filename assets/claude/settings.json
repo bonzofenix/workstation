@@ -9,6 +9,10 @@
     "ENABLE_TOOL_SEARCH": "false"
   },
   "includeCoAuthoredBy": false,
+  "fileSuggestion": {
+    "type": "command",
+    "command": "claude-file-suggestion"
+  },
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
@@ -44,7 +48,7 @@
       "Bash(*sudo*)"
     ]
   },
-  "model": "sonnet[1m]",
+  "model": "opus",
   "skillOverrides": {
     "atlassian:search-company-knowledge": "off",
     "atlassian:triage-issue": "off"
