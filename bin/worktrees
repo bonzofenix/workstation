@@ -44,4 +44,15 @@ if [[ -z "$selected_path" ]]; then
 fi
 
 cd "$selected_path"
+
+# Inside tmux: switch cwd of all OTHER panes in current window.
+if [[ -n "${TMUX:-}" ]]; then
+  window=$(tmux display-message -p '#{window_id}')
+  self=$(tmux display-message -p '#{pane_id}')
+  for pane in $(tmux list-panes -t "$window" -F '#{pane_id}'); do
+    [[ "$pane" == "$self" ]] && continue
+    tmux send-keys -t "$pane" "cd '$selected_path'" C-m
+  done
+fi
+
 exec "$SHELL"
