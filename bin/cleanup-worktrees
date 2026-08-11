@@ -71,8 +71,24 @@ else
   # Find branches where upstream is gone
   gone_branches=$(git branch -vv | grep ': gone]' | grep -vE '^\*|main$|master$' | awk '{print $2}' || true)
 
-  # Combine both lists and remove duplicates
-  branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches" | sort -u | grep -v '^$' || true)
+  # Find branches whose PR was merged on GitHub (catches squash/rebase merges,
+  # which --merged and ': gone]' both miss when the remote branch still exists).
+  squash_merged_branches=""
+  if command -v gh >/dev/null 2>&1; then
+    while IFS='|' read -r branch _; do
+      [[ -z "$branch" ]] && continue
+      case "$branch" in main|master) continue ;; esac
+      state=$(gh pr list --head "$branch" --state merged --json number -q '.[0].number' 2>/dev/null || true)
+      if [[ -n "$state" ]]; then
+        squash_merged_branches+="${branch}"$'\n'
+      fi
+    done <<< "$worktrees_info"
+  else
+    gum style --foreground 214 "Warning: gh not found — skipping squash-merge detection"
+  fi
+
+  # Combine all lists and remove duplicates
+  branches_to_cleanup=$(echo -e "$merged_branches\n$gone_branches\n$squash_merged_branches" | sort -u | grep -v '^$' || true)
 
   if [[ -z "$branches_to_cleanup" ]]; then
     gum style --foreground 240 "No merged or gone branches found. No worktrees to clean up."

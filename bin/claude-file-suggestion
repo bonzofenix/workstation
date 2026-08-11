@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 # Case-insensitive file suggestion for Claude Code `@` mentions.
 #
-# Claude Code invokes this with the partial query as $1 and expects a
-# newline-separated list of matching file paths on stdout. The default
-# built-in matcher is case-sensitive; this fold-cases both the query and
-# the candidate paths so `@trading` finds `Trading MOC.md`.
+# Claude Code passes the partial query either as $1 (older interface) or as a
+# JSON object on stdin like {"query":"..."} (newer interface). This handles
+# both. It emits a newline-separated list of matching paths on stdout. The
+# built-in matcher is case-sensitive; this fold-cases both query and candidate
+# paths so `@trading` finds `Trading MOC.md`.
+#
+# Speed:
+#   * The candidate file list is cached to a temp file keyed by the project
+#     root, refreshed only when older than $CACHE_TTL. Repeated keystrokes skip
+#     the find/git walk entirely.
+#   * The query is parsed with a pure-bash regex (no jq/sed subprocess).
+#   * A single awk does match + rank + limit; no sort/cut/head pipeline and no
+#     `cat` subprocess feeding it. One awk spawn per keystroke, nothing else.
 #
 # Wired via settings.json:
 #   "fileSuggestion": { "type": "command", "command": "claude-file-suggestion" }
@@ -12,13 +21,29 @@
 set -euo pipefail
 
 query="${1:-}"
+
+# Fallback: read query from stdin JSON when not passed as an argument. Parsed
+# with a bash regex so no jq/sed process is spawned on the hot path.
+if [[ -z "$query" && ! -t 0 ]]; then
+  IFS= read -r -d '' stdin || true
+  if [[ "$stdin" =~ \"query\"[[:space:]]*:[[:space:]]*\"([^\"]*)\" ]]; then
+    query="${BASH_REMATCH[1]}"
+  fi
+fi
+
 root="${CLAUDE_PROJECT_DIR:-$PWD}"
-limit=50
+limit=15          # Claude Code caps suggestions at 15.
+CACHE_TTL=30      # Seconds to reuse the cached file list before rebuilding.
 
 cd "$root" 2>/dev/null || exit 0
 
-# List candidate files. Prefer git (respects .gitignore, fast); fall back to find.
-list_files() {
+# Cache path is keyed by the project root so multiple projects don't collide.
+# Derive the key by squashing non-alnum chars in bash (no hashing subprocess).
+cache_key="${root//[^a-zA-Z0-9]/_}"
+cache_file="${TMPDIR:-/tmp}/claude-filesug-${cache_key}.cache"
+
+# Build the candidate list (git-tracked when available, else a pruned find).
+build_list() {
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     git ls-files --cached --others --exclude-standard
   else
@@ -26,30 +51,53 @@ list_files() {
       -not -path '*/.git/*' \
       -not -path '*/node_modules/*' \
       -not -path '*/.obsidian/*' \
+      -not -path '*/.trash/*' \
       | sed 's|^\./||'
   fi
 }
 
-# Empty query: return first N files.
+# Refresh the cache if missing or stale. Leaves the fresh list in $cache_file.
+ensure_cache() {
+  if [[ -s "$cache_file" ]]; then
+    local now mtime
+    now=$(date +%s)
+    mtime=$(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null || echo 0)
+    [[ "$mtime" =~ ^[0-9]+$ ]] || mtime=0
+    (( now - mtime < CACHE_TTL )) && return
+  fi
+  # Rebuild atomically so concurrent keystrokes never read a half-written file.
+  local tmp="${cache_file}.$$"
+  build_list > "$tmp"
+  mv -f "$tmp" "$cache_file"
+}
+
+ensure_cache
+
+# Empty query: return the first N files straight from the cache.
 if [[ -z "$query" ]]; then
-  list_files | head -n "$limit"
+  head -n "$limit" "$cache_file"
   exit 0
 fi
 
-# Case-insensitive substring match, ranked: basename hits before path hits.
-q_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+# Lowercase the query in-shell (bash 4+), avoiding a `tr` subprocess.
+q_lower="${query,,}"
 
-list_files | awk -v q="$q_lower" -v lim="$limit" '
+# One awk pass over the cached list: case-insensitive substring match, rank
+# basename hits ahead of path hits, and stop once $limit lines are emitted.
+# Reads the cache file directly (no `cat`), buffers matches by rank, prints
+# rank-0 then rank-1, capped at the limit.
+awk -v q="$q_lower" -v lim="$limit" '
   {
-    path = $0
-    lower = tolower(path)
+    lower = tolower($0)
     if (index(lower, q) == 0) next
 
-    n = split(path, parts, "/")
-    base = tolower(parts[n])
-
-    # Rank 0 = query matches basename, Rank 1 = matches elsewhere in path.
-    rank = (index(base, q) > 0) ? 0 : 1
-    printf "%d\t%s\n", rank, path
+    n = split($0, parts, "/")
+    if (index(tolower(parts[n]), q) > 0) { hi[++nh] = $0 }   # basename match
+    else                                  { lo[++nl] = $0 }   # path-only match
   }
-' | sort -t $'\t' -k1,1n -k2,2 | cut -f2- | head -n "$limit"
+  END {
+    c = 0
+    for (i = 1; i <= nh && c < lim; i++) { print hi[i]; c++ }
+    for (i = 1; i <= nl && c < lim; i++) { print lo[i]; c++ }
+  }
+' "$cache_file"
