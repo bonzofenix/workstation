@@ -7,3 +7,13 @@ assets/config/nvim/pack/
 lib/pr_reviewer/reviews
 assets/claude/hooks/**/.state.json
 assets/claude/hooks/**/packs/*/sounds/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*credentials*
+.claude/settings.local.json

@@ -28,5 +28,13 @@ target/
 *.tgz
 *.rar
 
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*credentials*
 
 **/.claude/settings.local.json
