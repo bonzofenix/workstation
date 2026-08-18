@@ -16,4 +16,5 @@ assets/claude/hooks/**/packs/*/sounds/
 id_rsa*
 id_ed25519*
 *credentials*
-.claude/settings.local.json
+# Local Claude Code state (settings + transient worktrees). Shared config lives in assets/claude/
+.claude/
