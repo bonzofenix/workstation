@@ -140,6 +140,15 @@ log_step "Installing Claude statusline script"
 mkdir -p ~/.claude
 ln -fs "$WORKSTATION_DIR/assets/claude/statusline-command.sh" ~/.claude/statusline-command.sh
 
+log_step "Installing Claude hooks"
+mkdir -p ~/.claude/hooks
+# Symlink each hook directory so settings.json references under
+# ~/.claude/hooks/ resolve on a fresh machine (e.g. worktree-guard).
+for hook_dir in "$WORKSTATION_DIR"/assets/claude/hooks/*/; do
+  [ -d "$hook_dir" ] || continue
+  ln -fns "${hook_dir%/}" ~/.claude/hooks/"$(basename "$hook_dir")"
+done
+
 log_step "Installing Claude Code plugins"
 if command -v claude &> /dev/null; then
   claude plugin marketplace add anthropics/claude-plugins-official 2>/dev/null || true
