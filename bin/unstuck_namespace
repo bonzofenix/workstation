@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
 set -x
 
 function unstuck_namespace(){
-  pushd "$TMPDIR" > /dev/null
-    kubectl get namespace "$1" -o json | grep -v '"kubernetes"' > tmp.json
-    curl -k -H "Content-Type: application/json" -X PUT --data-binary @tmp.json "http://localhost:8001/api/v1/namespaces/$1/finalize"
+  local tmpfile
+  tmpfile="$(mktemp)"
+  trap 'rm -f "$tmpfile"' RETURN
 
-  popd
+  kubectl get namespace "$1" -o json | grep -v '"kubernetes"' > "$tmpfile"
+  [ -s "$tmpfile" ] || { echo "unstuck_namespace: empty response for namespace $1, aborting" >&2; return 1; }
+
+  curl -k -H "Content-Type: application/json" -X PUT --data-binary "@$tmpfile" "http://localhost:8001/api/v1/namespaces/$1/finalize"
 }
 
 unstuck_namespace "$1"

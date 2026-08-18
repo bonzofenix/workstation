@@ -42,6 +42,14 @@ defaults write com.apple.Terminal Shell -string "/bin/bash"
 # Set default to use function key
 defaults write -g com.apple.keyboard.fnState -boolean false
 
+log_step "Setting default apps for file types"
+# Open .md files in TextEdit instead of Calibre/etc. Requires duti (see Brewfile).
+if command -v duti &>/dev/null; then
+  duti -s com.apple.TextEdit .md all
+else
+  echo "duti not installed, skipping file-type defaults"
+fi
+
 log_step "Installing Rosetta (if needed)"
 # Ghostty uses TOML configuration, see assets/config/ghostty/ if needed
 
