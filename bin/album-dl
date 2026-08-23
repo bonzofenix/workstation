@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#
+# album-dl.sh — resumable bulk downloader for public albums (bunkr, cyberdrop,
+# gofile, pixeldrain, etc. — anything cyberdrop-dl supports).
+#
+# Usage:
+#   ./album-dl.sh <album-url> [more-urls...]
+#   ./album-dl.sh -o /path/to/dest <album-url>
+#
+# Behavior:
+#   - Downloads into DEST (default: ./albums) with one subfolder per album.
+#   - Keeps a persistent history DB in DEST/.album-dl/downloads.db, so
+#     re-running the same URL resumes and skips files already downloaded —
+#     even if you've moved or reorganized the finished files elsewhere.
+#   - Appends a human-readable progress log to DEST/album-dl.log, and a
+#     machine-readable per-file record to DEST/.album-dl/results.jsonl.
+#
+# Requirements: uv (https://docs.astral.sh/uv/) — script runs cyberdrop-dl via uvx.
+
+set -euo pipefail
+
+DEST="./albums"
+
+while getopts "o:h" opt; do
+  case "$opt" in
+    o) DEST="$OPTARG" ;;
+    h) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) exit 1 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+  echo "usage: $0 [-o dest-dir] <album-url> [more-urls...]" >&2
+  exit 1
+fi
+
+if ! command -v uvx >/dev/null 2>&1; then
+  echo "error: uvx not found. Install uv first: brew install uv" >&2
+  exit 1
+fi
+
+mkdir -p "$DEST/.album-dl"
+DEST="$(cd "$DEST" && pwd)"
+STATE="$DEST/.album-dl"
+LOG="$DEST/album-dl.log"
+
+# cyberdrop-dl validates --cache-file/--database-file exist but won't create them
+[ -f "$STATE/cache.json" ] || echo '{}' > "$STATE/cache.json"
+[ -f "$STATE/downloads.db" ] || touch "$STATE/downloads.db"
+
+log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG"; }
+
+log "=== run started: $* ==="
+
+set +e
+uvx cyberdrop-dl-patched download \
+  --download-folder "$DEST" \
+  --database-file "$STATE/downloads.db" \
+  --cache-file "$STATE/cache.json" \
+  --dump-json \
+  "$@" 2>&1 | tee -a "$LOG"
+status=${PIPESTATUS[0]}
+set -e
+
+# Collect the per-file jsonl reports cyberdrop-dl dumps next to the DB/config
+find "$DEST" -maxdepth 2 -name '*.results.jsonl' -newer "$STATE/downloads.db" \
+  -exec cat {} + >> "$STATE/results.jsonl" 2>/dev/null || true
+
+if [ "$status" -eq 0 ]; then
+  log "=== run finished OK ==="
+else
+  log "=== run FAILED (exit $status) — rerun same command to resume ==="
+fi
+exit "$status"
