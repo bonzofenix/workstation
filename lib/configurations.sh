@@ -127,7 +127,6 @@ log_step "Configuring Neovim"
 ln -fs "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
 [ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && run_with_spin "Cloning lazy.nvim..." git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
 [ ! -d ~/.config/nvim/pack/github/start/copilot.vim ] && run_with_spin "Cloning copilot.vim..." git clone https://github.com/github/copilot.vim.git ~/.config/nvim/pack/github/start/copilot.vim
-run_with_spin "Installing Go binaries..." nvim -c ":GoInstallBinaries" -c ":q" </dev/null
 
 log_step "Configuring Ghostty"
 [ -d ~/.config/ghostty ] && rm -rf ~/.config/ghostty
