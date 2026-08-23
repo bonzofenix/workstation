@@ -84,6 +84,16 @@ The setup configures both bash and zsh:
 
 ### Worktree Management
 
+**Standing rule: use `EnterWorktree` before any feature/fix/bug/PR work that
+involves writing code.** This applies to file edits, not just branch creation —
+do not edit tracked files directly on `main` for PR-bound work. The
+`worktree-guard` PreToolUse hook enforces a narrow slice of this (it blocks
+branch-creating `git` commands outside a worktree), but the rule is broader
+than what the hook can detect.
+
+Exceptions, which still need a heads-up to the user: trivial one-line fixes,
+and changes to untracked or local-only files.
+
 The repo uses git worktrees extensively with dedicated scripts:
 - `worktrees` - Interactive worktree selector with tmux integration (changes all panes)
 - `new-worktree` - Creates new worktree in `../worktrees/` directory
