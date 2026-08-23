@@ -21,6 +21,15 @@ CI that isn't a known flake, a protected-branch rejection).
 
 ## Pipeline
 
+### 0. Review
+- Run `/pr-review-toolkit:review-pr` (all aspects) against the working diff before
+  committing.
+- Apply what it recommends: fix Critical + Important issues directly. Suggestions
+  are optional — apply if cheap/obvious, skip otherwise.
+- Don't stop to ask before applying fixes — that's the point of yolo. Only stop
+  if a finding is ambiguous enough that guessing the fix risks breaking behavior.
+- Re-run is not required after fixes; proceed straight to commit.
+
 ### 1. Commit
 - `git add -A` (stage everything) unless the user scoped specific paths.
 - Write a real Conventional Commits message (`type(scope): subject`, imperative,
@@ -49,9 +58,69 @@ CI that isn't a known flake, a protected-branch rejection).
 - When all required checks are green: `gh pr merge <num> --squash --auto`
   (squash unless the repo convention is otherwise; `--auto` lets it land the
   instant checks finish if there's any lag).
-- Delete the branch on merge (`--delete-branch`) when the user works in
-  throwaway branches/worktrees.
+- Do NOT rely on `--delete-branch`. When the branch is checked out in a worktree,
+  `gh` aborts that step with `cannot delete branch '<x>' used by worktree at ...`
+  and — because it also tries to check out the base branch, which the primary
+  worktree already holds — may print `fatal: 'main' is already used by worktree`
+  and exit non-zero. **The merge itself still succeeded.** Never retry the merge
+  on that error; verify state instead (next line), then delete branches in step 6.
 - Confirm merged state (`gh pr view <num> --json state,mergedAt`) and report.
+- Check whether the required checks actually gated the merge: if `gh pr checks`
+  still shows `pending` on a merged PR, branch protection is not enforcing them.
+  Say so — the user may believe CI is blocking when it is not.
+
+### 6. After merge — clean up
+
+Run this automatically once the PR is merged; it is part of the pipeline, not an
+optional offer.
+
+1. **Sync the primary worktree**: `git -C <primary> pull --ff-only`. If it refuses
+   because of dirty tracked files, see "Reconciling a dirty primary" below.
+2. **Delete the remote branch**: `git push origin --delete <branch>`. Do this
+   explicitly — `--delete-branch` in step 5 usually did not run. Verify with
+   `git ls-remote --heads origin <branch>` (empty = gone); a `git fetch --prune`
+   that deletes nothing means the branch is still on the remote.
+3. **Remove the worktree**:
+   - If this session created it via `EnterWorktree`: `ExitWorktree` with
+     `action: "remove"`.
+   - Otherwise: `git -C <primary> worktree remove <path>` — a session cannot
+     remove the worktree it is running inside, so this must run from the primary.
+4. **Delete the local branch**: `git -C <primary> branch -D <branch>`.
+5. Confirm: `git worktree list`, `git worktree prune -v`, and `git status`.
+
+### The squash-merge SHA trap
+
+Squash merges create a NEW commit, so the branch's commits never match by hash.
+Both `git log origin/main..HEAD` and `ExitWorktree` will therefore claim the
+branch has unmerged work when the content landed perfectly.
+
+**Never discard on that signal alone.** Verify by content first:
+
+```sh
+git diff origin/main <branch> -- <changed-paths>   # empty = content landed
+```
+
+Only when that is empty (or the sole differences are versions the merge
+deliberately superseded) may you use `ExitWorktree` with `discard_changes: true`.
+If real unique content exists, STOP and tell the user — do not discard.
+
+### Reconciling a dirty primary
+
+After copying changes into branches, the primary worktree still holds its own
+copies, which block `pull --ff-only`. For each dirty file:
+
+- `diff <file> <(git show origin/main:<file>)` — if identical, the local copy is
+  redundant: `git checkout -- <file>`.
+- If it differs, it holds work the PR did not include. Do NOT revert it. Stash
+  only that file (`git stash push -m "<what it is>" <file>`), pull, then pop and
+  verify the content survived.
+- Untracked files that landed in the merge (e.g. a new script) also block the
+  pull. Confirm byte-identical first, then `trash` the local copy.
+
+### Report
+
+PR URL, final check status, merged commit, and what cleanup removed. Keep it
+terse. Call out anything deliberately left behind.
 
 ## Failure handling
 
@@ -72,7 +141,3 @@ CI that isn't a known flake, a protected-branch rejection).
   unblock is toggling ruleset `20530825`. Do the re-run automatically; ask before
   touching the ruleset.
 
-## After merge
-
-- If working in a git worktree that's now merged, offer to clean it up.
-- Report: PR URL, final check status, merged commit. Keep it terse.
