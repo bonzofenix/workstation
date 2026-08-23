@@ -1,0 +1,33 @@
+[theme]
+name = "rose-pine"
+auto_switch = false
+
+[keys]
+# arrows alongside vim hjkl for pane focus
+focus_pane_left  = ["prefix+h", "prefix+left"]
+focus_pane_down  = ["prefix+j", "prefix+down"]
+focus_pane_up    = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+
+# tmux muscle memory: | for side-by-side split, v as reliable fallback
+# ("|" is shift+backslash; punctuation+modifier may not register in all terminals)
+split_vertical = ["prefix+|", "prefix+v"]
+
+# scrollback: no copy-mode in herdr, prefix+[ opens buffer in $EDITOR instead
+edit_scrollback = ["prefix+[", "prefix+e"]
+
+# tmux: prefix+d detaches
+detach = ["prefix+d", "prefix+q"]
+
+# tmux: prefix+, renames window
+rename_tab = ["prefix+comma", "prefix+shift+t"]
+
+[ui.toast]
+delivery = "system"
+
+[ui]
+agent_panel_sort = "spaces"
+
+# show live claude session title in sidebar (distinguishes multiple claude panes)
+[ui.sidebar.agents.rows_by_agent]
+claude = [["state_icon", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
