@@ -58,3 +58,11 @@ export OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Do
 alias wiki='cd "$OBSIDIAN_VAULT_PATH"'
 alias minimax-claude='source ~/.minimax-env && claude'
 alias good-morning='claude -p "/good-morning"'
+
+# worktrees prints the chosen path on stdout; cd the current shell into it.
+wt() {
+  local dir
+  dir=$(command worktrees) || return
+  [[ -n "$dir" ]] || return 0
+  cd "$dir"
+}
