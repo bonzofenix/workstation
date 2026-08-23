@@ -30,29 +30,32 @@ worktree_list="${worktree_list%$'\n'}"
 
 selected=$(echo "$worktree_list" | gum choose)
 
+# Abort (Ctrl-C/Esc) or empty pick: bail rather than falling back to main worktree.
+[[ -n "$selected" ]] || exit 1
+
 # Extract branch name (first word) and find matching worktree path
 branch_name=$(echo "$selected" | awk '{print $1}')
 
 selected_path=$(git worktree list --porcelain | awk -v branch="refs/heads/$branch_name" '
-  /^worktree / { path = $2 }
+  /^worktree / { path = substr($0, 10) }
   /^branch / { if ($2 == branch) print path }
 ')
 
 if [[ -z "$selected_path" ]]; then
   # fallback: main worktree
-  selected_path=$(git worktree list --porcelain | awk '/^worktree / { print $2; exit }')
+  selected_path=$(git worktree list --porcelain | awk '/^worktree / { print substr($0, 10); exit }')
 fi
 
-cd "$selected_path"
-
-# Inside tmux: switch cwd of all OTHER panes in current window.
+# Inside tmux: cd the other panes in this window. The current pane is skipped;
+# the calling wt() shell function cds it via our stdout.
 if [[ -n "${TMUX:-}" ]]; then
   window=$(tmux display-message -p '#{window_id}')
   self=$(tmux display-message -p '#{pane_id}')
   for pane in $(tmux list-panes -t "$window" -F '#{pane_id}'); do
     [[ "$pane" == "$self" ]] && continue
-    tmux send-keys -t "$pane" "cd '$selected_path'" C-m
+    tmux send-keys -t "$pane" "cd $(printf '%q' "$selected_path")" C-m
   done
 fi
 
-exec "$SHELL"
+# Print path on stdout so calling shell function can cd into it.
+printf '%s\n' "$selected_path"
