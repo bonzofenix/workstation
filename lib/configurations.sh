@@ -84,11 +84,6 @@ add_to_profile '# enables CGO' \
 add_to_profile '# sets devbox' \
                'eval "$(devbox global shellenv)"'
 
-if ! grep -q 'TMUX' ~/.bash_profile; then
-  add_to_profile '# Adding tmux to run by default on new terminal' \
-                 '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
-fi
-
 if hash direnv 2>/dev/null; then
   add_to_profile '# Load direnv' \
                  'eval "$( direnv hook bash )"'
