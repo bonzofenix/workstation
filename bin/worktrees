@@ -57,5 +57,5 @@ if [[ -n "${TMUX:-}" ]]; then
   done
 fi
 
-# Print path on stdout so calling shell function can cd into it.
+# Print path on stdout so the calling shell function can cd into it.
 printf '%s\n' "$selected_path"
