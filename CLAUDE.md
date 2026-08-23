@@ -45,6 +45,7 @@ DEBUG=true make install    # Enable debug output
 - **`assets/`** - Configuration files and dotfiles
   - `aliases.bash` - Custom bash aliases loaded globally
   - `tmux.conf` - tmux configuration
+  - `herdr/config.toml` - herdr configuration (agent multiplexer, tmux alternative)
   - `gitignore_global` - Global git ignore patterns
   - `config/nvim/` - Neovim configuration
   - `config/ghostty/` - Ghostty terminal configuration
@@ -83,6 +84,16 @@ The setup configures both bash and zsh:
 - **Git-authors file**: `~/.git-authors` for git-duet configuration
 
 ### Worktree Management
+
+**Standing rule: use `EnterWorktree` before any feature/fix/bug/PR work that
+involves writing code.** This applies to file edits, not just branch creation —
+do not edit tracked files directly on `main` for PR-bound work. The
+`worktree-guard` PreToolUse hook enforces a narrow slice of this (it blocks
+branch-creating `git` commands outside a worktree), but the rule is broader
+than what the hook can detect.
+
+Exceptions, which still need a heads-up to the user: trivial one-line fixes,
+and changes to untracked or local-only files.
 
 The repo uses git worktrees extensively with dedicated scripts:
 - `worktrees` - Interactive worktree selector with tmux integration (changes all panes)
@@ -136,8 +147,9 @@ When modifying scripts in `bin/`:
 1. **Shell aliases**: Edit `assets/aliases.bash`
 2. **Git config**: Modify `lib/git.sh` or run git config commands directly
 3. **TMUX**: Edit `assets/tmux.conf`
-4. **Neovim**: Edit files in `assets/config/nvim/`
-5. **Homebrew packages**: Edit `assets/work/Brewfile` or `assets/personal/Brewfile`
+4. **herdr**: Edit `assets/herdr/config.toml` (validate with `herdr config check`, apply with `herdr server reload-config`)
+5. **Neovim**: Edit files in `assets/config/nvim/`
+6. **Homebrew packages**: Edit `assets/work/Brewfile` or `assets/personal/Brewfile`
 
 After changes to assets, re-run `make configurations` to apply.
 

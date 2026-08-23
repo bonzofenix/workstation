@@ -52,6 +52,15 @@ log_step "Configuring tmux"
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 
+log_step "Configuring herdr"
+mkdir -p ~/.config/herdr
+# Back up rather than rm: unlike ~/.tmux.conf this path may hold a real
+# config that was never symlinked, and losing it silently would be rude.
+if [ -e ~/.config/herdr/config.toml ] && [ ! -L ~/.config/herdr/config.toml ]; then
+  mv ~/.config/herdr/config.toml ~/.config/herdr/config.toml.bak-$(date +%Y%m%d-%H%M%S)
+fi
+ln -fs "$WORKSTATION_DIR/assets/herdr/config.toml" ~/.config/herdr/config.toml
+
 log_step "Configuring history"
 add_to_profile '# Only ignore duplicates in history' \
                'export HISTCONTROL=ignoredups'
@@ -83,11 +92,6 @@ add_to_profile '# enables CGO' \
                'export CGO_ENABLED=1'
 add_to_profile '# sets devbox' \
                'eval "$(devbox global shellenv)"'
-
-if ! grep -q 'TMUX' ~/.bash_profile; then
-  add_to_profile '# Adding tmux to run by default on new terminal' \
-                 '[ -z $TMUX ] && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
-fi
 
 if hash direnv 2>/dev/null; then
   add_to_profile '# Load direnv' \
