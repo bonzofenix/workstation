@@ -21,14 +21,28 @@ CI that isn't a known flake, a protected-branch rejection).
 
 ## Pipeline
 
-### 0. Review
+### 0. Review — mandatory, never skipped
+
+Review is the reason to run yolo, not a preamble to it. This is the only review
+the change is guaranteed to get — no required status check gates merges in this
+repo, and other repos may have none either. Never assume GitHub will catch what
+you skip.
+
 - Run `/pr-review-toolkit:review-pr` (all aspects) against the working diff before
   committing.
+- Run it for **every** diff. Do not skip because the change looks small, is
+  docs-only, is prose, or "obviously" has no executable code — that judgment is
+  not yours to make here, and the cost of a needless review is far lower than the
+  cost of an unreviewed change reaching `main` unchecked.
 - Apply what it recommends: fix Critical + Important issues directly. Suggestions
   are optional — apply if cheap/obvious, skip otherwise.
 - Don't stop to ask before applying fixes — that's the point of yolo. Only stop
   if a finding is ambiguous enough that guessing the fix risks breaking behavior.
 - Re-run is not required after fixes; proceed straight to commit.
+- If the review cannot run, or does not return findings you can act on (including
+  a `max_turns` timeout or a half-completed pass), treat it as not having run:
+  say so plainly and STOP. Never merge something that was never reviewed while
+  implying it was.
 
 ### 1. Commit
 - `git add -A` (stage everything) unless the user scoped specific paths.
@@ -46,7 +60,15 @@ CI that isn't a known flake, a protected-branch rejection).
 - Capture the PR number + URL; report the URL to the user.
 
 ### 4. Watch CI
-- Watch the checks to completion. Prefer a **Monitor** on `gh pr checks <num>`
+- First check whether there is anything to watch: `gh pr checks <num>`. Checks can
+  take a few seconds to register after a push, so if it reports none, wait ~15s and
+  probe once more before concluding there are none.
+- If there are genuinely no checks, skip **the CI watch only** (never step 0) and
+  go to step 5 — do not arm a Monitor that will just time out. With
+  `Claude Code Review` disabled, that is the expected case in
+  `bonzofenix/workstation`.
+- When checks DO exist and gate the merge: watch them to completion. Prefer a
+  **Monitor** on `gh pr checks <num>`
   that emits one line per terminal check state and exits when the run completes:
   poll `gh pr checks <num> --json name,state,bucket`, emit any check that left
   `pending`, and stop when none are pending. Cover ALL terminal states
@@ -65,9 +87,10 @@ CI that isn't a known flake, a protected-branch rejection).
   and exit non-zero. **The merge itself still succeeded.** Never retry the merge
   on that error; verify state instead (next line), then delete branches in step 6.
 - Confirm merged state (`gh pr view <num> --json state,mergedAt`) and report.
-- Check whether the required checks actually gated the merge: if `gh pr checks`
-  still shows `pending` on a merged PR, branch protection is not enforcing them.
-  Say so — the user may believe CI is blocking when it is not.
+- If the repo has **no required status checks**, a PR merging with checks pending
+  or absent is expected — do not report it as a misconfiguration. But if required
+  checks ARE configured and a PR merged with them still pending, that IS a real
+  gap: say so.
 
 ### 6. After merge — clean up
 
@@ -134,10 +157,31 @@ terse. Call out anything deliberately left behind.
 
 ## Repo-specific notes
 
+Config facts below were observed 2026-08 and are live-mutable. Verify with
+`gh api repos/:owner/:repo/rulesets` and `gh api repos/:owner/:repo/actions/workflows`.
+**If what you observe disagrees with this section, trust the observation** and
+tell the user the note is stale — never dismiss evidence because this file
+predicts otherwise.
+
+- **bonzofenix/workstation**: review happens locally (step 0), not on GitHub.
+  - Ruleset `protect-main` (`20983003`) has three rules: `deletion`,
+    `non_fast_forward`, and `pull_request` — and **no `required_status_checks`**.
+    That absence is intentional; do not "fix" it or report it as a defect.
+  - The `pull_request` rule requires 0 approvals, so it does not gate ordinary
+    merges, but it does force changes through a PR and sets
+    `require_extra_approval_for_unattributed_changes: true`. An unattributed
+    commit **will** require an approval. A merge refused on that ground is a
+    real gate, not the "no checks" case — report it per "Protected branch /
+    missing approval" and do not bypass it.
+  - The `Claude Code Review` workflow is disabled (`disabled_manually`); it
+    duplicated the local review. The `Claude Code` workflow (the `@claude`
+    mention responder) stays active. So PRs here are expected to have no checks
+    at all — which is exactly why step 0 has no exceptions.
+
 - **tangohub** (github.com/bonzofenix/tangohub): the required `review` check is
   known to flake on a `max_turns` timeout (see the user's memory). If the ONLY
   red check is `review` and it failed on max_turns, that is the known flake:
   re-run it once; if it still blocks a PR that is otherwise green, the documented
-  unblock is toggling ruleset `20530825`. Do the re-run automatically; ask before
+  unblock is toggling ruleset `20753720`. Do the re-run automatically; ask before
   touching the ruleset.
 
