@@ -9,9 +9,12 @@ focus_pane_down  = ["prefix+j", "prefix+down"]
 focus_pane_up    = ["prefix+k", "prefix+up"]
 focus_pane_right = ["prefix+l", "prefix+right"]
 
-# tmux muscle memory: | for side-by-side split, v as reliable fallback
-# ("|" is shift+backslash; punctuation+modifier may not register in all terminals)
-split_vertical = ["prefix+|", "prefix+v"]
+# Splits are bound under [[keys.command]] below so they can inherit the shell's
+# live cwd. Unbind the built-in actions explicitly: their defaults are prefix+v
+# and prefix+minus, the same keys the commands use, and which handler would win
+# otherwise is undocumented.
+split_vertical = []
+split_horizontal = []
 
 # scrollback: no copy-mode in herdr, prefix+[ opens buffer in $EDITOR instead
 edit_scrollback = ["prefix+[", "prefix+e"]
@@ -21,6 +24,44 @@ detach = ["prefix+d", "prefix+q"]
 
 # tmux: prefix+, renames window
 rename_tab = ["prefix+comma", "prefix+shift+t"]
+
+# Splits that inherit the shell's *live* cwd.
+#
+# terminal.new_cwd = "follow" (the default) inherits the source pane's workspace
+# root, not wherever the shell has since cd'd to, so splitting from a worktree
+# lands back in the repo root. tmux splits inherit the live cwd; bin/herdr-split-cwd
+# restores that by resolving the pane's cwd and passing --cwd, which takes
+# precedence over the policy.
+#
+# type = "pane" runs the command in a temporary pane that closes when it exits,
+# so the split appears without a popup flashing up.
+#
+# Each direction gets two keys: the tmux one and a plain-letter fallback.
+# "|" is shift+backslash and "_" is shift+minus, and punctuation with a modifier
+# does not register in every terminal, so v/s stay reliable.
+[[keys.command]]
+key = "prefix+|"
+type = "pane"
+command = "herdr-split-cwd right"
+description = "split right in current dir"
+
+[[keys.command]]
+key = "prefix+v"
+type = "pane"
+command = "herdr-split-cwd right"
+description = "split right in current dir"
+
+[[keys.command]]
+key = "prefix+minus"
+type = "pane"
+command = "herdr-split-cwd down"
+description = "split down in current dir"
+
+[[keys.command]]
+key = "prefix+s"
+type = "pane"
+command = "herdr-split-cwd down"
+description = "split down in current dir"
 
 [ui.toast]
 delivery = "system"

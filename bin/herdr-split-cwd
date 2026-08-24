@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#
+# herdr-split-cwd — split the focused herdr pane into its shell's *live* cwd.
+#
+# Usage: herdr-split-cwd right|down [extra herdr pane split args...]
+#
+# herdr's terminal.new_cwd = "follow" inherits the source pane's workspace root,
+# not wherever the shell has since cd'd to, so a split lands in the project root
+# rather than the directory you are actually working in. tmux splits inherit the
+# live cwd; this restores that behavior by resolving the pane's foreground cwd
+# and passing it to `herdr pane split --cwd`, which takes precedence over the
+# policy.
+#
+# Bind it in ~/.config/herdr/config.toml:
+#
+#   [[keys.command]]
+#   key = "prefix+|"
+#   type = "pane"
+#   command = "herdr-split-cwd right"
+#   description = "split right in current dir"
+
+set -euo pipefail
+
+direction="${1:-}"
+case "$direction" in
+  right | down) shift ;;
+  *)
+    echo "usage: ${0##*/} right|down [herdr pane split args...]" >&2
+    exit 1
+    ;;
+esac
+
+command -v herdr >/dev/null 2>&1 || {
+  echo "${0##*/}: herdr not found on PATH" >&2
+  exit 1
+}
+
+# Which pane to split. A [[keys.command]] runs in its own temporary pane, so
+# --current would resolve to that helper rather than the pane the user is
+# looking at, splitting the wrong parent. Prefer the ids herdr exports:
+# HERDR_ACTIVE_PANE_ID names the underlying tiled pane for popups, and
+# HERDR_PANE_ID is set for pane-type commands. --current is the last resort,
+# for when the script is run by hand from an ordinary shell.
+if [ -n "${HERDR_ACTIVE_PANE_ID:-}" ]; then
+  pane_args=(--pane "$HERDR_ACTIVE_PANE_ID")
+elif [ -n "${HERDR_PANE_ID:-}" ]; then
+  pane_args=(--pane "$HERDR_PANE_ID")
+else
+  pane_args=(--current)
+fi
+
+info="$(herdr pane process-info "${pane_args[@]}" 2>/dev/null)" || info=""
+
+# `pane process-info` already reports a cwd per foreground process, so no
+# external lookup (lsof, /proc) is needed.
+#
+# Pick the process whose pid matches foreground_process_group_id: that is the
+# job the user is actually looking at. The rest of the list is a process *set*,
+# not a recency-ordered stack — it includes MCP servers, editors and other
+# helpers that were spawned from directories the shell has long since left, and
+# any of them may hold a cwd from an unrelated project.
+cwd=""
+if [ -n "$info" ]; then
+  cwd="$(
+    printf '%s' "$info" | python3 -c '
+import json, sys
+
+try:
+    info = json.load(sys.stdin)["result"]["process_info"]
+except Exception:
+    raise SystemExit(0)
+
+procs = info.get("foreground_processes") or []
+pgid = info.get("foreground_process_group_id")
+
+# Group leader first; otherwise any foreground process with a cwd.
+for proc in procs:
+    if proc.get("pid") == pgid and proc.get("cwd"):
+        print(proc["cwd"])
+        break
+else:
+    for proc in procs:
+        if proc.get("cwd"):
+            print(proc["cwd"])
+            break
+' 2>/dev/null
+  )" || cwd=""
+fi
+
+# Fall back to herdr's own policy rather than refusing to split. A cwd that no
+# longer exists (a removed worktree) would make herdr drop the pane into $HOME,
+# which is worse than following the workspace root.
+if [ -n "$cwd" ] && [ -d "$cwd" ]; then
+  exec herdr pane split "${pane_args[@]}" --direction "$direction" --cwd "$cwd" "$@"
+else
+  exec herdr pane split "${pane_args[@]}" --direction "$direction" "$@"
+fi
