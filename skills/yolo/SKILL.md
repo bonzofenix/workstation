@@ -105,11 +105,21 @@ optional offer.
    that deletes nothing means the branch is still on the remote.
 3. **Remove the worktree**:
    - If this session created it via `EnterWorktree`: `ExitWorktree` with
-     `action: "remove"`.
+     `action: "remove"`. This also deletes the branch, so step 4 will report
+     `branch '<x>' not found` — that is success, not an error.
    - Otherwise: `git -C <primary> worktree remove <path>` — a session cannot
      remove the worktree it is running inside, so this must run from the primary.
-4. **Delete the local branch**: `git -C <primary> branch -D <branch>`.
-5. Confirm: `git worktree list`, `git worktree prune -v`, and `git status`.
+4. **Delete the local branch**, if it still exists: `git branch -D <branch>`.
+5. **Pull `main` again, now that the session is back on it.** `ExitWorktree`
+   returns the session to the primary checkout, and the step-1 sync ran before
+   the merge commit was reachable — so without this the local `main` sits behind
+   the very commit just merged. Run `git pull --ff-only` and confirm
+   `git log --oneline -1` shows the squash commit (`... (#<num>)`).
+   Use `--ff-only` so a diverged local `main` fails loudly instead of
+   silently creating a merge commit.
+6. Confirm: `git worktree list`, `git worktree prune -v`, and `git status`.
+   Verify the merged files are actually present in the primary checkout — a
+   clean `git status` alone does not prove the pull landed.
 
 ### The squash-merge SHA trap
 

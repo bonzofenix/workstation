@@ -152,6 +152,69 @@ for hook_dir in "$WORKSTATION_DIR"/assets/claude/hooks/*/; do
   ln -fns "${hook_dir%/}" ~/.claude/hooks/"$(basename "$hook_dir")"
 done
 
+log_step "Installing Claude skills"
+mkdir -p ~/.claude/skills
+# Symlink each skill directory so the repo is the single source of truth.
+# Previously these were copied by hand, which let ~/.claude/skills/ drift
+# behind the repo — a skill could be updated here and the stale copy would
+# keep running. Relinking on every run also repairs links left dangling by
+# moving a skill's source directory.
+#
+# nullglob: bash 3.2 (macOS) leaves an unmatched glob as the literal pattern,
+# which is how a directory named `*` ended up in ~/.claude/skills/.
+shopt -s nullglob
+
+# Resolve `..` out of WORKSTATION_DIR ("$SCRIPT_DIR/.."): the prune loop below
+# compares it against symlink targets, which are stored fully resolved.
+WORKSTATION_REAL="$(cd "$WORKSTATION_DIR" && pwd -P)"
+
+for skill_dir in "$WORKSTATION_REAL"/skills/*/; do
+  [ -d "$skill_dir" ] || continue
+  skill_name="$(basename "$skill_dir")"
+  target=~/.claude/skills/"$skill_name"
+  # Back up a real directory rather than clobbering it: it may hold a
+  # hand-written skill that was never in the repo. The backup goes OUTSIDE
+  # ~/.claude/skills/ — anything left inside is discovered and loaded as a
+  # live skill, so a "yolo.bak-..." would show up as a second, stale yolo.
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    mkdir -p ~/.claude/skills-backup
+    backup=~/.claude/skills-backup/"$skill_name-$(date +%Y%m%d-%H%M%S)"
+    # Timestamps are second-granularity and do collide. Never mv onto an
+    # existing directory: mv would move the source *inside* it, silently
+    # burying the earlier backup instead of replacing it.
+    suffix=1
+    while [ -e "$backup" ]; do
+      backup="$backup.$suffix"
+      suffix=$((suffix + 1))
+    done
+    mv "$target" "$backup"
+  fi
+  ln -fns "${skill_dir%/}" "$target"
+done
+
+# Drop symlinks whose source is gone, e.g. a skill deleted or renamed in the
+# repo. Left in place they are invisible: the skill silently fails to load.
+# Only reclaim links pointing into this repo — ~/.claude/skills/ also holds
+# plugin and marketplace directories, and a dangling link elsewhere may be a
+# deliberate pointer to an external volume or an unmounted share.
+for link in ~/.claude/skills/*; do
+  [ -L "$link" ] || continue
+  [ -e "$link" ] && continue
+  # Compare the link target's parent resolved, against WORKSTATION_REAL which
+  # is also resolved: a raw readlink can differ purely by symlinked ancestor
+  # (on macOS /tmp is itself a link to /private/tmp) and would never match.
+  link_target="$(readlink "$link")"
+  link_parent="$(cd "$(dirname "$link_target")" 2>/dev/null && pwd -P)"
+  case "$link_parent" in
+    "$WORKSTATION_REAL"/skills)
+      echo "  removing dangling skill link: $(basename "$link")"
+      rm "$link"
+      ;;
+  esac
+done
+
+shopt -u nullglob
+
 log_step "Installing Claude Code plugins"
 if command -v claude &> /dev/null; then
   claude plugin marketplace add anthropics/claude-plugins-official 2>/dev/null || true
