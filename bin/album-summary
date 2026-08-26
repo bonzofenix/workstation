@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+#
+# album-summary — report what an album-dl run actually fetched.
+#
+# Usage:
+#   album-summary [-o dest-dir]
+#
+# Reads DEST/.album-dl/results.jsonl, which album-dl accumulates across runs.
+# cyberdrop-dl writes one record per file in a `finally` block, so every file
+# it considered appears exactly once per run: downloaded, skipped, or failed.
+#
+# Note this is a post-run report, not a live progress bar. cyberdrop-dl
+# discovers files lazily while downloading, so no total is known up front —
+# watch its own UI (album-dl -u fullscreen) for live progress.
+
+set -euo pipefail
+
+DEST="./albums"
+
+while getopts "o:h" opt; do
+  case "$opt" in
+    o) DEST="$OPTARG" ;;
+    h) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) exit 1 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+RESULTS="$DEST/.album-dl/results.jsonl"
+
+if [ ! -s "$RESULTS" ]; then
+  echo "no results yet at $RESULTS — run album-dl first" >&2
+  exit 1
+fi
+
+# Deduplicate on url, keeping the last record: re-running an album re-reports
+# files already fetched, and we want the newest verdict for each, not a tally
+# inflated by every previous run.
+#
+# Capture into a variable rather than reading straight from a process
+# substitution: under `set -e`, a `read` that hits EOF returns non-zero and
+# would kill the script with no output at all if the parse failed.
+summary="$(python3 - "$RESULTS" <<'PY'
+import json, sys
+
+seen = {}
+# errors="replace" so one truncated multi-byte sequence -- e.g. from a run
+# interrupted mid-write -- degrades that single line into something
+# json.loads rejects, instead of raising UnicodeDecodeError and losing the
+# entire file.
+with open(sys.argv[1], encoding="utf-8", errors="replace") as fh:
+    for line in fh:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        key = rec.get("url") or rec.get("db_path") or f"__anon_{len(seen)}"
+        seen[key] = rec
+
+recs = list(seen.values())
+done = [r for r in recs if r.get("downloaded")]
+# int() because a float size would print as "4.0", which bash arithmetic
+# cannot parse.
+size = int(sum(r.get("size") or 0 for r in done))
+print(len(recs), len(done), len(recs) - len(done), size)
+PY
+)" || { echo "album-summary: failed to parse $RESULTS" >&2; exit 1; }
+
+read -r total downloaded skipped bytes <<<"$summary"
+
+human() {
+  python3 -c '
+import sys
+n = float(sys.argv[1])
+for unit in ("B", "KB", "MB", "GB", "TB"):
+    if n < 1024 or unit == "TB":
+        print(f"{n:.1f} {unit}")
+        break
+    n /= 1024
+' "$1"
+}
+
+pct=0
+[ "$total" -gt 0 ] && pct=$(( downloaded * 100 / total ))
+
+if command -v gum >/dev/null 2>&1; then
+  gum style --border rounded --padding "0 2" --border-foreground 212 \
+    "$(gum style --bold 'album-dl summary')" \
+    "" \
+    "files seen:  $total" \
+    "downloaded:  $(gum style --foreground 46 "$downloaded")  (${pct}%)" \
+    "skipped:     $(gum style --foreground 214 "$skipped")" \
+    "total size:  $(human "$bytes")"
+else
+  printf 'album-dl summary\n  files seen: %s\n  downloaded: %s (%s%%)\n  skipped:    %s\n  total size: %s\n' \
+    "$total" "$downloaded" "$pct" "$skipped" "$(human "$bytes")"
+fi

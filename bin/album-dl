@@ -6,24 +6,33 @@
 # Usage:
 #   ./album-dl.sh <album-url> [more-urls...]
 #   ./album-dl.sh -o /path/to/dest <album-url>
+#   ./album-dl.sh -u simple <album-url>     # progress UI: fullscreen (default),
+#                                           # simple, activity, disabled
 #
 # Behavior:
 #   - Downloads into DEST (default: ./albums) with one subfolder per album.
 #   - Keeps a persistent history DB in DEST/.album-dl/downloads.db, so
 #     re-running the same URL resumes and skips files already downloaded —
 #     even if you've moved or reorganized the finished files elsewhere.
-#   - Appends a human-readable progress log to DEST/album-dl.log, and a
+#   - Appends a human-readable run log to DEST/album-dl.log, cyberdrop-dl's
+#     own verbose log to DEST/.album-dl/cyberdrop-dl.log, and a
 #     machine-readable per-file record to DEST/.album-dl/results.jsonl.
+#     Run `album-summary -o DEST` for a downloaded/skipped/size report.
+#   - Shows cyberdrop-dl's live progress UI when stdout is a terminal. When
+#     output is redirected or piped, the UI is disabled automatically and
+#     progress is only written to the log.
 #
 # Requirements: uv (https://docs.astral.sh/uv/) — script runs cyberdrop-dl via uvx.
 
 set -euo pipefail
 
 DEST="./albums"
+UI=""
 
-while getopts "o:h" opt; do
+while getopts "o:u:h" opt; do
   case "$opt" in
     o) DEST="$OPTARG" ;;
+    u) UI="$OPTARG" ;;
     h) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) exit 1 ;;
   esac
@@ -53,14 +62,35 @@ log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG"; }
 
 log "=== run started: $* ==="
 
+# cyberdrop-dl renders a live Rich UI, which needs stdout to be a terminal.
+# Piping it through `tee` makes Rich fall back to plain output and the progress
+# bars vanish, so instead we only pipe when there is no terminal to render to,
+# and let cyberdrop-dl append to the same log file either way.
+if [ -z "$UI" ]; then
+  if [ -t 1 ]; then UI="fullscreen"; else UI="disabled"; fi
+fi
+
 set +e
-uvx cyberdrop-dl-patched download \
-  --download-folder "$DEST" \
-  --database-file "$STATE/downloads.db" \
-  --cache-file "$STATE/cache.json" \
-  --dump-json \
-  "$@" 2>&1 | tee -a "$LOG"
-status=${PIPESTATUS[0]}
+if [ "$UI" = "disabled" ]; then
+  uvx cyberdrop-dl-patched download \
+    --download-folder "$DEST" \
+    --database-file "$STATE/downloads.db" \
+    --cache-file "$STATE/cache.json" \
+    --ui "$UI" \
+    --dump-json \
+    "$@" 2>&1 | tee -a "$LOG"
+  status=${PIPESTATUS[0]}
+else
+  uvx cyberdrop-dl-patched download \
+    --download-folder "$DEST" \
+    --database-file "$STATE/downloads.db" \
+    --cache-file "$STATE/cache.json" \
+    --log-file "$STATE/cyberdrop-dl.log" \
+    --ui "$UI" \
+    --dump-json \
+    "$@"
+  status=$?
+fi
 set -e
 
 # Collect the per-file jsonl reports cyberdrop-dl dumps next to the DB/config
