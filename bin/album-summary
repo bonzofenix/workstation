@@ -24,6 +24,7 @@ while getopts "o:h" opt; do
     *) exit 1 ;;
   esac
 done
+shift $((OPTIND - 1))
 
 RESULTS="$DEST/.album-dl/results.jsonl"
 
@@ -35,11 +36,19 @@ fi
 # Deduplicate on url, keeping the last record: re-running an album re-reports
 # files already fetched, and we want the newest verdict for each, not a tally
 # inflated by every previous run.
-read -r total downloaded skipped bytes < <(python3 - "$RESULTS" <<'PY'
+#
+# Capture into a variable rather than reading straight from a process
+# substitution: under `set -e`, a `read` that hits EOF returns non-zero and
+# would kill the script with no output at all if the parse failed.
+summary="$(python3 - "$RESULTS" <<'PY'
 import json, sys
 
 seen = {}
-with open(sys.argv[1], encoding="utf-8") as fh:
+# errors="replace" so one truncated multi-byte sequence -- e.g. from a run
+# interrupted mid-write -- degrades that single line into something
+# json.loads rejects, instead of raising UnicodeDecodeError and losing the
+# entire file.
+with open(sys.argv[1], encoding="utf-8", errors="replace") as fh:
     for line in fh:
         line = line.strip()
         if not line:
@@ -48,15 +57,19 @@ with open(sys.argv[1], encoding="utf-8") as fh:
             rec = json.loads(line)
         except json.JSONDecodeError:
             continue
-        key = rec.get("url") or rec.get("db_path") or len(seen)
+        key = rec.get("url") or rec.get("db_path") or f"__anon_{len(seen)}"
         seen[key] = rec
 
 recs = list(seen.values())
 done = [r for r in recs if r.get("downloaded")]
-size = sum(r.get("size") or 0 for r in done)
+# int() because a float size would print as "4.0", which bash arithmetic
+# cannot parse.
+size = int(sum(r.get("size") or 0 for r in done))
 print(len(recs), len(done), len(recs) - len(done), size)
 PY
-)
+)" || { echo "album-summary: failed to parse $RESULTS" >&2; exit 1; }
+
+read -r total downloaded skipped bytes <<<"$summary"
 
 human() {
   python3 -c '
