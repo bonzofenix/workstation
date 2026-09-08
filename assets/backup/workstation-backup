@@ -168,7 +168,34 @@ cmd_backup() {
   fi
 
   log "Backing up: ${paths[*]}"
-  restic backup --tag automated "${paths[@]}"
+  # A directory in BACKUP_PATHS may hold a live SQLite database, and copying
+  # .db/.db-wal/.db-shm as plain files is the torn-snapshot problem
+  # dump_sqlite exists to avoid. Exclude them so the consistent copy in
+  # DUMP_DIR/sqlite is the only one in the repository.
+  #
+  # Anchored to the app paths rather than passed as bare globs: an unanchored
+  # --exclude '*.db' would also match the snapshots in DUMP_DIR/sqlite, which
+  # are exactly what must be kept.
+  local excludes=()
+  local p
+  for p in "${paths[@]}"; do
+    [ "$p" = "$DUMP_DIR" ] && continue
+    excludes+=(--exclude "$p/**/*.db" --exclude "$p/**/*.db-wal" --exclude "$p/**/*.db-shm")
+    excludes+=(--exclude "$p/*.db" --exclude "$p/*.db-wal" --exclude "$p/*.db-shm")
+  done
+
+  # Operator-supplied excludes, for anything that should not leave the box
+  # even encrypted — live OAuth tokens being the usual case.
+  if [ -n "${RESTIC_EXCLUDES:-}" ]; then
+    # shellcheck disable=SC2206  # deliberate word-split: space-separated patterns
+    local user_excludes=($RESTIC_EXCLUDES)
+    local e
+    for e in "${user_excludes[@]}"; do
+      excludes+=(--exclude "$e")
+    done
+  fi
+
+  restic backup --tag automated "${excludes[@]}" "${paths[@]}"
 
   # Prune old snapshots so the bucket does not grow without bound. Runs after
   # a successful backup only: pruning when the new snapshot failed could drop
