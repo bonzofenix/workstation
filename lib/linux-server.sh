@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/common.sh"
 
 # Pin Go rather than taking the archive's version, which lags well behind and
 # would not match the .tool-versions of the apps deployed here.
-GO_VERSION="${GO_VERSION:-1.24.13}"
+GO_VERSION="${GO_VERSION:-1.25.14}"
 
 log_section "Linux server runtime"
 
@@ -32,7 +32,7 @@ log_step "Installing server packages"
 $SUDO apt-get install -y -qq \
   postgresql postgresql-contrib \
   python3 python3-pip python3-venv \
-  ufw \
+  ufw fail2ban \
   debian-keyring debian-archive-keyring apt-transport-https
 
 log_step "Installing Go ${GO_VERSION}"
@@ -114,5 +114,40 @@ $SUDO ufw allow 80/tcp
 $SUDO ufw allow 443/tcp
 $SUDO ufw --force enable
 log_success "Firewall active (${SSH_PORT}, 80, 443)"
+
+log_step "Hardening SSH"
+# A fresh Hetzner box starts taking password brute-force attempts within
+# minutes of going live — verified: 34k+ failed logins on one box's first
+# few days, enough concurrent connection attempts to visibly slow down
+# legitimate SSH sessions. Key auth is assumed to already work (Hetzner sets
+# it up at server creation), so disabling passwords is safe here, not a step
+# that could lock the operator out.
+if [ -f /etc/ssh/sshd_config ]; then
+  $SUDO cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak-preharden
+  $SUDO sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+  $SUDO sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+  if $SUDO sshd -t; then
+    $SUDO systemctl reload ssh 2>/dev/null || $SUDO systemctl reload sshd 2>/dev/null
+    log_success "Password auth disabled, root requires a key"
+  else
+    log_error "sshd config invalid after edit — reverting"
+    $SUDO cp /etc/ssh/sshd_config.bak-preharden /etc/ssh/sshd_config
+  fi
+fi
+
+cat > /tmp/jail.local <<'EOF'
+[sshd]
+enabled = true
+port = 22
+filter = sshd
+backend = systemd
+maxretry = 3
+findtime = 10m
+bantime = 1h
+EOF
+$SUDO cp /tmp/jail.local /etc/fail2ban/jail.local
+rm -f /tmp/jail.local
+$SUDO systemctl enable --now fail2ban
+log_success "fail2ban active on sshd"
 
 log_success "Server runtime ready"

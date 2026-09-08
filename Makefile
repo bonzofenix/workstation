@@ -4,7 +4,7 @@ NO_BREW?=false
 DEBUG?=false
 # Go toolchain installed by linux-server; override to match a project's
 # .tool-versions when it needs a different one.
-GO_VERSION?=1.24.13
+GO_VERSION?=1.25.14
 default: install
 
 # This will grab all targets in the Makefile and make them PHONY
