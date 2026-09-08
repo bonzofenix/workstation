@@ -1,3 +1,6 @@
+# shellcheck shell=bash
+# Invoked through the Makefile, which runs it with bash.
+
 # All these applications are independent, so if one
 # fails to install, don't stop.
 set +e

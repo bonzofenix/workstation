@@ -15,16 +15,33 @@ info=0
 # Run shellcheck on all bin and lib scripts
 while IFS= read -r script; do
   if [[ -f "$script" ]]; then
+    # zsh scripts cannot be parsed by this linter, which reports SC1071 for
+    # the whole file. Skip them rather than carry a permanent error that
+    # means "not analyzed" — it would mask real errors in everything else.
+    if head -1 "$script" | grep -q 'zsh'; then
+      continue
+    fi
+
     output=$(shellcheck "$script" 2>&1 || true)
 
     if [[ -n "$output" ]]; then
       echo "$output"
       echo ""
 
-      # Count by severity
-      errors=$((errors + $(echo "$output" | grep -c "error" || echo "0")))
-      warnings=$((warnings + $(echo "$output" | grep -c "warning" || echo "0")))
-      info=$((info + $(echo "$output" | grep -c "info" || echo "0")))
+      # Count by severity.
+      #
+      # Match shellcheck's own "(error):" tag rather than the bare word: the
+      # footer it prints links to shellcheck.net/wiki/SCxxxx and the message
+      # prose uses these words too, so counting bare words overcounts.
+      #
+      # `|| true` on the pipeline, not `|| echo "0"` inside the expansion:
+      # grep -c already prints 0 when it matches nothing, and also exits 1,
+      # so the old fallback appended a second line. The result was "0\n0",
+      # which made the arithmetic a syntax error and left every counter
+      # pinned at 0 — the whole summary, and the exit status CI reads.
+      errors=$((errors + $(grep -c '(error):' <<< "$output" || true)))
+      warnings=$((warnings + $(grep -c '(warning):' <<< "$output" || true)))
+      info=$((info + $(grep -c '(info):' <<< "$output" || true)))
     fi
   fi
 done < <(find bin lib -type f \( -name "*.sh" -o -executable \) 2>/dev/null)

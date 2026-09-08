@@ -1,3 +1,9 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2296
+# Vendored third-party code (rupa/z), sourced by the shell profile. It uses
+# zsh parameter expansions that shellcheck cannot parse; left as upstream
+# ships it rather than patched locally.
+
 # Copyright (c) 2009 rupa deadwyler. Licensed under the WTFPL license, Version 2
 
 # maintains a jump-list of the directories you actually use
