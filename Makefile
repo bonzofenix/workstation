@@ -2,6 +2,9 @@ SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c ${SHELLFLAGS}
 NO_BREW?=false
 DEBUG?=false
+# Go toolchain installed by linux-server; override to match a project's
+# .tool-versions when it needs a different one.
+GO_VERSION?=1.25.14
 default: install
 
 # This will grab all targets in the Makefile and make them PHONY
@@ -10,6 +13,25 @@ default: install
 install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals claude-configs devbox
 	@source ~/.bash_profile
 	@gum style --foreground 2 --bold "  Installation complete!"
+
+# Linux workstation: the same shell, git and Claude setup as macOS, without
+# Homebrew or the osx-configurations defaults writes.
+install-linux: linux-packages git linux-configurations claude-configs
+	@echo "  Linux installation complete. Open a new shell to pick it up."
+
+# Adds what a VPS needs on top of install-linux: Go, PostgreSQL, Caddy,
+# Garmin sync deps and a default-deny firewall.
+install-server: install-linux linux-server
+	@echo "  Server setup complete."
+
+linux-packages:
+	@DEBUG="${DEBUG}" ./lib/linux-packages.sh
+
+linux-configurations:
+	@DEBUG="${DEBUG}" ./lib/linux-configurations.sh
+
+linux-server:
+	@DEBUG="${DEBUG}" GO_VERSION="${GO_VERSION}" ./lib/linux-server.sh
 
 check-dependencies:
 	@./lib/check-dependencies.sh
