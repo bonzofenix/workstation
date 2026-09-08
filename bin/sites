@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+# Interactive picker for per-site tmux sessions.
+#
+# One tmux session per site, each rooted in that site's directory, so a
+# phone SSH session can attach straight to the site being worked on and
+# leave the others running untouched.
+#
+# Sites are the immediate subdirectories of SITES_DIR (default ~/sites).
+#
+# Usage:
+#   sites           # pick a site, attach or create its session
+#   sites <name>    # attach or create that site's session directly
+#   sites -l        # list sites and whether a session is live
+
+set -euo pipefail
+
+SITES_DIR="${SITES_DIR:-$HOME/sites}"
+
+if [ ! -d "$SITES_DIR" ]; then
+  echo "Error: $SITES_DIR does not exist. Set SITES_DIR or create it." >&2
+  exit 1
+fi
+
+command -v tmux >/dev/null 2>&1 || { echo "Error: tmux not installed" >&2; exit 1; }
+
+# tmux treats dots as host/window separators in target names, so a site
+# directory like "example.com" becomes "example_com" as a session name.
+session_name() {
+  printf '%s' "${1//./_}"
+}
+
+list_sites() {
+  find "$SITES_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort
+}
+
+if [ "${1:-}" = "-l" ]; then
+  while IFS= read -r site; do
+    if tmux has-session -t "$(session_name "$site")" 2>/dev/null; then
+      printf '%s (running)\n' "$site"
+    else
+      printf '%s\n' "$site"
+    fi
+  done < <(list_sites)
+  exit 0
+fi
+
+if [ $# -gt 0 ]; then
+  site="$1"
+  if [ ! -d "$SITES_DIR/$site" ]; then
+    echo "Error: no site directory at $SITES_DIR/$site" >&2
+    exit 1
+  fi
+else
+  command -v gum >/dev/null 2>&1 || {
+    echo "Error: gum not installed, and no site name given" >&2
+    exit 1
+  }
+
+  sites_list="$(list_sites)"
+  [ -n "$sites_list" ] || { echo "Error: no site directories in $SITES_DIR" >&2; exit 1; }
+
+  # Mark live sessions so the picker shows what is already running.
+  annotated=""
+  while IFS= read -r s; do
+    if tmux has-session -t "$(session_name "$s")" 2>/dev/null; then
+      annotated+="$s (running)"$'\n'
+    else
+      annotated+="$s"$'\n'
+    fi
+  done <<< "$sites_list"
+
+  selected="$(printf '%s' "$annotated" | gum choose)"
+  # Abort (Ctrl-C/Esc): bail rather than attaching to something arbitrary.
+  [ -n "$selected" ] || exit 1
+  site="${selected% (running)}"
+fi
+
+name="$(session_name "$site")"
+
+if ! tmux has-session -t "$name" 2>/dev/null; then
+  tmux new-session -d -s "$name" -c "$SITES_DIR/$site"
+fi
+
+# switch-client from inside tmux, attach from outside: attach-session nested
+# inside a session fails with "sessions should be nested with care".
+if [ -n "${TMUX:-}" ]; then
+  tmux switch-client -t "$name"
+else
+  tmux attach-session -t "$name"
+fi

@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+
+# Daily backup driver: dumps PostgreSQL, then hands everything to restic.
+#
+# Usage:
+#   workstation-backup            # take a snapshot (what the timer runs)
+#   workstation-backup init       # create the restic repo, run once by hand
+#   workstation-backup check      # verify repository integrity
+#   workstation-backup snapshots  # list what is in the repo
+#   workstation-backup restore <snapshot-id> <target-dir>
+#
+# Credentials and paths come from /etc/workstation-backup.env.
+
+set -euo pipefail
+
+CONFIG="${WORKSTATION_BACKUP_CONFIG:-/etc/workstation-backup.env}"
+
+if [ ! -f "$CONFIG" ]; then
+  echo "workstation-backup: missing config at $CONFIG" >&2
+  exit 1
+fi
+
+# shellcheck source=/dev/null
+source "$CONFIG"
+
+# Fail loudly on a half-filled config rather than letting restic produce a
+# confusing auth error, or silently backing up to the wrong place.
+: "${R2_ACCOUNT_ID:?set R2_ACCOUNT_ID in $CONFIG}"
+: "${R2_BUCKET:?set R2_BUCKET in $CONFIG}"
+: "${AWS_ACCESS_KEY_ID:?set AWS_ACCESS_KEY_ID in $CONFIG}"
+: "${AWS_SECRET_ACCESS_KEY:?set AWS_SECRET_ACCESS_KEY in $CONFIG}"
+: "${RESTIC_PASSWORD:?set RESTIC_PASSWORD in $CONFIG}"
+
+export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY RESTIC_PASSWORD
+export RESTIC_REPOSITORY="s3:https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}"
+
+# R2 has no region, but the S3 SDK restic uses insists on one being set.
+export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+
+DUMP_DIR="${DUMP_DIR:-/var/backups/workstation}"
+RETENTION_DAILY="${RETENTION_DAILY:-7}"
+RETENTION_WEEKLY="${RETENTION_WEEKLY:-4}"
+RETENTION_MONTHLY="${RETENTION_MONTHLY:-6}"
+
+log() { echo "[workstation-backup] $*"; }
+
+dump_postgres() {
+  if ! command -v pg_dumpall >/dev/null 2>&1; then
+    log "pg_dumpall not found, skipping PostgreSQL dump"
+    return 0
+  fi
+  if ! systemctl is-active --quiet postgresql 2>/dev/null; then
+    log "postgresql not running, skipping PostgreSQL dump"
+    return 0
+  fi
+
+  mkdir -p "$DUMP_DIR"
+  chmod 700 "$DUMP_DIR"
+
+  # Dump to a temp file and move into place only on success. A truncated
+  # dump that overwrote the previous good one would look like a backup while
+  # being unrestorable.
+  local target="$DUMP_DIR/postgresql.sql.gz"
+  local tmp="$target.partial"
+
+  log "Dumping PostgreSQL"
+  if sudo -u postgres pg_dumpall | gzip > "$tmp"; then
+    mv "$tmp" "$target"
+    chmod 600 "$target"
+    log "PostgreSQL dumped to $target"
+  else
+    rm -f "$tmp"
+    log "ERROR: pg_dumpall failed" >&2
+    return 1
+  fi
+}
+
+# Only paths that exist are passed to restic: it errors out on a missing
+# path, which would abort a backup over one uninstalled service.
+collect_paths() {
+  local candidates=(
+    "$DUMP_DIR"
+    /etc/caddy
+    /etc/systemd/system
+    /etc/ufw
+    /etc/fail2ban
+    /etc/workstation-backup.env
+  )
+
+  # BACKUP_PATHS is the per-host escape hatch for app data directories.
+  if [ -n "${BACKUP_PATHS:-}" ]; then
+    # shellcheck disable=SC2206  # deliberate word-split: space-separated paths
+    local extra=($BACKUP_PATHS)
+    candidates+=("${extra[@]}")
+  fi
+
+  local existing=()
+  for p in "${candidates[@]}"; do
+    [ -e "$p" ] && existing+=("$p")
+  done
+  printf '%s\n' "${existing[@]}"
+}
+
+cmd_init() {
+  log "Initializing restic repository at $RESTIC_REPOSITORY"
+  restic init
+  log "Repository initialized"
+}
+
+cmd_backup() {
+  dump_postgres
+
+  local paths
+  mapfile -t paths < <(collect_paths)
+
+  if [ "${#paths[@]}" -eq 0 ]; then
+    log "ERROR: nothing to back up" >&2
+    exit 1
+  fi
+
+  log "Backing up: ${paths[*]}"
+  restic backup --tag automated "${paths[@]}"
+
+  # Prune old snapshots so the bucket does not grow without bound. Runs after
+  # a successful backup only: pruning when the new snapshot failed could drop
+  # the last good copy.
+  log "Applying retention policy"
+  restic forget \
+    --tag automated \
+    --keep-daily "$RETENTION_DAILY" \
+    --keep-weekly "$RETENTION_WEEKLY" \
+    --keep-monthly "$RETENTION_MONTHLY" \
+    --prune
+
+  log "Backup complete"
+}
+
+case "${1:-backup}" in
+  backup)    cmd_backup ;;
+  init)      cmd_init ;;
+  check)     restic check ;;
+  snapshots) restic snapshots ;;
+  restore)
+    if [ $# -ne 3 ]; then
+      echo "usage: workstation-backup restore <snapshot-id> <target-dir>" >&2
+      exit 1
+    fi
+    restic restore "$2" --target "$3"
+    ;;
+  *)
+    echo "usage: workstation-backup [backup|init|check|snapshots|restore]" >&2
+    exit 1
+    ;;
+esac

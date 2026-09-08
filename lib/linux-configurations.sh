@@ -43,6 +43,11 @@ add_to_profile '# Adds local bin to path' \
 add_to_profile '# Add Go toolchain' \
                'path+=("/usr/local/go/bin")'
 
+# npm's global prefix is moved here by linux-packages.sh so global installs
+# (Claude Code among them) do not need sudo.
+add_to_profile '# npm global bin' \
+               'path=("$HOME/.npm-global/bin" $path)'
+
 log_step "Configuring environment variables"
 add_to_profile '# Sets git duet' \
                'export GIT_DUET_SET_GIT_USER_CONFIG=1'
@@ -98,6 +103,12 @@ log_step "Configuring tmux session alias"
 # over SSH from a phone.
 add_to_rc '# Attach-or-create the main tmux session' \
           "alias t='tmux attach -t main || tmux new -s main'"
+
+# Per-site sessions, one per directory under ~/sites. `s` picks one; the
+# auto-attach above still lands on main, so this is opt-in per connection
+# rather than a change to what SSH does by default.
+add_to_rc '# Pick a per-site tmux session' \
+          "alias s='sites'"
 add_to_profile '# Auto-attach to the main tmux session on interactive SSH login' \
           'if [[ -n "$SSH_CONNECTION" && -z "$TMUX" && $- == *i* ]]; then tmux attach -t main 2>/dev/null || tmux new -s main; fi'
 

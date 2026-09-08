@@ -222,23 +222,7 @@ done
 
 shopt -u nullglob
 
-log_step "Installing Claude Code plugins"
-if command -v claude &> /dev/null; then
-  claude plugin marketplace add anthropics/claude-plugins-official 2>/dev/null || true
-  claude plugin marketplace add affaan-m/everything-claude-code 2>/dev/null || true
-  claude plugin marketplace add JuliusBrussee/caveman 2>/dev/null || true
-  claude plugin marketplace add forrestchang/andrej-karpathy-skills 2>/dev/null || true
-  claude plugin marketplace add anthropics/skills 2>/dev/null || true
-  claude plugin marketplace add kepano/obsidian-skills 2>/dev/null || true
-  claude plugin install gopls-lsp@claude-plugins-official 2>/dev/null || true
-  claude plugin install ralph-loop@claude-plugins-official 2>/dev/null || true
-  claude plugin install code-simplifier@claude-plugins-official 2>/dev/null || true
-  claude plugin install atlassian@claude-plugins-official 2>/dev/null || true
-  claude plugin install caveman@caveman 2>/dev/null || true
-  claude plugin install andrej-karpathy-skills@karpathy-skills 2>/dev/null || true
-  claude plugin install skill-creator@claude-plugins-official 2>/dev/null || true
-  claude plugin install obsidian@obsidian-skills 2>/dev/null || true
-else
-  log_warning "Claude Code CLI not found, skipping plugin installation"
-fi
+# shellcheck source=./claude-plugins.sh
+source "$SCRIPT_DIR/claude-plugins.sh"
+install_claude_plugins
 

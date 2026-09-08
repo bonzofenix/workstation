@@ -32,6 +32,10 @@ function main() {
     log_success "Peon sounds already present"
   fi
 
+  # shellcheck source=./claude-plugins.sh
+  source "$(dirname "$0")/claude-plugins.sh"
+  install_claude_plugins
+
   log_success "Claude Code configs configured"
 }
 

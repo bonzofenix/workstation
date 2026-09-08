@@ -20,8 +20,8 @@ install-linux: linux-packages git linux-configurations claude-configs
 	@echo "  Linux installation complete. Open a new shell to pick it up."
 
 # Adds what a VPS needs on top of install-linux: Go, PostgreSQL, Caddy,
-# Garmin sync deps and a default-deny firewall.
-install-server: install-linux linux-server
+# Garmin sync deps, a default-deny firewall and daily off-site backups.
+install-server: install-linux linux-server linux-backups
 	@echo "  Server setup complete."
 
 linux-packages:
@@ -32,6 +32,15 @@ linux-configurations:
 
 linux-server:
 	@DEBUG="${DEBUG}" GO_VERSION="${GO_VERSION}" ./lib/linux-server.sh
+
+linux-backups:
+	@DEBUG="${DEBUG}" ./lib/linux-backups.sh
+
+# Not part of install-server: creating the tunnel needs an interactive
+# browser login, so this installs cloudflared and then hands off to a
+# documented manual sequence.
+linux-tunnel:
+	@DEBUG="${DEBUG}" ./lib/linux-tunnel.sh
 
 check-dependencies:
 	@./lib/check-dependencies.sh
