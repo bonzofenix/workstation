@@ -103,6 +103,12 @@ log_step "Configuring tmux session alias"
 # over SSH from a phone.
 add_to_rc '# Attach-or-create the main tmux session' \
           "alias t='tmux attach -t main || tmux new -s main'"
+
+# Per-site sessions, one per directory under ~/sites. `s` picks one; the
+# auto-attach above still lands on main, so this is opt-in per connection
+# rather than a change to what SSH does by default.
+add_to_rc '# Pick a per-site tmux session' \
+          "alias s='sites'"
 add_to_profile '# Auto-attach to the main tmux session on interactive SSH login' \
           'if [[ -n "$SSH_CONNECTION" && -z "$TMUX" && $- == *i* ]]; then tmux attach -t main 2>/dev/null || tmux new -s main; fi'
 
