@@ -45,3 +45,10 @@ function _G.FoldText()
   local lines_count = vim.v.foldend - vim.v.foldstart + 1
   return "📂 " .. line .. "  … [" .. lines_count .. " lines]"
 end
+
+-- Completion menu behaviour:
+--   menuone  = show the menu even for a single match
+--   noselect = do not preselect; nothing is inserted until you choose
+--   popup    = show docs in a floating window next to the menu
+vim.opt.completeopt = { "menuone", "noselect", "popup" }
+vim.opt.pumheight = 12  -- cap menu height so it does not fill the screen

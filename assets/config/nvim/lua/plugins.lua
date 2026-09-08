@@ -1,4 +1,9 @@
 -- ~/.config/nvim/lua/plugins.lua
+-- Copilot must not own <Tab> — LSP completion uses it (see lua/lsp.lua).
+-- Accept Copilot suggestions with <M-l> instead. Toggle Copilot: :Copilot disable
+vim.g.copilot_no_tab_map = true
+vim.g.copilot_assume_mapped = true
+
 return require("lazy").setup({
 
   -- Core utilities
@@ -15,10 +20,37 @@ return require("lazy").setup({
   { "godlygeek/tabular" },
   { "preservim/vim-markdown" },
 
+  -- GitHub Copilot. NOTE: a copy also exists in pack/github/start/ but lazy.nvim
+  -- owns runtimepath, so the native pack/ dir is never sourced. Managed here.
+  {
+    "github/copilot.vim",
+    lazy = false,  -- load at startup so :Copilot exists without entering insert mode first
+    config = function()
+      -- <Tab> belongs to LSP completion (see lua/lsp.lua); accept Copilot with <M-l>
+      vim.g.copilot_no_tab_map = true
+      vim.keymap.set("i", "<M-l>", 'copilot#Accept("\\<CR>")',
+        { expr = true, replace_keycodes = false, desc = "Accept Copilot suggestion" })
+      vim.keymap.set("i", "<M-]>", "<Plug>(copilot-next)", { desc = "Next Copilot suggestion" })
+      vim.keymap.set("i", "<M-[>", "<Plug>(copilot-previous)", { desc = "Prev Copilot suggestion" })
+      vim.keymap.set("i", "<C-]>", "<Plug>(copilot-dismiss)", { desc = "Dismiss Copilot" })
+    end,
+  },
+
   -- Go development
   { "fatih/vim-go",
     ft = "go",
     build = ":GoUpdateBinaries",
+    init = function()
+      -- lspconfig owns gopls. Without these, vim-go starts a SECOND gopls and
+      -- overrides omnifunc with its own (non-LSP) completion.
+      vim.g.go_gopls_enabled = 0
+      vim.g.go_code_completion_enabled = 0
+      vim.g.go_def_mapping_enabled = 0
+      vim.g.go_doc_keywordprg_enabled = 0
+      vim.g.go_fmt_autosave = 0        -- LSP formats on save already
+      vim.g.go_imports_autosave = 0    -- organizeImports handles this
+      vim.g.go_diagnostics_enabled = 0 -- avoid duplicate diagnostics
+    end,
   },
 
   -- JavaScript syntax

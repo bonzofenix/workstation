@@ -37,8 +37,18 @@ map ;n GoZ<Esc>:g/^[ <Tab>]*$/.,/[^ <Tab>]/-j<CR>Gdd
 map ;c :,s/^[ <Tab>]*//g<CR>i
 ]]
 
--- open location list with diagnostics
+-- toggle location list with diagnostics
 vim.keymap.set('n', '<leader>ll', function()
-  vim.diagnostic.setloclist()
+  local winid = vim.fn.getloclist(0, { winid = 0 }).winid
+  if winid ~= 0 then
+    vim.cmd('lclose')
+    return
+  end
+  vim.diagnostic.setloclist({ open = false })
+  if vim.tbl_isempty(vim.fn.getloclist(0)) then
+    vim.cmd('lclose')
+    vim.notify('No diagnostics', vim.log.levels.INFO)
+    return
+  end
   vim.cmd('lopen')
-end, { desc = "Open location list with diagnostics" })
+end, { desc = "Toggle location list with diagnostics" })
