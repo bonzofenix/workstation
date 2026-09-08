@@ -44,6 +44,54 @@ RETENTION_MONTHLY="${RETENTION_MONTHLY:-6}"
 
 log() { echo "[workstation-backup] $*"; }
 
+# SQLite databases cannot be backed up by copying the files: in WAL mode a
+# database is .db plus .db-shm and .db-wal, and copying the three while the
+# app is writing captures them at different moments. The result restores as
+# a corrupt or stale database, and nothing reports a problem until then.
+#
+# `.backup` takes a consistent snapshot of a live database through SQLite
+# itself, checkpointing the WAL into a single self-contained file.
+dump_sqlite() {
+  if [ -z "${SQLITE_DATABASES:-}" ]; then
+    return 0
+  fi
+
+  if ! command -v sqlite3 >/dev/null 2>&1; then
+    log "ERROR: sqlite3 not found but SQLITE_DATABASES is set" >&2
+    return 1
+  fi
+
+  mkdir -p "$DUMP_DIR/sqlite"
+  chmod 700 "$DUMP_DIR/sqlite"
+
+  # shellcheck disable=SC2206  # deliberate word-split: space-separated paths
+  local dbs=($SQLITE_DATABASES)
+  local db name target
+  for db in "${dbs[@]}"; do
+    if [ ! -f "$db" ]; then
+      log "WARNING: $db does not exist, skipping"
+      continue
+    fi
+
+    # Name snapshots by app directory as well as filename: three apps each
+    # holding <app>.db would otherwise collide in one flat directory.
+    name="$(basename "$(dirname "$(dirname "$db")")")-$(basename "$db")"
+    target="$DUMP_DIR/sqlite/$name"
+
+    log "Snapshotting $db"
+    if sqlite3 "$db" ".backup '$target.partial'"; then
+      mv "$target.partial" "$target"
+      chmod 600 "$target"
+    else
+      rm -f "$target.partial"
+      log "ERROR: sqlite3 .backup failed for $db" >&2
+      return 1
+    fi
+  done
+
+  log "SQLite snapshots written to $DUMP_DIR/sqlite"
+}
+
 dump_postgres() {
   if ! command -v pg_dumpall >/dev/null 2>&1; then
     log "pg_dumpall not found, skipping PostgreSQL dump"
@@ -108,6 +156,7 @@ cmd_init() {
 }
 
 cmd_backup() {
+  dump_sqlite
   dump_postgres
 
   local paths
