@@ -36,6 +36,12 @@ linux-server:
 linux-backups:
 	@DEBUG="${DEBUG}" ./lib/linux-backups.sh
 
+# Not part of install-server: creating the tunnel needs an interactive
+# browser login, so this installs cloudflared and then hands off to a
+# documented manual sequence.
+linux-tunnel:
+	@DEBUG="${DEBUG}" ./lib/linux-tunnel.sh
+
 check-dependencies:
 	@./lib/check-dependencies.sh
 
