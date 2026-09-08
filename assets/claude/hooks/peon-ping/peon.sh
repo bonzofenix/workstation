@@ -1,98 +1,83 @@
 #!/bin/bash
 # peon-ping: Warcraft III Peon voice lines for Claude Code hooks
-# Handles sounds, tab titles, and tmux notifications
+# Handles sounds and tmux notifications
 set -uo pipefail
 
 PEON_DIR="${CLAUDE_PEON_DIR:-$HOME/.claude/hooks/peon-ping}"
 CONFIG_FILE="$PEON_DIR/config.json"
 STATE_FILE="$PEON_DIR/.state.json"
 
-INPUT=$(cat)
+# One python pass: read the config, parse the hook event off stdin, and decide
+# whether this is a non-interactive agent session. Values reach python through
+# the environment and stdin, never spliced into its source, so a quote or a
+# space in a path cannot break the script.
+eval "$(
+  PEON_CONFIG_FILE="$CONFIG_FILE" PEON_STATE_FILE="$STATE_FILE" \
+  /usr/bin/python3 -c '
+import json, os, shlex, sys
 
-# Load configuration with safe shell variable export
-eval "$(/usr/bin/python3 -c "
-import json, shlex
+config_file = os.environ["PEON_CONFIG_FILE"]
+state_file = os.environ["PEON_STATE_FILE"]
+
+def emit(name, value):
+    print(name + "=" + shlex.quote(str(value)))
+
+def emit_bool(name, value):
+    print(name + "=" + ("true" if value else "false"))
+
 try:
-    cfg = json.load(open('$CONFIG_FILE'))
-except:
+    cfg = json.load(open(config_file))
+except Exception:
     cfg = {}
 
-def quote(val):
-    return shlex.quote(str(val))
+emit_bool("ENABLED", cfg.get("enabled", True))
+emit("VOLUME", cfg.get("volume", 0.5))
+emit("ACTIVE_PACK", cfg.get("active_pack", "peon"))
+emit("ANNOYED_THRESHOLD", cfg.get("annoyed_threshold", 3))
+emit("ANNOYED_WINDOW", cfg.get("annoyed_window_seconds", 10))
+emit("TMUX_ALERT_STYLE", cfg.get("tmux_alert_style", "fg=white,bg=red,bold"))
+emit_bool("TMUX_RENAME_WINDOW", cfg.get("tmux_rename_window", False))
 
-print('ENABLED=' + quote(cfg.get('enabled', True)).lower())
-print('VOLUME=' + quote(cfg.get('volume', 0.5)))
-print('ACTIVE_PACK=' + quote(cfg.get('active_pack', 'peon')))
-print('ANNOYED_THRESHOLD=' + quote(cfg.get('annoyed_threshold', 3)))
-print('ANNOYED_WINDOW=' + quote(cfg.get('annoyed_window_seconds', 10)))
-print('TMUX_ALERT_STYLE=' + quote(cfg.get('tmux_alert_style', 'fg=white,bg=red,bold')))
+categories = cfg.get("categories", {})
+for name in ["greeting", "acknowledge", "complete", "error", "permission",
+             "resource_limit", "annoyed"]:
+    emit_bool("CAT_" + name.upper(), categories.get(name, True))
 
-categories = cfg.get('categories', {})
-for name in ['greeting','acknowledge','complete','error','permission','resource_limit','annoyed']:
-    print('CAT_' + name.upper() + '=' + quote(categories.get(name, True)).lower())
-" 2>/dev/null)"
+try:
+    event = json.load(sys.stdin)
+except Exception:
+    event = {}
 
-[ "$ENABLED" = "false" ] && exit 0
+emit("EVENT", event.get("hook_event_name", ""))
+emit("NOTIFY_TYPE", event.get("notification_type", ""))
+emit("CWD", event.get("cwd", ""))
 
-# Walk up process tree to find a TTY for tab title updates
-find_session_tty() {
-  local pid=$$
-  while [ "$pid" -gt 1 ] 2>/dev/null; do
-    local tty
-    tty=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
-    if [ -n "$tty" ] && [ "$tty" != "??" ]; then
-      echo "$tty"
-      return 0
-    fi
-    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-  done
-  return 1
-}
-
-SESSION_TTY=$(find_session_tty)
-
-# Parse hook event from stdin JSON
-eval "$(/usr/bin/python3 -c "
-import sys, json, shlex
-event = json.load(sys.stdin)
-for key in ['hook_event_name', 'notification_type', 'cwd', 'session_id', 'permission_mode']:
-    var_name = key.upper().replace('HOOK_EVENT_NAME', 'EVENT').replace('NOTIFICATION_TYPE', 'NOTIFY_TYPE')
-    print(var_name + '=' + shlex.quote(event.get(key, '')))
-" <<< "$INPUT" 2>/dev/null)"
-
-# Skip non-interactive agent/teammate sessions
-# Agent modes: acceptEdits, ignoreEdits, bypassPermissions, delegate, etc.
-# Normal interactive modes: default, plan (these should get sounds)
-IS_AGENT_SESSION=$(/usr/bin/python3 -c "
-import json, os
-
-state_file = '$STATE_FILE'
-session_id = '$SESSION_ID'
-perm_mode = '$PERMISSION_MODE'
-
-# These permission modes indicate non-interactive agent sessions
-AGENT_MODES = {'acceptEdits', 'ignoreEdits', 'bypassPermissions', 'delegate'}
+# Permission modes that mark a non-interactive agent or teammate session.
+# Interactive modes (default, plan) still get sounds. Once a session shows up
+# in an agent mode it stays classified that way, since later events on the
+# same session no longer carry the mode.
+AGENT_MODES = {"acceptEdits", "ignoreEdits", "bypassPermissions", "delegate"}
+session_id = event.get("session_id", "")
+perm_mode = event.get("permission_mode", "")
 
 try:
     state = json.load(open(state_file))
-except:
+except Exception:
     state = {}
 
-agent_sessions = set(state.get('agent_sessions', []))
-
+agent_sessions = set(state.get("agent_sessions", []))
 if perm_mode in AGENT_MODES:
     agent_sessions.add(session_id)
-    state['agent_sessions'] = list(agent_sessions)
-    os.makedirs(os.path.dirname(state_file) or '.', exist_ok=True)
-    json.dump(state, open(state_file, 'w'))
-    print('true')
-elif session_id in agent_sessions:
-    print('true')
-else:
-    print('false')
-" 2>/dev/null)
+    state["agent_sessions"] = sorted(agent_sessions)
+    os.makedirs(os.path.dirname(state_file) or ".", exist_ok=True)
+    json.dump(state, open(state_file, "w"))
 
-[ "$IS_AGENT_SESSION" = "true" ] && exit 0
+emit_bool("IS_AGENT_SESSION", session_id in agent_sessions)
+' 2>/dev/null
+)"
+
+[ "${ENABLED:-true}" = "false" ] && exit 0
+[ "${IS_AGENT_SESSION:-false}" = "true" ] && exit 0
 
 # Extract and sanitize project name for display
 PROJECT="${CWD##*/}"
@@ -101,59 +86,64 @@ PROJECT=$(printf '%s' "$PROJECT" | tr -cd '[:alnum:] ._-')
 
 # Check if user is rapidly submitting prompts (triggers annoyed responses)
 is_user_spamming() {
-  /usr/bin/python3 -c "
-import json, time, os
+  PEON_STATE_FILE="$STATE_FILE" \
+  PEON_ANNOYED_WINDOW="$ANNOYED_WINDOW" \
+  PEON_ANNOYED_THRESHOLD="$ANNOYED_THRESHOLD" \
+  /usr/bin/python3 -c '
+import json, os, time
 
-state_file = '$STATE_FILE'
+state_file = os.environ["PEON_STATE_FILE"]
 now = time.time()
-window = float('$ANNOYED_WINDOW')
-threshold = int('$ANNOYED_THRESHOLD')
+window = float(os.environ["PEON_ANNOYED_WINDOW"])
+threshold = int(os.environ["PEON_ANNOYED_THRESHOLD"])
 
 try:
     state = json.load(open(state_file))
-except:
+except Exception:
     state = {}
 
-timestamps = [t for t in state.get('prompt_timestamps', []) if now - t < window]
+timestamps = [t for t in state.get("prompt_timestamps", []) if now - t < window]
 timestamps.append(now)
 
-state['prompt_timestamps'] = timestamps
-os.makedirs(os.path.dirname(state_file) or '.', exist_ok=True)
-json.dump(state, open(state_file, 'w'))
+state["prompt_timestamps"] = timestamps
+os.makedirs(os.path.dirname(state_file) or ".", exist_ok=True)
+json.dump(state, open(state_file, "w"))
 
-print('true' if len(timestamps) >= threshold else 'false')
-" 2>/dev/null
+print("true" if len(timestamps) >= threshold else "false")
+' 2>/dev/null
 }
 
 # Pick random sound from category, avoiding immediate repeats
 pick_sound() {
-  local category="$1"
-  /usr/bin/python3 -c "
-import json, random, os, sys
+  PEON_PACK_DIR="$PEON_DIR/packs/$ACTIVE_PACK" \
+  PEON_STATE_FILE="$STATE_FILE" \
+  PEON_CATEGORY="$1" \
+  /usr/bin/python3 -c '
+import json, os, random, sys
 
-pack_dir = '$PEON_DIR/packs/$ACTIVE_PACK'
-state_file = '$STATE_FILE'
-category = '$category'
+pack_dir = os.environ["PEON_PACK_DIR"]
+state_file = os.environ["PEON_STATE_FILE"]
+category = os.environ["PEON_CATEGORY"]
 
-manifest = json.load(open(os.path.join(pack_dir, 'manifest.json')))
-sounds = manifest.get('categories', {}).get(category, {}).get('sounds', [])
+manifest = json.load(open(os.path.join(pack_dir, "manifest.json")))
+sounds = manifest.get("categories", {}).get(category, {}).get("sounds", [])
 if not sounds:
     sys.exit(1)
 
 try:
     state = json.load(open(state_file))
-except:
+except Exception:
     state = {}
 
-last_file = state.get('last_played', {}).get(category, '')
-candidates = sounds if len(sounds) <= 1 else [s for s in sounds if s['file'] != last_file]
+last_file = state.get("last_played", {}).get(category, "")
+candidates = sounds if len(sounds) <= 1 else [s for s in sounds if s["file"] != last_file]
 pick = random.choice(candidates)
 
-state.setdefault('last_played', {})[category] = pick['file']
-json.dump(state, open(state_file, 'w'))
+state.setdefault("last_played", {})[category] = pick["file"]
+json.dump(state, open(state_file, "w"))
 
-print(os.path.join(pack_dir, 'sounds', pick['file']))
-" 2>/dev/null
+print(os.path.join(pack_dir, "sounds", pick["file"]))
+' 2>/dev/null
 }
 
 # Determine sound category and status based on event type
@@ -209,47 +199,35 @@ if [ -n "$SOUND_CATEGORY" ]; then
   [ "${!CAT_VAR:-true}" = "false" ] && SOUND_CATEGORY=""
 fi
 
+# A volume of 0 makes the sound inaudible, so skip picking and playing it.
+case "$VOLUME" in
+  0|0.0|0.00) SOUND_CATEGORY="" ;;
+esac
+
+# Nothing audible and no tmux window to touch means there is no work left.
+[ -z "$SOUND_CATEGORY" ] && [ -z "${TMUX_PANE:-}" ] && exit 0
+
 # Build tab title with optional attention marker
 TAB_TITLE="${SHOW_MARKER:+● }${PROJECT}: ${TAB_STATUS}"
 
 # Get tmux window ID once for reuse
 WINDOW_ID=""
-if [ -n "${TMUX_PANE:-}" ]; then
+if [ -n "${TMUX_PANE:-}" ] && { [ "$TMUX_RENAME_WINDOW" = "true" ] || [ -n "$TRIGGER_ALERT" ]; }; then
   WINDOW_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{window_id}')
 
-  # Store original window name if not already stored
-  ORIGINAL_NAME=$(tmux show-window-option -t "$WINDOW_ID" -v @claude_original_name 2>/dev/null || echo "")
-  if [ -z "$ORIGINAL_NAME" ]; then
-    ORIGINAL_NAME=$(tmux display-message -t "$WINDOW_ID" -p '#{window_name}')
-    tmux set-option -w -t "$WINDOW_ID" @claude_original_name "$ORIGINAL_NAME"
+  # Renaming the window is opt-in: the colour alert alone is enough to draw
+  # attention, and rewriting the tab title churns the window list.
+  if [ "$TMUX_RENAME_WINDOW" = "true" ]; then
+    # Store original window name if not already stored
+    ORIGINAL_NAME=$(tmux show-window-option -t "$WINDOW_ID" -v @claude_original_name 2>/dev/null || echo "")
+    if [ -z "$ORIGINAL_NAME" ]; then
+      ORIGINAL_NAME=$(tmux display-message -t "$WINDOW_ID" -p '#{window_name}')
+      tmux set-option -w -t "$WINDOW_ID" @claude_original_name "$ORIGINAL_NAME"
+    fi
+
+    # Set window name with attention marker
+    tmux rename-window -t "$WINDOW_ID" "$TAB_TITLE"
   fi
-
-  # Set window name with attention marker
-  tmux rename-window -t "$WINDOW_ID" "$TAB_TITLE"
-fi
-
-# Update Terminal.app tab title via AppleScript
-if [ -n "$SESSION_TTY" ]; then
-  osascript - "$TAB_TITLE" "$SESSION_TTY" <<'APPLESCRIPT' &
-on run argv
-  set theTitle to item 1 of argv
-  set theTTY to "/dev/" & item 2 of argv
-  tell application "Terminal"
-    repeat with w in windows
-      repeat with t in tabs of w
-        if tty of t is theTTY then
-          set custom title of t to theTitle
-          set title displays custom title of t to true
-          set title displays device name of t to false
-          set title displays shell path of t to false
-          set title displays window size of t to false
-          set title displays file name of t to false
-        end if
-      end repeat
-    end repeat
-  end tell
-end run
-APPLESCRIPT
 fi
 
 # Play sound for category
