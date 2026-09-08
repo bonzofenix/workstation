@@ -3,6 +3,7 @@
   "volume": 0,
   "enabled": true,
   "tmux_alert_style": "fg=white,bg=red,bold",
+  "tmux_rename_window": false,
   "categories": {
     "greeting": true,
     "acknowledge": true,

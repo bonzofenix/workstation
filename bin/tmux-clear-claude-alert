@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Clear the peon-ping attention alert on a tmux window.
+#
+# Run from a session-window-changed hook: when the user switches to a window
+# that peon-ping flagged, drop the highlight and, if peon-ping renamed the
+# window, put the original name back.
+set -euo pipefail
+
+window_id="${1:?usage: tmux-clear-claude-alert <window-id>}"
+
+get_option() {
+  tmux show-window-option -t "$window_id" -v "$1" 2>/dev/null || true
+}
+
+[ -n "$(get_option @claude_alert)" ] || exit 0
+
+tmux set-window-option -t "$window_id" window-status-style default
+tmux set-option -w -t "$window_id" -u @claude_alert
+
+original_name="$(get_option @claude_original_name)"
+if [ -n "$original_name" ]; then
+  tmux rename-window -t "$window_id" "$original_name"
+  tmux set-option -w -t "$window_id" -u @claude_original_name
+fi
