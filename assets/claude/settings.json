@@ -37,14 +37,19 @@
       "Write(*)",
       "MultiEdit(*)",
       "Grep",
-      "Glob"
+      "Glob",
+      "Bash(trash:*)",
+      "Bash(trash-put:*)"
     ],
     "deny": [
       "Bash(rm *)",
-      "Bash(*sudo*)"
+      "Bash(*sudo*)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rmdir *)"
     ]
   },
-  "model": "opus[1m]",
+  "model": "sonnet",
   "skillOverrides": {
     "atlassian:search-company-knowledge": "off",
     "atlassian:triage-issue": "off"
@@ -53,6 +58,16 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/worktree-guard/guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit|MultiEdit",
         "hooks": [
           {
             "type": "command",
@@ -217,7 +232,12 @@
     ]
   },
   "alwaysThinkingEnabled": false,
-  "effortLevel": "high",
+  "effortLevel": "medium",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
   "voice": {
     "enabled": true,
     "mode": "hold"
@@ -225,16 +245,22 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
   "editorMode": "vim",
+  "agentPushNotifEnabled": true,
   "autoMode": {
     "allow": [
       "$defaults",
       "Bash(gh pr list:*)",
-      "Bash(gh pr view:*)"
+      "Bash(gh pr view:*)",
+      "Bash(qmd query:*)",
+      "Bash(qmd get:*)",
+      "Bash(mdfind:*)",
+      "Bash(gh run view:*)"
     ],
     "soft_deny": [
       "$defaults",
       "Bash(railway down:*)",
-      "Bash(railway delete:*)"
+      "Bash(railway delete:*)",
+      "Bash(make migrate-down:*)"
     ]
   },
   "voiceEnabled": true,
