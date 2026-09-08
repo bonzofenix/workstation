@@ -49,6 +49,7 @@ APT_PACKAGES=(
   shellcheck
   neovim
   direnv
+  sqlite3
   gnupg
   openssl
   nmap

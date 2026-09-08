@@ -56,9 +56,55 @@ if [ -e ~/.tmux.conf ] && [ ! -L ~/.tmux.conf ]; then
 fi
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 
+log_step "Configuring Oh My Zsh"
+# Provides the prompt and completion. RUNZSH= stops the installer dropping
+# into an interactive shell; CHSH= stops it changing the login shell, which
+# the step above already handled.
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  run_with_spin "Installing Oh My Zsh..." env RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://install.ohmyz.sh/)"
+  log_success "Oh My Zsh installed"
+else
+  log_success "Oh My Zsh already installed"
+fi
+
+log_step "Configuring zsh"
+# Match the plugin set used on macOS. The installer writes plugins=(git), so
+# this rewrites that line in place rather than appending a second assignment
+# that would be shadowed by the first.
+if [ -f ~/.zshrc ] && grep -q '^plugins=(git)$' ~/.zshrc; then
+  sed -i 's/^plugins=(git)$/plugins=(git vi-mode)/' ~/.zshrc
+  log_success "Enabled zsh plugins: git vi-mode"
+fi
+add_to_rc '# Enables z shell plugin' \
+  ". $WORKSTATION_DIR/bin/z.sh"
+add_to_rc '# sets vi mode for zsh' \
+          'bindkey -v'
+add_to_rc '# sets vi mode for zsh' \
+          'bindkey "^R" history-incremental-search-backward'
+add_to_rc '# Disable zsh beeps' \
+          'unsetopt BEEP'
+if command -v direnv >/dev/null 2>&1; then
+  add_to_rc '# Adds direnv hook' \
+            'eval "$(direnv hook zsh)"'
+fi
+
 log_step "Configuring shell aliases"
 add_to_rc '# Workstation aliases' \
           "source $WORKSTATION_DIR/assets/aliases.bash"
+
+log_step "Configuring Neovim"
+# Back up a real config directory rather than removing it; only replace a
+# symlink this script owns.
+if [ -e ~/.config/nvim ] && [ ! -L ~/.config/nvim ]; then
+  mv ~/.config/nvim "$HOME/.config/nvim.bak-$(date +%Y%m%d-%H%M%S)"
+fi
+mkdir -p ~/.config
+ln -fsn "$WORKSTATION_DIR/assets/config/nvim" ~/.config/nvim
+[ ! -d ~/.local/share/nvim/lazy/lazy.nvim ] && run_with_spin "Cloning lazy.nvim..." \
+  git clone https://github.com/folke/lazy.nvim ~/.local/share/nvim/lazy/lazy.nvim
+
+add_to_profile '# TERM for tmux compatibility' \
+               'export TERM=xterm-256color'
 
 log_step "Configuring git ignore"
 ln -fs "$WORKSTATION_DIR/assets/gitignore_global" ~/.gitignore_global
