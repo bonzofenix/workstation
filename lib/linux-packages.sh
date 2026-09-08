@@ -106,4 +106,33 @@ if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
+# Node from NodeSource rather than the Ubuntu archive, which ships a version
+# too old for the Claude Code CLI.
+if ! command -v node >/dev/null 2>&1; then
+  log_step "Installing Node.js"
+  curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
+  $SUDO apt-get install -y -qq nodejs
+  log_success "Node.js installed"
+fi
+
+# Claude Code runs on the server itself, so a phone SSH session gets the same
+# agent as a laptop. npm's global prefix is moved under ~/.npm-global first:
+# installing to /usr/lib/node_modules would need sudo for every later
+# update, and running npm as root is how permissions get wrecked.
+if ! command -v claude >/dev/null 2>&1; then
+  log_step "Installing Claude Code"
+  NPM_PREFIX="$HOME/.npm-global"
+  mkdir -p "$NPM_PREFIX"
+  npm config set prefix "$NPM_PREFIX"
+  # The PATH entry for this lives in linux-configurations.sh, which runs
+  # after this script and is what creates ~/.zprofile.
+  if npm install -g @anthropic-ai/claude-code; then
+    log_success "Claude Code installed"
+  else
+    log_warning "Claude Code install failed; run 'npm install -g @anthropic-ai/claude-code' manually"
+  fi
+else
+  log_success "Claude Code already installed"
+fi
+
 log_success "Linux packages installed"

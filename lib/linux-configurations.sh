@@ -43,6 +43,11 @@ add_to_profile '# Adds local bin to path' \
 add_to_profile '# Add Go toolchain' \
                'path+=("/usr/local/go/bin")'
 
+# npm's global prefix is moved here by linux-packages.sh so global installs
+# (Claude Code among them) do not need sudo.
+add_to_profile '# npm global bin' \
+               'path=("$HOME/.npm-global/bin" $path)'
+
 log_step "Configuring environment variables"
 add_to_profile '# Sets git duet' \
                'export GIT_DUET_SET_GIT_USER_CONFIG=1'
