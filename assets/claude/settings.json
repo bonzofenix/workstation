@@ -218,6 +218,7 @@
   },
   "alwaysThinkingEnabled": false,
   "effortLevel": "high",
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
@@ -225,16 +226,22 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
   "editorMode": "vim",
+  "agentPushNotifEnabled": true,
   "autoMode": {
     "allow": [
       "$defaults",
       "Bash(gh pr list:*)",
-      "Bash(gh pr view:*)"
+      "Bash(gh pr view:*)",
+      "Bash(systemctl status:*)",
+      "Bash(journalctl:*)",
+      "Bash(sqlite3 *.db \"SELECT*\")"
     ],
     "soft_deny": [
       "$defaults",
       "Bash(railway down:*)",
-      "Bash(railway delete:*)"
+      "Bash(railway delete:*)",
+      "Bash(systemctl stop:*)",
+      "Bash(systemctl restart:*)"
     ]
   },
   "voiceEnabled": true,
