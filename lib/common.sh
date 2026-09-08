@@ -1,3 +1,6 @@
+# shellcheck shell=bash
+# Sourced by the lib/*.sh scripts, so it has no shebang of its own.
+
 exec >&2
 
 if [[ "${DEBUG}" == "true" ]]; then
