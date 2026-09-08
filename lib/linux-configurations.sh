@@ -92,6 +92,15 @@ log_step "Configuring shell aliases"
 add_to_rc '# Workstation aliases' \
           "source $WORKSTATION_DIR/assets/aliases.bash"
 
+log_step "Configuring tmux session alias"
+# The levels.io "land straight in tmux" pattern: attach to a session named
+# main, or create it if this is the first connection. `t` for quick typing
+# over SSH from a phone.
+add_to_rc '# Attach-or-create the main tmux session' \
+          "alias t='tmux attach -t main || tmux new -s main'"
+add_to_profile '# Auto-attach to the main tmux session on interactive SSH login' \
+          'if [[ -n "$SSH_CONNECTION" && -z "$TMUX" && $- == *i* ]]; then tmux attach -t main 2>/dev/null || tmux new -s main; fi'
+
 log_step "Configuring Neovim"
 # Back up a real config directory rather than removing it; only replace a
 # symlink this script owns.
