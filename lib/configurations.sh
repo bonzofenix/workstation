@@ -139,8 +139,15 @@ add_to_profile '# Setting UTF-8 tmux support' \
 log_step "Linking iCloud folder"
 ln -fs "$HOME/Library/Mobile Documents/com~apple~CloudDocs/" "$HOME/icloud"
 
-log_step "Installing Claude statusline script"
+log_step "Installing Claude settings"
 mkdir -p ~/.claude
+# Symlink so the repo is the single source of truth for Claude Code settings
+# (statusLine, hooks, permissions). Previously only the statusline script was
+# linked, so ~/.claude/settings.json never picked up the statusLine block and
+# the status line silently never appeared.
+ln -fs "$WORKSTATION_DIR/assets/claude/settings.json" ~/.claude/settings.json
+
+log_step "Installing Claude statusline script"
 ln -fs "$WORKSTATION_DIR/assets/claude/statusline-command.sh" ~/.claude/statusline-command.sh
 
 log_step "Installing Claude hooks"
