@@ -34,6 +34,17 @@ else
   log_success "restic already installed"
 fi
 
+# This target also runs on its own, not only after linux-server, so it cannot
+# assume the sqlite3 CLI is already there. SQLITE_DATABASES is useless
+# without it: the nightly run would fail at the first database.
+log_step "Installing sqlite3"
+if ! command -v sqlite3 >/dev/null 2>&1; then
+  $SUDO apt-get install -y -qq sqlite3
+  log_success "sqlite3 installed"
+else
+  log_success "sqlite3 already installed"
+fi
+
 # The config carries R2 credentials and the restic password, so it is
 # root-owned and unreadable by anyone else. Installed from a template on
 # first run and never overwritten, so re-running this script cannot clobber
