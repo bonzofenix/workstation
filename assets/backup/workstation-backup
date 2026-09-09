@@ -4,6 +4,7 @@
 #
 # Usage:
 #   workstation-backup            # take a snapshot (what the timer runs)
+#   workstation-backup snapshot   # local SQLite snapshot only, no restic
 #   workstation-backup init       # create the restic repo, run once by hand
 #   workstation-backup check      # verify repository integrity
 #   workstation-backup snapshots  # list what is in the repo
@@ -25,17 +26,23 @@ source "$CONFIG"
 
 # Fail loudly on a half-filled config rather than letting restic produce a
 # confusing auth error, or silently backing up to the wrong place.
-: "${R2_ACCOUNT_ID:?set R2_ACCOUNT_ID in $CONFIG}"
-: "${R2_BUCKET:?set R2_BUCKET in $CONFIG}"
-: "${AWS_ACCESS_KEY_ID:?set AWS_ACCESS_KEY_ID in $CONFIG}"
-: "${AWS_SECRET_ACCESS_KEY:?set AWS_SECRET_ACCESS_KEY in $CONFIG}"
-: "${RESTIC_PASSWORD:?set RESTIC_PASSWORD in $CONFIG}"
+#
+# Only for the commands that actually reach R2. `snapshot` writes a local
+# SQLite copy and never opens the repository, so requiring credentials there
+# would block a deploy on a box where off-site backups are not configured yet.
+require_restic_config() {
+  : "${R2_ACCOUNT_ID:?set R2_ACCOUNT_ID in $CONFIG}"
+  : "${R2_BUCKET:?set R2_BUCKET in $CONFIG}"
+  : "${AWS_ACCESS_KEY_ID:?set AWS_ACCESS_KEY_ID in $CONFIG}"
+  : "${AWS_SECRET_ACCESS_KEY:?set AWS_SECRET_ACCESS_KEY in $CONFIG}"
+  : "${RESTIC_PASSWORD:?set RESTIC_PASSWORD in $CONFIG}"
 
-export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY RESTIC_PASSWORD
-export RESTIC_REPOSITORY="s3:https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}"
+  export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY RESTIC_PASSWORD
+  export RESTIC_REPOSITORY="s3:https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}"
 
-# R2 has no region, but the S3 SDK restic uses insists on one being set.
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+  # R2 has no region, but the S3 SDK restic uses insists on one being set.
+  export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+}
 
 DUMP_DIR="${DUMP_DIR:-/var/backups/workstation}"
 RETENTION_DAILY="${RETENTION_DAILY:-7}"
@@ -66,7 +73,7 @@ dump_sqlite() {
 
   # shellcheck disable=SC2206  # deliberate word-split: space-separated paths
   local dbs=($SQLITE_DATABASES)
-  local db name target
+  local db name target app file
   for db in "${dbs[@]}"; do
     if [ ! -f "$db" ]; then
       log "WARNING: $db does not exist, skipping"
@@ -74,8 +81,15 @@ dump_sqlite() {
     fi
 
     # Name snapshots by app directory as well as filename: three apps each
-    # holding <app>.db would otherwise collide in one flat directory.
-    name="$(basename "$(dirname "$(dirname "$db")")")-$(basename "$db")"
+    # holding db.sqlite would otherwise collide in one flat directory. The
+    # common <app>/data/<app>.db layout would give "foodtracker-foodtracker.db",
+    # so drop the prefix when the filename already carries the app name.
+    app="$(basename "$(dirname "$(dirname "$db")")")"
+    file="$(basename "$db")"
+    case "$file" in
+      "$app".*) name="$file" ;;
+      *)        name="$app-$file" ;;
+    esac
     target="$DUMP_DIR/sqlite/$name"
 
     log "Snapshotting $db"
@@ -185,11 +199,19 @@ cmd_backup() {
 }
 
 case "${1:-backup}" in
-  backup)    cmd_backup ;;
-  init)      cmd_init ;;
-  check)     restic check ;;
-  snapshots) restic snapshots ;;
+  backup)    require_restic_config; cmd_backup ;;
+  # Local SQLite snapshot with no restic leg, for callers that want a
+  # recovery point right now rather than an off-site copy -- a deploy script
+  # taking one before it swaps binaries, say. Pushing a full restic snapshot
+  # on every deploy would hit R2 far more often than the daily timer, for a
+  # copy that is discarded minutes later when it turns out the deploy was
+  # fine.
+  snapshot)  dump_sqlite ;;
+  init)      require_restic_config; cmd_init ;;
+  check)     require_restic_config; restic check ;;
+  snapshots) require_restic_config; restic snapshots ;;
   restore)
+    require_restic_config
     if [ $# -ne 3 ]; then
       echo "usage: workstation-backup restore <snapshot-id> <target-dir>" >&2
       exit 1
@@ -197,7 +219,7 @@ case "${1:-backup}" in
     restic restore "$2" --target "$3"
     ;;
   *)
-    echo "usage: workstation-backup [backup|init|check|snapshots|restore]" >&2
+    echo "usage: workstation-backup [backup|snapshot|init|check|snapshots|restore]" >&2
     exit 1
     ;;
 esac

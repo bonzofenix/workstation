@@ -5,8 +5,8 @@
 # box can take the workstation setup without dragging in a database and a
 # web server it will never run.
 #
-# Installs: Go, PostgreSQL, Caddy, the Python deps for Garmin sync, and a
-# default-deny firewall.
+# Installs: Go, PostgreSQL, the sqlite3 CLI, Caddy, the Python deps for
+# Garmin sync, and a default-deny firewall.
 
 export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source "$SCRIPT_DIR/common.sh"
@@ -29,8 +29,12 @@ SUDO=""
 run_with_spin "Updating apt index..." $SUDO apt-get update -qq
 
 log_step "Installing server packages"
+# sqlite3 is the CLI, not the library the Go apps link: the backup driver
+# needs it for `.backup`, which is the only safe way to snapshot a live
+# WAL-mode database. Without it a backup run fails at the first database.
 $SUDO apt-get install -y -qq \
   postgresql postgresql-contrib \
+  sqlite3 \
   python3 python3-pip python3-venv \
   ufw fail2ban \
   debian-keyring debian-archive-keyring apt-transport-https
