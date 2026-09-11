@@ -57,6 +57,38 @@ log() { echo "[workstation-backup] $*"; }
 # a corrupt or stale database, and nothing reports a problem until then.
 #
 # `.backup` takes a consistent snapshot of a live database through SQLite
+# Run one command with the backup lock held, so two invocations serialize
+# instead of interleaving.
+#
+# Unique temp names already stop concurrent runs from clobbering each other, but
+# two runs snapshotting the same databases at the same moment is still wasted IO
+# on a small box -- and `snapshot` is called by every app's deploy, which is
+# exactly the case that collided.
+#
+# flock is used without a timeout: a waiting deploy wants the backup to finish,
+# not to give up and skip its safety net. If flock is unavailable the command
+# runs unlocked rather than failing, since the unique temp names keep that
+# correct, just redundant.
+with_lock() {
+  local lock="$DUMP_DIR/.backup.lock"
+  mkdir -p "$DUMP_DIR"
+  chmod 700 "$DUMP_DIR"
+  if ! command -v flock >/dev/null 2>&1; then
+    log "WARNING: flock not found, running without a lock"
+    "$@"
+    return
+  fi
+  # fd 9 is the lock handle; it is released when this subshell exits, including
+  # on failure, so a crashed run cannot wedge the next one.
+  (
+    flock 9 || {
+      log "ERROR: could not acquire $lock" >&2
+      exit 1
+    }
+    "$@"
+  ) 9>"$lock"
+}
+
 # itself, checkpointing the WAL into a single self-contained file.
 dump_sqlite() {
   if [ -z "${SQLITE_DATABASES:-}" ]; then
@@ -73,7 +105,7 @@ dump_sqlite() {
 
   # shellcheck disable=SC2206  # deliberate word-split: space-separated paths
   local dbs=($SQLITE_DATABASES)
-  local db name target app file
+  local db name target app file tmp
   for db in "${dbs[@]}"; do
     if [ ! -f "$db" ]; then
       log "WARNING: $db does not exist, skipping"
@@ -92,12 +124,23 @@ dump_sqlite() {
     esac
     target="$DUMP_DIR/sqlite/$name"
 
+    # The temp name carries the PID. With a fixed "$target.partial" two
+    # concurrent runs write the same path, and the first mv to finish takes the
+    # file out from under the second -- which then dies on
+    # "mv: cannot stat '...partial': No such file or directory".
+    #
+    # That is not theoretical: three app deploy scripts call `snapshot` as a
+    # pre-deploy gate, their timers had drifted onto the same minute, and two
+    # deploys failed together on exactly that error. The gate did its job and
+    # refused to deploy without a backup, so the visible symptom was both apps
+    # silently stuck on an old build.
+    local tmp="$target.$$.partial"
     log "Snapshotting $db"
-    if sqlite3 "$db" ".backup '$target.partial'"; then
-      mv "$target.partial" "$target"
+    if sqlite3 "$db" ".backup '$tmp'"; then
+      mv "$tmp" "$target"
       chmod 600 "$target"
     else
-      rm -f "$target.partial"
+      rm -f "$tmp"
       log "ERROR: sqlite3 .backup failed for $db" >&2
       return 1
     fi
@@ -170,7 +213,7 @@ cmd_init() {
 }
 
 cmd_backup() {
-  dump_sqlite
+  with_lock dump_sqlite
   dump_postgres
 
   local paths
@@ -206,7 +249,7 @@ case "${1:-backup}" in
   # on every deploy would hit R2 far more often than the daily timer, for a
   # copy that is discarded minutes later when it turns out the deploy was
   # fine.
-  snapshot)  dump_sqlite ;;
+  snapshot)  with_lock dump_sqlite ;;
   init)      require_restic_config; cmd_init ;;
   check)     require_restic_config; restic check ;;
   snapshots) require_restic_config; restic snapshots ;;
