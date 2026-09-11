@@ -8,13 +8,16 @@
 # Glyphs require a Nerd Font patched font in the terminal. Set
 # CLAUDE_STATUSLINE_ASCII=1 to fall back to plain ASCII labels.
 
-# Colors (ANSI)
-CYAN='\033[0;36m'
-BRIGHT_CYAN='\033[1;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-RESET='\033[0m'
+# Colors (ANSI). These hold real escape characters rather than "\033" text, so
+# the output can go through printf '%s'. Using '%b' instead would expand
+# backslash sequences in the interpolated repo and model names too, letting a
+# directory named with an escape sequence corrupt the terminal.
+CYAN=$'\033[0;36m'
+BRIGHT_CYAN=$'\033[1;36m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+RED=$'\033[0;31m'
+RESET=$'\033[0m'
 
 # Icons. Nerd Font glyphs by default, ASCII labels when opted out.
 if [ -n "${CLAUDE_STATUSLINE_ASCII:-}" ]; then
@@ -43,12 +46,23 @@ effort=$(echo "$input" | jq -r '.effort.level // empty')
 # Unknown names keep their first word so new models still render something useful.
 abbreviate_model() {
     local name="$1" family version
-    family=$(printf '%s' "$name" | awk '{print toupper(substr($1,1,1))}')
-    version=$(printf '%s' "$name" | grep -oE '[0-9]+(\.[0-9]+)?' | head -1)
+    # Match the family anywhere in the name, so a "Claude Opus 5" style display
+    # name still shortens instead of falling back to the word "Claude".
+    shopt -s nocasematch
     case "$name" in
-        Opus*|Sonnet*|Haiku*|Fable*) printf '%s%s' "$family" "$version" ;;
-        *) printf '%s' "${name%% *}" ;;
+        *Opus*) family=O ;;
+        *Sonnet*) family=S ;;
+        *Haiku*) family=H ;;
+        *Fable*) family=F ;;
+        *)
+            shopt -u nocasematch
+            printf '%s' "${name%% *}"
+            return
+            ;;
     esac
+    shopt -u nocasematch
+    version=$(printf '%s' "$name" | grep -oE '[0-9]+(\.[0-9]+)?' | head -1)
+    printf '%s%s' "$family" "$version"
 }
 
 # Effort levels are long words; two letters are enough to tell them apart.
@@ -107,13 +121,22 @@ fi
 # Context percentage, colored by how much headroom is left.
 context_info=""
 if [ -n "$used_pct" ]; then
-    if [ "$used_pct" -lt 50 ]; then
-        pct_color="${GREEN}"
-    elif [ "$used_pct" -lt 80 ]; then
-        pct_color="${YELLOW}"
-    else
-        pct_color="${RED}"
-    fi
+    # Truncate to an integer before comparing. A fractional percentage is
+    # normal, and feeding one to [ -lt ] both writes "integer expected" to
+    # stderr on every render and falls through to the red branch.
+    used_pct_int=${used_pct%%.*}
+    case "$used_pct_int" in
+        '' | *[!0-9]*) pct_color="${RESET}" ;;
+        *)
+            if [ "$used_pct_int" -lt 50 ]; then
+                pct_color="${GREEN}"
+            elif [ "$used_pct_int" -lt 80 ]; then
+                pct_color="${YELLOW}"
+            else
+                pct_color="${RED}"
+            fi
+            ;;
+    esac
     context_info="${pct_color}${ICON_CONTEXT}${used_pct}%${RESET}"
 fi
 
@@ -125,4 +148,4 @@ for segment in "$repo_info" "$branch_info" "$diff_info" "$context_info"; do
     fi
 done
 
-printf "%b" "$output"
+printf '%s' "$output"
