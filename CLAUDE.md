@@ -85,15 +85,20 @@ The setup configures both bash and zsh:
 
 ### Worktree Management
 
-**Standing rule: use `EnterWorktree` before any feature/fix/bug/PR work that
-involves writing code.** This applies to file edits, not just branch creation —
-do not edit tracked files directly on `main` for PR-bound work. The
-`worktree-guard` PreToolUse hook enforces a narrow slice of this (it blocks
-branch-creating `git` commands outside a worktree), but the rule is broader
-than what the hook can detect.
+**Standing rule: never edit a tracked file in the main checkout. Use
+`EnterWorktree` before the first such edit, always.** This applies to file
+edits, not just branch creation, and there is no size exception — a one-line
+fix needs a worktree too. The `worktree-guard` PreToolUse hook enforces a
+narrow slice of this (it blocks branch-creating `git` commands outside a
+worktree), but the rule is broader than what the hook can detect.
 
-Exceptions, which still need a heads-up to the user: trivial one-line fixes,
-and changes to untracked or local-only files.
+Untracked and local-only files are the only things safe to edit in place, and
+still warrant a heads-up to the user.
+
+Why there is no "trivial fix" carve-out: edits stranded on `main` block
+`git pull` and collide with incoming merges. A conflict resolved in favour of
+the upstream side silently discards the local edit, which is how a settings
+block was lost once already.
 
 The repo uses git worktrees extensively with dedicated scripts:
 - `worktrees` - Interactive worktree selector with tmux integration (changes all panes)
