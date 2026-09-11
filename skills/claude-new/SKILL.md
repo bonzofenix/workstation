@@ -2,10 +2,11 @@
 name: claude-new
 description: Start a new background Claude Code session in a project under ~/workspace, so it shows up in the agent view. Use when the user says "claude-new", "new claude session", "start claude in <project>", "spin up a session for <project>", or wants to pick a workspace project and get a session running there.
 allowed-tools:
-  - Bash(ls ~/workspace*)
-  - Bash(ls /root/workspace*)
-  - Bash(cd * && claude --bg*)
-  - Bash(claude agents*)
+  - Bash(ls ~/workspace)
+  - Bash(ls ~/workspace/*)
+  - Bash(cd ~/workspace/*)
+  - Bash(claude --bg *)
+  - Bash(claude agents *)
 ---
 
 # claude-new — start a background session in a workspace project
@@ -79,6 +80,7 @@ the user.
   substitute `-p`/`--print`: that is headless and cannot be attached to later.
 - Sessions survive this conversation ending. `claude stop <id>` stops one,
   `claude rm <id>` deletes it.
-- `bin/claude-new` in this repo does the same thing from a shell, where a TTY
-  exists and `gum` can be used. This skill is the equivalent for use from
-  inside a Claude session.
+- `bin/claude-new` in this repo does the equivalent from a shell, where a TTY
+  exists and `gum` can be used. It starts a *foreground* session in the chosen
+  directory, so it does not populate the agent view; this skill starts a
+  detached one that does.

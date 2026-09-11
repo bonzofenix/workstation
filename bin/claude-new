@@ -26,9 +26,11 @@ projects=$(find "$WORKSPACE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename 
   exit 1
 }
 
-selected=$(echo "$projects" | gum choose --header "Select project")
+# `|| exit 1` keeps set -e from aborting at the assignment, so the guard below
+# is reachable. gum exits non-zero on Ctrl-C/Esc, but can also exit 0 with an
+# empty selection; both must bail rather than start in the wrong directory.
+selected=$(echo "$projects" | gum choose --header "Select project") || exit 1
 
-# Abort (Ctrl-C/Esc) or empty pick: bail instead of starting in the wrong directory.
 [[ -n "$selected" ]] || exit 1
 
 cd "$WORKSPACE_DIR/$selected"
