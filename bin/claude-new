@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pick a project under ~/workspace with gum and start Claude Code there.
+# Any extra arguments are forwarded to claude.
+
+WORKSPACE_DIR="${WORKSPACE_DIR:-$HOME/workspace}"
+
+command -v gum >/dev/null 2>&1 || {
+  echo "Error: gum not installed. Install with: brew install gum" >&2
+  exit 1
+}
+command -v claude >/dev/null 2>&1 || {
+  echo "Error: claude not installed. See https://claude.ai/code" >&2
+  exit 1
+}
+[[ -d "$WORKSPACE_DIR" ]] || {
+  echo "Error: workspace directory not found: $WORKSPACE_DIR" >&2
+  exit 1
+}
+
+projects=$(find "$WORKSPACE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+
+[[ -n "$projects" ]] || {
+  echo "Error: no projects found in $WORKSPACE_DIR" >&2
+  exit 1
+}
+
+# `|| exit 1` keeps set -e from aborting at the assignment, so the guard below
+# is reachable. gum exits non-zero on Ctrl-C/Esc, but can also exit 0 with an
+# empty selection; both must bail rather than start in the wrong directory.
+selected=$(echo "$projects" | gum choose --header "Select project") || exit 1
+
+[[ -n "$selected" ]] || exit 1
+
+cd "$WORKSPACE_DIR/$selected"
+exec claude "$@"
