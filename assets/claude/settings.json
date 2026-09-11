@@ -32,6 +32,8 @@
       "Bash(pwd)",
       "Bash(git status)",
       "Bash(pip *)",
+      "Bash(trash-put:*)",
+      "Bash(trash-list:*)",
       "Read(*)",
       "Edit(*)",
       "Write(*)",
