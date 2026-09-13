@@ -182,8 +182,32 @@ dump_postgres() {
 
 # Only paths that exist are passed to restic: it errors out on a missing
 # path, which would abort a backup over one uninstalled service.
+#
+# A missing BACKUP_PATHS entry is reported, though, because the two cases are
+# not the same. The built-in candidates below are absent on plenty of hosts --
+# not every box runs ufw or fail2ban -- so warning about those would be noise
+# that teaches the reader to skip the warnings. An entry someone typed into
+# BACKUP_PATHS is a statement that the path matters, so its absence is either
+# a typo or a file that moved, and silence there means the thing they asked to
+# protect is quietly not protected.
+#
+# That is not hypothetical: BACKUP_PATHS named /root/workspace/app1/.env
+# for days while that app actually kept its env elsewhere on disk, so those
+# secrets were in nobody's backup and nothing said so.
+#
+# dump_sqlite warns for the same reason (see the WARNING in it), but it can use
+# log() because its stdout is not a data channel. This function cannot -- see
+# the comment at the echo below before copying that pattern here.
+#
+# cmd_backup repeats this existence test to name the missing entries in its
+# summary, rather than this function passing them back: `mapfile -t paths <
+# <(collect_paths)` runs this in a SUBSHELL, so an array assigned here never
+# reaches the caller (measured: the caller sees zero elements). A second small
+# loop there is cheaper than a temp file or a sentinel line on stdout, and the
+# summary is the only place a human actually reads -- at 03:09 the stderr line
+# below goes to a journal nobody opens, since the unit sets no OnFailure=.
 collect_paths() {
-  local candidates=(
+  local builtin_candidates=(
     "$DUMP_DIR"
     /etc/caddy
     /etc/systemd/system
@@ -192,17 +216,30 @@ collect_paths() {
     /etc/workstation-backup.env
   )
 
+  local existing=()
+  local p
+
+  for p in "${builtin_candidates[@]}"; do
+    [ -e "$p" ] && existing+=("$p")
+  done
+
   # BACKUP_PATHS is the per-host escape hatch for app data directories.
   if [ -n "${BACKUP_PATHS:-}" ]; then
     # shellcheck disable=SC2206  # deliberate word-split: space-separated paths
     local extra=($BACKUP_PATHS)
-    candidates+=("${extra[@]}")
+    for p in "${extra[@]}"; do
+      if [ -e "$p" ]; then
+        existing+=("$p")
+      else
+        # stderr, not log(): this function's stdout IS the path list, read by
+        # `mapfile -t paths < <(collect_paths)`. A warning on stdout would be
+        # handed to restic as a path and abort the backup -- the warning would
+        # cause the outage it exists to prevent.
+        echo "[workstation-backup] WARNING: BACKUP_PATHS entry $p does not exist, skipping" >&2
+      fi
+    done
   fi
 
-  local existing=()
-  for p in "${candidates[@]}"; do
-    [ -e "$p" ] && existing+=("$p")
-  done
   printf '%s\n' "${existing[@]}"
 }
 
@@ -224,7 +261,26 @@ cmd_backup() {
     exit 1
   fi
 
+  # Name what is NOT being backed up, next to what is. "Backing up: ..." lists
+  # only the paths that exist, so a BACKUP_PATHS entry that points at nothing
+  # is absent from the one line a human reads -- the summary looks complete
+  # while a file someone asked to protect is unprotected. That is the failure
+  # this whole change exists to end, so it has to appear here and not only on
+  # stderr. See collect_paths for why it cannot hand the list back directly.
+  local missing=()
+  if [ -n "${BACKUP_PATHS:-}" ]; then
+    # shellcheck disable=SC2206  # deliberate word-split, as in collect_paths
+    local configured=($BACKUP_PATHS)
+    local c
+    for c in "${configured[@]}"; do
+      [ -e "$c" ] || missing+=("$c")
+    done
+  fi
+
   log "Backing up: ${paths[*]}"
+  if [ "${#missing[@]}" -gt 0 ]; then
+    log "WARNING: NOT backed up, BACKUP_PATHS entries that do not exist: ${missing[*]}" >&2
+  fi
   restic backup --tag automated "${paths[@]}"
 
   # Prune old snapshots so the bucket does not grow without bound. Runs after
