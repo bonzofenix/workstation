@@ -1,5 +1,5 @@
 ---
-name: yolo-before-merge
+name: feedback-yolo-before-merge
 description: "Finishing an implementation means running /yolo through to merge — it carries the mandatory review, so hand-rolling commit/push/PR skips it"
 metadata: 
   node_type: memory
@@ -18,4 +18,8 @@ The second, and the more expensive one: **yolo's step 1 is a mandatory review** 
 
 Asked how autonomous this should be, the user chose "Always, no asking": straight through commit, review, push, PR, CI watch, merge, deploy follow. Stop only when CI actually fails, when review surfaces something real, or for something genuinely destructive.
 
-**How to apply:** Invoke `Skill(yolo)` as the finishing move on any implementation — do not announce a finished PR and wait. If a PR was already opened by hand, still run yolo so the review step happens before merge. Order the skill enforces: commit FIRST (so review reads a stable snapshot and cannot revert uncommitted work), then review, then ship. Honour [[no-push-during-ci]] and [[worktrees]] alongside it.
+**How to apply:** Invoke `Skill(yolo)` as the finishing move on implementation work the user wants shipped — do not announce a finished PR and wait. If a PR was already opened by hand, still run yolo so the review step happens before merge. Order the skill enforces: commit FIRST (so review reads a stable snapshot and cannot revert uncommitted work), then review, then ship.
+
+**When this does NOT apply:** if the user asked only for a commit, only for a review, or the work is exploratory or on a scratch branch. "Always, no asking" governs how far to carry work that is meant to ship; it never converts a narrower request into a merge.
+
+Honour [[feedback_worktrees]] alongside it: enter a worktree before editing tracked files, then let yolo run from there. Where a standing rule says to ask before pushing while CI is running, that rule wins over this file's "no asking" — pause and ask rather than pushing into a live CI run.
