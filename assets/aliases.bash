@@ -59,6 +59,10 @@ alias wiki='cd "$OBSIDIAN_VAULT_PATH"'
 alias minimax-claude='source ~/.minimax-env && claude'
 alias good-morning='claude -p "/good-morning"'
 
+# Resume the last Claude session with permission prompts off.
+# Only use inside a sandboxed environment (container/VM).
+c() { IS_SANDBOX=1 claude --continue --dangerously-skip-permissions "$@"; }
+
 # bin/worktrees prints the chosen path on stdout; cd the current shell into it.
 # `command` bypasses this function and runs the PATH script, so no recursion.
 worktrees() {
