@@ -1,0 +1,332 @@
+#!/usr/bin/env bash
+
+# One view of everything scheduled or running on this host.
+#
+# systemctl shows units. crontab shows cron. Neither shows the other, and on
+# this box that gap hid a real job: a nightly foodtracker backup in root's
+# crontab was invisible to every `systemctl list-timers` anyone ran. This
+# gathers services, timers AND cron into one place so nothing scheduled is
+# off-screen.
+#
+# Usage:
+#   svc                  # pick a unit, then an action (needs gum)
+#   svc top              # live auto-refreshing view, htop style
+#   svc -l               # everything, one line each, pipeable
+#   svc cron             # just the cron jobs systemctl never shows
+#   svc <name>           # status plus recent journal for one unit
+#   svc logs <name>      # follow one unit's journal
+#
+# Read-only by default. The picker offers restart and stop, and asks first.
+
+set -euo pipefail
+
+REFRESH="${SVC_REFRESH:-2}"
+
+have_gum() { command -v gum >/dev/null 2>&1; }
+
+# Colour only when stdout is a terminal, so `svc -l | grep` stays clean.
+if [ -t 1 ]; then
+  C_RESET=$'\033[0m'; C_DIM=$'\033[2m'; C_RED=$'\033[31m'
+  C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_BOLD=$'\033[1m'
+else
+  C_RESET=''; C_DIM=''; C_RED=''; C_GREEN=''; C_YELLOW=''; C_BOLD=''
+fi
+
+# Units this host actually owns, rather than the hundreds systemd ships with.
+# /etc/systemd/system is where install-service.sh and lib/linux-backups.sh put
+# things; vendor units under /usr/lib are noise for someone asking "what am I
+# running".
+#
+# A glob, not `systemctl show -p FragmentPath` per unit. The question is
+# literally "is this unit's file in that directory", which the directory
+# listing answers for free -- asking systemd instead meant 292 subprocesses
+# and 15.7 seconds per render on this host, so `top` at a 2-second refresh
+# actually redrew every 17s while the footer claimed 2s.
+#
+# Symlinks are skipped: systemd puts enable-links in here pointing at
+# /usr/lib (chronyd, syslog, iscsi, vmtoolsd), and those are exactly the
+# vendor units this filter exists to leave out. The old FragmentPath check
+# excluded them only because systemd resolves a symlinked fragment to its
+# target -- true today, and not something to depend on.
+local_units() {
+  local f
+  for f in /etc/systemd/system/*.service /etc/systemd/system/*.timer; do
+    [ -e "$f" ] || continue
+    [ -L "$f" ] && continue
+    printf '%s\n' "${f##*/}"
+  done | sort
+}
+
+# ACTIVE for a service, or the next fire time for a timer: the two questions
+# are different. A timer that is "active" tells you nothing useful; when it
+# next runs does.
+unit_row() {
+  local u="$1" active sub when
+  active="$(systemctl is-active "$u" 2>/dev/null || true)"
+  sub="$(systemctl show -p SubState --value "$u" 2>/dev/null || true)"
+
+  case "$u" in
+    *.timer)
+      # NEXT is empty for a timer whose unit is still running -- systemd does
+      # not schedule the following fire until the current one finishes -- and
+      # list-timers then prints "-" in that column, shifting everything after
+      # it. Read the property instead of slicing columns, and say when the
+      # last run was, which is the useful answer in that case.
+      when="$(systemctl show -p NextElapseUSecRealtime --value "$u" 2>/dev/null || true)"
+      if [ -z "$when" ] || [ "$when" = "0" ] || [ "$when" = "n/a" ]; then
+        when="$(systemctl show -p LastTriggerUSec --value "$u" 2>/dev/null || true)"
+        if [ -n "$when" ] && [ "$when" != "0" ] && [ "$when" != "n/a" ]; then
+          printf '%s\t%s\t%s\n' "$u" "$active" "running since: $when"
+        else
+          printf '%s\t%s\t%s\n' "$u" "$active" "next: -"
+        fi
+      else
+        printf '%s\t%s\t%s\n' "$u" "$active" "next: $when"
+      fi
+      ;;
+    *)
+      printf '%s\t%s\t%s\n' "$u" "$active" "$sub"
+      ;;
+  esac
+}
+
+colourise() {
+  awk -v r="$C_RESET" -v d="$C_DIM" -v red="$C_RED" -v grn="$C_GREEN" \
+      -v yel="$C_YELLOW" -F'\t' '
+    {
+      state = $2
+      col = d
+      if (state == "active")      col = grn
+      else if (state == "failed") col = red
+      else if (state == "activating" || state == "reloading") col = yel
+      printf "%-42s %s%-11s%s %s%s%s\n", $1, col, state, r, d, $3, r
+    }'
+}
+
+list_units() {
+  local u
+  while IFS= read -r u; do
+    [ -n "$u" ] && unit_row "$u"
+  done < <(local_units)
+}
+
+list_cron() {
+  # Cron is the half systemctl cannot see. Both root's crontab and the
+  # /etc/cron.d drop-ins, since deploy scripts land in either.
+  local any=0 line
+  # `|| [ -n "$line" ]` so a file whose last line has no trailing newline is
+  # still printed: read returns non-zero there but has already filled $line,
+  # and a hand-edited crontab missing its final newline would otherwise hide
+  # a job -- exactly the class of invisibility this command exists to end.
+  #
+  # *=* skips the SHELL=/PATH=/MAILTO= preamble most packaged drop-ins carry.
+  # Anchored to the first field so a job whose command contains = still shows.
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      ''|\#*) continue ;;
+      [A-Za-z_]*=*) [ "${line%%=*}" = "${line%%[[:space:]]*}" ] && continue ;;
+    esac
+    printf '  %s\n' "$line"
+    any=1
+  done < <(crontab -l 2>/dev/null || true)
+
+  local f base
+  for f in /etc/cron.d/*; do
+    [ -f "$f" ] || continue
+    # basename resolved before the redirect, not inside the loop: a command
+    # substitution there reads the same file that is feeding stdin, which the
+    # linter flags (SC2094), and it is needless work per line anyway.
+    base="$(basename "$f")"
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        ''|\#*) continue ;;
+        [A-Za-z_]*=*) [ "${line%%=*}" = "${line%%[[:space:]]*}" ] && continue ;;
+      esac
+      printf '  %s %s(%s)%s\n' "$line" "$C_DIM" "$base" "$C_RESET"
+      any=1
+    done < "$f"
+  done
+
+  [ "$any" -eq 1 ] || printf '  %s(none)%s\n' "$C_DIM" "$C_RESET"
+}
+
+# Every failed unit, not just this host's own: --plain drops the leading "●"
+# glyph, so the unit name is field 1 rather than 2. The old version read $2 and
+# would have printed the word "loaded" on any systemd that omits the glyph, and
+# counted a single trailing blank line as one failure.
+failed_summary() {
+  local failed
+  failed="$(systemctl list-units --state=failed --no-legend --plain --no-pager 2>/dev/null |
+    awk 'NF {printf "  %s\n", $1}')"
+  [ -n "$failed" ] || return 0
+  printf '%s%s FAILED unit(s):%s\n' \
+    "$C_RED" "$(printf '%s\n' "$failed" | grep -c .)" "$C_RESET"
+  printf '%s\n' "$failed"
+}
+
+render() {
+  # The clock earns its place in top: every other line can sit unchanged for
+  # minutes, so without it there is nothing on screen to distinguish a live
+  # view from a frozen one. Seconds included for that reason.
+  printf '%sSERVICES AND TIMERS%s  %s%s  %s%s\n' \
+    "$C_BOLD" "$C_RESET" "$C_DIM" "$(hostname)" \
+    "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$C_RESET"
+  echo
+  list_units | colourise
+  echo
+  printf '%sCRON%s\n' "$C_BOLD" "$C_RESET"
+  list_cron
+  local fs
+  fs="$(failed_summary)"
+  if [ -n "$fs" ]; then
+    echo
+    printf '%s\n' "$fs"
+  fi
+}
+
+cmd_top() {
+  # Plain redraw rather than a curses app: this is a handful of lines that
+  # change every couple of seconds, and `watch`-style output survives being
+  # run over a phone SSH session where a full TUI often does not.
+  tput civis 2>/dev/null || true
+  # EXIT, not just INT TERM: an SSH link that drops sends SIGHUP, and render
+  # dying under set -e exits normally -- neither fires an INT/TERM handler, and
+  # the cursor would stay hidden until the next `reset`. Over phone SSH, which
+  # is what this mode is for, that is the likeliest exit of all.
+  trap 'tput cnorm 2>/dev/null; printf "\n"' EXIT
+  trap 'exit 0' INT TERM HUP
+
+  # Repaint in place instead of clearing: a clear-then-draw flashes and throws
+  # away scrollback every tick, which reads as the screen being wiped and
+  # rebuilt rather than updated. Home the cursor, overwrite each line, and
+  # erase only from the cursor down at the end -- so the visible text changes
+  # without the screen ever being blank.
+  local first=1
+  while :; do
+    if [ "$first" -eq 1 ]; then
+      tput clear 2>/dev/null || printf '\033[2J'
+      first=0
+    fi
+    tput cup 0 0 2>/dev/null || printf '\033[H'
+    # Clear to end of line after each row, so a shorter line cannot leave the
+    # tail of the previous render behind.
+    render | while IFS= read -r line; do
+      printf '%s' "$line"
+      tput el 2>/dev/null || printf '\033[K'
+      printf '\n'
+    done
+    printf '%srefresh %ss -- Ctrl-C to quit%s' "$C_DIM" "$REFRESH" "$C_RESET"
+    tput el 2>/dev/null || printf '\033[K'
+    printf '\n'
+    # Erase anything below, for a render that got shorter than the last one.
+    tput ed 2>/dev/null || printf '\033[J'
+    sleep "$REFRESH"
+  done
+}
+
+cmd_one() {
+  local u="$1"
+  # Accept a bare name: `svc tangotracker` rather than the full unit id.
+  systemctl cat "$u" >/dev/null 2>&1 || u="$u.service"
+
+  # A bare name that resolves to a .service can still have a .timer beside it,
+  # and for the deploy jobs the timer is the interesting half: the service is a
+  # oneshot sitting inactive/dead between fires, so showing only that answers
+  # "is it scheduled?" with a corpse. Say the timer exists rather than letting
+  # this command hide the very thing it was built to surface.
+  case "$u" in
+    *.service)
+      local sibling="${u%.service}.timer"
+      if systemctl cat "$sibling" >/dev/null 2>&1; then
+        printf '%snote: %s also exists -- that is what schedules this.%s\n' \
+          "$C_YELLOW" "$sibling" "$C_RESET"
+        systemctl list-timers --all --plain --no-legend --no-pager "$sibling" 2>/dev/null |
+          awk 'NF {printf "  next: %s %s %s %s\n", $1, $2, $3, $4}'
+        echo
+      fi
+      ;;
+  esac
+
+  systemctl status "$u" --no-pager 2>&1 | head -20
+  echo
+  printf '%s--- last 15 journal lines%s\n' "$C_DIM" "$C_RESET"
+  journalctl -u "$u" -n 15 --no-pager 2>&1 | tail -15
+}
+
+cmd_pick() {
+  have_gum || {
+    echo "gum is not installed; use 'svc -l', 'svc top' or 'svc <name>'" >&2
+    exit 1
+  }
+
+  local rows selected unit action
+  rows="$(list_units | awk -F'\t' '{printf "%-42s %-11s %s\n", $1, $2, $3}')"
+  [ -n "$rows" ] || { echo "no local units found" >&2; exit 1; }
+
+  selected="$(printf '%s\n' "$rows" | gum choose --height 20 --header "unit")"
+  # Abort (Ctrl-C/Esc) must not fall through to acting on something arbitrary.
+  [ -n "$selected" ] || exit 1
+  unit="${selected%% *}"
+
+  action="$(printf 'status\nlogs (follow)\nrestart\nstop\n' |
+    gum choose --header "$unit")"
+  [ -n "$action" ] || exit 1
+
+  case "$action" in
+    status) cmd_one "$unit" ;;
+    "logs (follow)") journalctl -u "$unit" -f ;;
+    restart)
+      gum confirm "restart $unit?" || exit 1
+      systemctl restart "$unit" && printf 'restarted %s\n' "$unit"
+      ;;
+    stop)
+      gum confirm "stop $unit?" || exit 1
+      systemctl stop "$unit" && printf 'stopped %s\n' "$unit"
+      # `systemctl stop` on a timer is not durable: the next daemon-reload or
+      # reboot brings it back, so someone who "stopped" a deploy timer will
+      # find it firing again with no memory of having done anything wrong.
+      case "$unit" in
+        *.timer)
+          printf '%snote: a stopped timer returns on the next daemon-reload or\n' "$C_YELLOW"
+          printf 'reboot. For good: systemctl disable --now %s%s\n' "$unit" "$C_RESET"
+          ;;
+      esac
+      ;;
+  esac
+}
+
+# Reject unknown dash arguments up front: one would otherwise fall through to
+# cmd_one, which appends .service and hands systemctl `--.service` -- parsed as
+# an option rather than a unit, giving an error about the wrong thing.
+case "${1:-}" in
+  --)
+    shift
+    if [ $# -ge 1 ]; then
+      cmd_one "$1"
+    else
+      cmd_pick
+    fi
+    exit $?
+    ;;
+  -*)
+    case "${1}" in
+      -l|--list|-h|--help) ;;
+      *) echo "unknown option: $1 (try: svc --help)" >&2; exit 1 ;;
+    esac
+    ;;
+esac
+
+case "${1:-}" in
+  top)      cmd_top ;;
+  -l|--list) render ;;
+  cron)     printf '%sCRON%s\n' "$C_BOLD" "$C_RESET"; list_cron ;;
+  logs)
+    [ $# -ge 2 ] || { echo "usage: svc logs <unit>" >&2; exit 1; }
+    journalctl -u "$2" -f
+    ;;
+  -h|--help)
+    sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  '')       cmd_pick ;;
+  *)        cmd_one "$1" ;;
+esac
