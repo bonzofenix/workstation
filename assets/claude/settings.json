@@ -49,7 +49,7 @@
       "Bash(*sudo*)"
     ]
   },
-  "model": "opus[1m]",
+  "model": "claude-opus-5-5[1m]",
   "skillOverrides": {
     "atlassian:search-company-knowledge": "off",
     "atlassian:triage-issue": "off"
