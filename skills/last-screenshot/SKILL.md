@@ -1,6 +1,6 @@
 ---
 name: last-screenshot
-description: Last Screenshot Skill
+description: References the most recent screenshot from the user's Desktop for analysis
 allowed-tools:
   - Bash(ls -t ~/Desktop/Screenshot*.png*)
   - Read

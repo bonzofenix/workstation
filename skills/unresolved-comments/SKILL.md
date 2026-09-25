@@ -65,27 +65,44 @@ Fetch and display ONLY unresolved comments from a GitHub pull request, then assi
 
 If no unresolved comments exist, return "No unresolved comments found."
 
+## Comment Classification
+
+Before presenting a comment to the user, classify it:
+
+- **Style/preference** — formatting, naming, if/return vs match, cosmetic structure. Reviewer has a preference, no correctness impact.
+- **Correctness/logic** — the suggestion fixes a bug, closes a gap, or prevents future breakage.
+- **Architectural** — changes where responsibility lives, call signatures, abstraction level.
+
 ## Comment Resolution Workflow
 
 For each unresolved comment:
 
-1. **Analyze the comment**: Read the relevant code context
-2. **Provide your assessment**: 
-   - Explain whether the suggestion makes sense
-   - Discuss trade-offs and implications
-   - Give your recommendation (apply or skip)
-3. **Let user decide**: Present options and wait for user input
-4. **If applying the fix**:
+1. **Analyze the comment**: Read the relevant code context and classify it (style, correctness, or architectural).
+
+2. **Present to user — lead with disposition, not reasoning**:
+
+   - **Style/preference**: Skip the tradeoff essay. Just ask apply or skip with a one-liner max.
+     > "Style preference — apply it or skip?"
+   - **Correctness/architectural**: Brief assessment (2-3 sentences max). State your recommendation clearly first, reasoning second.
+     > "Recommend applying — [one-line reason]. [Optional: one-line tradeoff only if genuinely non-obvious]."
+
+   Never defend the existing approach AND propose applying the change in the same message — pick one.
+
+3. **Let user decide**: Wait for user input.
+
+4. **Apply + reply atomically**: Do both in one step — never explain in a reply and commit separately.
    - Make the code change
-   - Commit with message format: "fix: address review comment - [brief description]"
-   - Reply with: "Fixed in {commit_hash}"
+   - Commit: `"fix: address review comment - [brief description]"`
+   - Push, so the commit link resolves on GitHub
+   - Post reply: `"Done in [commit_hash](commit permalink)."` — no re-explanation of what was already discussed
+
 5. **If skipping**:
-   - Provide a concise explanation for the user to reply with
-   - Format: 1-2 sentences explaining why the suggestion wasn't applied
+   - One sentence max for the reply. State the reason, not the history.
+   - Format: `"Keeping this — [reason]."`
 
 ## Code References in Replies
 
-When replying to comments, **always include GitHub permalink references** to support claims:
+Replies stay within the length limits above. When a reply references code (usually a skip reason), link it with a GitHub permalink instead of describing it:
 
 - Link to the changed code: `[methodName](https://github.com/OWNER/REPO/blob/BRANCH/path/file.go#L42)`
 - Link to line ranges: `#L10-L25` for multi-line references
@@ -93,11 +110,9 @@ When replying to comments, **always include GitHub permalink references** to sup
 - Link to third-party library source when explaining library behavior
 - Build links using the PR's head branch: `https://github.com/OWNER/REPO/blob/BRANCH/path`
 
-Example reply:
+Example skip reply:
 ```
-Switched to Bearer auth via [`HTTPAuthClient().Do()`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L177).
-Uses [`doAuthRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L174) for /introspect
-and [`doUaaRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L185) for /userinfo.
+Keeping this — [`doAuthRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L174) already sends the Bearer token.
 ```
 
 This makes it easy for reviewers to verify claims without searching the codebase.
