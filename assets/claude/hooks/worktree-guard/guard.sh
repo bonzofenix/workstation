@@ -11,7 +11,7 @@
 #                start of PR-bound work, and it creates no branch, so trigger
 #                1 never fires.
 #   3. Bash    — writing to a TRACKED file through the shell rather than the
-#                Edit tool: `cat >`, `sed -i`, `mv`, `rm`, `tee`. Sessions in
+#                Edit tool: `cat >`, `sed -i`, `mv`, `rm`/`trash`, `tee`. Sessions in
 #                auto mode are instructed to prefer shell redirection over the
 #                Edit/Write tools, which routes every real edit around trigger
 #                2. A whole feature once landed on main unchallenged that way.
@@ -102,8 +102,16 @@ on_guarded_branch() {
 # tracked reports whether git already indexes a path. New/untracked files are
 # usually scratch work, notes, or generated output — blocking those is noise.
 # `--error-unmatch` exits non-zero for anything not in the index.
+#
+# Directories are never "tracked" here: `ls-files` matches a directory by any
+# tracked file under it, so `cp new.png assets/` would otherwise be blocked
+# even though it only adds an untracked file. `:(literal)` keeps glob
+# characters and pathspec magic in a filename from matching other paths.
 tracked() {
-  git -C "$cwd" ls-files --error-unmatch -- "$1" >/dev/null 2>&1
+  local p="$1"
+  case "$p" in /*) ;; *) p="$cwd/$p" ;; esac
+  [ -d "$p" ] && return 1
+  git -C "$cwd" ls-files --error-unmatch -- ":(literal)$1" >/dev/null 2>&1
 }
 
 current_branch() {
@@ -139,85 +147,152 @@ EOF
     # Extract candidate write targets, one per line. A non-zero exit or an
     # unparseable command yields nothing and the command is allowed; see the
     # fail-open note in the header.
+    # shellcheck disable=SC2016 # Python source; the $ and backticks are its own.
     targets="$(printf '%s' "$command" | python3 -c '
-import shlex, sys
+import os, sys
+
+SQ = chr(39)  # a literal single quote would end the surrounding bash string
+
+def tokenize(s):
+    """Split a command into ("w", word) and ("op", operator) tokens.
+
+    Quote-aware on purpose: `grep ">" f` must yield the word ">" rather than
+    a redirect, which shlex cannot distinguish once quotes are stripped.
+    Unbalanced quotes raise ValueError.
+    """
+    toks, cur, has, i, n = [], [], False, 0, len(s)
+    def flush():
+        nonlocal cur, has
+        if has:
+            toks.append(("w", "".join(cur)))
+        cur, has = [], False
+    while i < n:
+        c = s[i]
+        if c == "\\" and i + 1 < n:
+            cur.append(s[i + 1]); has = True; i += 2; continue
+        if c == SQ:
+            j = s.find(SQ, i + 1)
+            if j < 0:
+                raise ValueError
+            cur.append(s[i + 1:j]); has = True; i = j + 1; continue
+        if c == "\"":
+            j, buf = i + 1, []
+            while j < n and s[j] != "\"":
+                if s[j] == "\\" and j + 1 < n and s[j + 1] in "\"\\$`":
+                    buf.append(s[j + 1]); j += 2; continue
+                buf.append(s[j]); j += 1
+            if j >= n:
+                raise ValueError
+            cur.append("".join(buf)); has = True; i = j + 1; continue
+        if c.isspace():
+            flush(); i += 1; continue
+        if c == "#" and not has:
+            break
+        if c in ";&|<>":
+            # `2>file`: a bare fd number before a redirect is not a word.
+            if c in "<>" and has and "".join(cur).isdigit():
+                cur, has = [], False
+            else:
+                flush()
+            j = i
+            while j < n and s[j] in ";&|<>":
+                j += 1
+            toks.append(("op", s[i:j])); i = j; continue
+        cur.append(c); has = True; i += 1
+    flush()
+    return toks
 
 try:
-    words = shlex.split(sys.stdin.read(), comments=False)
+    toks = tokenize(sys.stdin.read())
 except ValueError:
     # Unbalanced quotes, usually a heredoc body flattened into the line.
     sys.exit(0)
 
-WRITERS_ALL  = {"rm", "unlink", "truncate", "shred"}   # every operand destroyed
+WRITERS_ALL  = {"rm", "unlink", "truncate", "shred", "trash", "trash-put"}  # every operand
 WRITERS_LAST = {"mv", "cp", "install", "ln", "rsync"}  # last operand is dest
 INPLACE      = {"sed", "gsed", "perl", "ruby"}         # only with -i
 TEE          = {"tee", "sponge"}
-OPERATORS    = (";", "&&", "||", "|", "&")
+CHDIR        = {"cd", "pushd", "popd"}
+SEPARATORS   = {";", "&&", "||", "|", "&", "|&", ";;"}
+WRITE_REDIR  = {">", ">>", ">|", "&>", "&>>"}
+READ_REDIR   = {"<", "<<<", "<>"}
+DUP_REDIR    = {">&", "<&"}
+HEREDOC      = {"<<", "<<-"}
 
 out = []
 
 def add(p):
-    if not p or p.startswith("-") or p.startswith("&"):
-        return
     # Devices and fds are not files anyone tracks.
-    if p.startswith("/dev/"):
+    if not p or p.startswith("-") or p.startswith("/dev/"):
         return
     out.append(p)
 
-i = 0
-segment_start = True
-while i < len(words):
-    w = words[i]
+def handle(words):
+    """Collect targets for one simple command; False means stop parsing."""
+    while words and "=" in words[0] and not words[0].startswith("-"):
+        words = words[1:]  # leading VAR=value assignments
+    if not words:
+        return True
+    base = os.path.basename(words[0])
+    if base in CHDIR:
+        # Later relative paths resolve somewhere other than cwd; guessing
+        # would mean false blocks, so stop and fail open.
+        return False
+    operands = words[1:]
+    flags = [w for w in operands if w.startswith("-")]
+    # Empty words are dropped: macOS `sed -i ""` passes one as the suffix.
+    plain = [w for w in operands if w and not w.startswith("-")]
+    if base in WRITERS_ALL or base in TEE:
+        for p in plain:
+            add(p)
+    elif base in WRITERS_LAST and plain:
+        add(plain[-1])
+    elif base in INPLACE and any(
+        f.startswith("-i") or f == "--in-place"
+        or (base in ("perl", "ruby") and not f.startswith("--") and "i" in f[1:])
+        for f in flags
+    ):
+        # The script operand is not a file, so skip the first plain word.
+        for p in plain[1:]:
+            add(p)
+    return True
 
-    if w in OPERATORS:
-        segment_start = True
-        i += 1
-        continue
-
-    # Redirections. `<` and heredoc markers are reads, skipped deliberately.
-    # Detached forms first: `>`, `>>`, `2>`, `2>>`.
-    if w in (">", ">>") or (len(w) > 1 and w[0].isdigit() and w[1:] in (">", ">>")):
-        if i + 1 < len(words):
-            add(words[i + 1])
-            i += 2
+words, i = [], 0
+while i < len(toks):
+    kind, val = toks[i]
+    nxt = toks[i + 1] if i + 1 < len(toks) and toks[i + 1][0] == "w" else None
+    if kind == "w":
+        words.append(val); i += 1; continue
+    if val in SEPARATORS:
+        if not handle(words):
+            words = None
+            break
+        words = []; i += 1; continue
+    if val in WRITE_REDIR:
+        if nxt:
+            add(nxt[1]); i += 2; continue
+    elif val in DUP_REDIR:
+        if nxt:
+            # `>&2` duplicates an fd; `>&file` is bash shorthand for `&>file`.
+            if not (nxt[1].isdigit() or nxt[1] == "-") and val == ">&":
+                add(nxt[1])
+            i += 2; continue
+    elif val in READ_REDIR:
+        if nxt:
+            i += 2; continue
+    elif val in HEREDOC:
+        # The body was flattened onto this line; skip to the terminator word
+        # so its text is not parsed as commands.
+        if nxt:
+            marker, i = nxt[1], i + 2
+            while i < len(toks) and toks[i] != ("w", marker):
+                i += 1
+            i += 1
             continue
-    # Attached forms: `>file`, `>>file`, `2>file`.
-    if w.startswith(">>") and len(w) > 2:
-        add(w[2:]); i += 1; continue
-    if w.startswith(">") and len(w) > 1:
-        add(w[1:]); i += 1; continue
-    if len(w) > 2 and w[0].isdigit() and w[1] == ">":
-        add(w[2:].lstrip(">")); i += 1; continue
-
-    if segment_start:
-        base = w.rsplit("/", 1)[-1]
-        rest = words[i + 1:]
-        # Stop at the next operator so `rm a && ls b` does not treat b as an
-        # rm target.
-        stop = len(rest)
-        for j, r in enumerate(rest):
-            if r in OPERATORS:
-                stop = j
-                break
-        operands = rest[:stop]
-        flags = [r for r in operands if r.startswith("-")]
-        plain = [r for r in operands if not r.startswith("-")]
-
-        if base in WRITERS_ALL:
-            for p in plain:
-                add(p)
-        elif base in WRITERS_LAST and plain:
-            add(plain[-1])
-        elif base in TEE:
-            for p in plain:
-                add(p)
-        elif base in INPLACE and any(f.startswith("-i") for f in flags):
-            # The script operand is not a file, so skip the first plain word.
-            for p in plain[1:]:
-                add(p)
-        segment_start = False
-
     i += 1
+
+if words:
+    handle(words)
 
 for p in dict.fromkeys(out):
     print(p)
