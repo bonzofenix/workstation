@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/common.sh"
 # private memory repo wins; otherwise block only the default below.
 hosts_file="${MEMORY_DIR:-$HOME/workspace/memory}/blocked-hosts.txt"
 if [ -f "$hosts_file" ]; then
-  hosts="$(sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$hosts_file")"
+  hosts="$(sed -e 's/\r$//' -e 's/#.*//' -e 's/[[:space:]]*$//' -e '/^[[:space:]]*$/d' "$hosts_file")"
 else
   hosts=$'www.twitter.com\nwww.x.com\nx.com'
 fi

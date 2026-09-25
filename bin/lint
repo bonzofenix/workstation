@@ -57,11 +57,25 @@ done < <(find bin lib -type f \( -name "*.sh" -o -executable \) 2>/dev/null)
 # ~/.claude/settings.json is a symlink into this repo, so anything Claude Code
 # writes there (such as an auto-mode environment describing a private project)
 # lands in a tracked file. That is how such a block got published once.
-if python3 -c 'import json, sys; sys.exit(0 if "environment" in json.load(open(sys.argv[1])).get("autoMode", {}) else 1)' \
-    assets/claude/settings.json 2>/dev/null; then
-  echo "assets/claude/settings.json: autoMode.environment (error): per-project context; move it to that project's .claude/settings.local.json"
-  errors=$((errors + 1))
-fi
+settings_rc=0
+python3 - assets/claude/settings.json <<'PY' || settings_rc=$?
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception as e:
+    print(f"{sys.argv[1]}: {e}")
+    sys.exit(2)
+sys.exit(3 if "environment" in d.get("autoMode", {}) else 0)
+PY
+case "$settings_rc" in
+  0) ;;
+  3)
+    echo "assets/claude/settings.json: autoMode.environment (error): per-project context; move it to that project's .claude/settings.local.json"
+    errors=$((errors + 1)) ;;
+  *)
+    echo "assets/claude/settings.json: not valid JSON (error)"
+    errors=$((errors + 1)) ;;
+esac
 if [[ -e assets/claude/memory ]]; then
   echo "assets/claude/memory (error): memory is private; it lives in the memory repo"
   errors=$((errors + 1))
