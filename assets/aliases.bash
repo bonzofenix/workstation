@@ -57,7 +57,6 @@ alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum
 export OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki"
 alias wiki='cd "$OBSIDIAN_VAULT_PATH"'
 alias minimax-claude='source ~/.minimax-env && claude'
-alias good-morning='claude -p "/good-morning"'
 
 # Resume the last Claude session with permission prompts off.
 # Only use inside a sandboxed environment (container/VM).
