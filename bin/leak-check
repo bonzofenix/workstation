@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# leak-check: refuse to commit private strings to a public repo.
+#
+# Greps the lines a commit adds against a denylist of regexes (one ERE per
+# line, # comments allowed) kept in the private memory repo, so the list of
+# what is private is itself never published. Without the denylist (anyone but
+# its owner) it does nothing.
+#
+# Usage:
+#   leak-check            check staged changes (what the pre-commit hook runs)
+#   leak-check <rev>      check what <rev>..HEAD adds
+#
+# Installed as this repo's pre-commit hook by `make git` (core.hooksPath).
+# Bypass for a genuine false positive: git commit --no-verify.
+set -euo pipefail
+
+denylist="${MEMORY_DIR:-$HOME/workspace/memory}/leak-denylist.txt"
+[[ -f "$denylist" ]] || exit 0
+
+patterns="$(sed -e 's/[[:space:]]*#.*//' -e '/^[[:space:]]*$/d' "$denylist")"
+[[ -n "$patterns" ]] || exit 0
+
+if [[ $# -gt 0 ]]; then
+  diff_cmd=(git diff "$1..HEAD")
+else
+  diff_cmd=(git diff --cached)
+fi
+
+# Added lines only, tagged with their file so a hit can be located.
+hits="$("${diff_cmd[@]}" --unified=0 --no-color --no-ext-diff | awk '
+  /^\+\+\+ / { file = substr($0, 7); next }
+  /^\+/      { print file ": " substr($0, 2) }
+' | grep -iEf <(printf '%s\n' "$patterns") || true)"
+
+if [[ -n "$hits" ]]; then
+  echo "leak-check: these added lines match the private denylist ($denylist):" >&2
+  echo "$hits" | sed 's/^/  /' >&2
+  echo "Move private content to the memory repo, or commit with --no-verify if this is a false positive." >&2
+  exit 1
+fi

@@ -22,7 +22,7 @@ done
 add_to_profile '# Bun global bin' \
                'path=("$HOME/.bun/bin" $path)'
 
-OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki"
+OBSIDIAN_VAULT_PATH="${OBSIDIAN_VAULT_PATH:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki}"
 
 if command -v qmd >/dev/null 2>&1 && [ -d "$OBSIDIAN_VAULT_PATH" ]; then
   echo "Setting up qmd Obsidian collection..."

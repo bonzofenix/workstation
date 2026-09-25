@@ -114,7 +114,7 @@ dump_sqlite() {
 
     # Name snapshots by app directory as well as filename: three apps each
     # holding db.sqlite would otherwise collide in one flat directory. The
-    # common <app>/data/<app>.db layout would give "foodtracker-foodtracker.db",
+    # common <app>/data/<app>.db layout would give "myapp-myapp.db",
     # so drop the prefix when the filename already carries the app name.
     app="$(basename "$(dirname "$(dirname "$db")")")"
     file="$(basename "$db")"
@@ -191,7 +191,7 @@ dump_postgres() {
 # a typo or a file that moved, and silence there means the thing they asked to
 # protect is quietly not protected.
 #
-# That is not hypothetical: BACKUP_PATHS named /root/workspace/foodtracker/.env
+# That is not hypothetical: BACKUP_PATHS named an app's /root/workspace/<app>/.env
 # for days while that app actually kept its env elsewhere on disk, so those
 # secrets were in nobody's backup and nothing said so.
 #

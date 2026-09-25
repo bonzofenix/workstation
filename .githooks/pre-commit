@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Block commits that add strings from the private leak denylist.
+exec "$(git rev-parse --show-toplevel)/bin/leak-check"

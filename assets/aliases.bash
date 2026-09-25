@@ -45,7 +45,6 @@ alias k9s='k9s --context foo'
 alias download-audio='yt-dlp -x --audio-format mp3 --audio-quality 0 --no-playlist '
 
 alias bosh-deployments='bosh deployments --json | jq ".Tables | .[0] | .Rows | .[] | .name" -r'
-#alias iacbox='iacbox -iv=iacbox.common.cdn.repositories.cloud.sap/iacbox-dev-test:latest'
 alias download-video='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" '
 
 alias autocommit="~/workstation/bin/autocommit"
@@ -54,7 +53,7 @@ alias autoreset="git reset --soft HEAD~1 && autocommit"
 
 alias makepick='TARGET=$(grep -E "^[a-zA-Z0-9_-]+:" Makefile | sed "s/://" | gum filter --limit 1) && make "$TARGET"'
 
-export OBSIDIAN_VAULT_PATH="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki"
+export OBSIDIAN_VAULT_PATH="${OBSIDIAN_VAULT_PATH:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/wiki}"
 alias wiki='cd "$OBSIDIAN_VAULT_PATH"'
 alias minimax-claude='source ~/.minimax-env && claude'
 
