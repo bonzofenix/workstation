@@ -53,7 +53,8 @@ ti = d.get("tool_input", {}) or {}
 print(d.get("tool_name", ""))
 print((ti.get("command", "") or "").replace("\n", " "))
 print(d.get("cwd", "") or "")
-print((ti.get("file_path", "") or "").replace("\n", " "))
+# NotebookEdit names its target notebook_path rather than file_path.
+print((ti.get("file_path") or ti.get("notebook_path") or "").replace("\n", " "))
 ')" || {
   echo "worktree-guard: could not parse hook input JSON. Blocking to fail safe." >&2
   exit 2
@@ -126,7 +127,7 @@ case "$tool_name" in
     # --- Trigger 1: branch creation ---------------------------------------
     # Case-insensitive, and tolerant of a `git -C <path>` global option before
     # the subcommand.
-    if printf '%s' "$command" | grep -qiE '(^|[; &]|&&)[[:space:]]*git[[:space:]]+(-C[[:space:]]+[^ ]+[[:space:]]+)?(checkout[[:space:]]+-b|switch[[:space:]]+-c|branch[[:space:]]+[^-])'; then
+    if printf '%s' "$command" | grep -qiE '(^|[; &]|&&)[[:space:]]*git[[:space:]]+(-C[[:space:]]+[^ ]+[[:space:]]+)?(checkout[[:space:]]+-b|switch[[:space:]]+-c|branch[[:space:]]+[A-Za-z0-9_./])'; then
       cat >&2 <<'EOF'
 Blocked: this looks like the start of PR-bound work (creating a new git
 branch) outside a Claude Code worktree.
@@ -149,7 +150,7 @@ EOF
     # fail-open note in the header.
     # shellcheck disable=SC2016 # Python source; the $ and backticks are its own.
     targets="$(printf '%s' "$command" | python3 -c '
-import os, sys
+import os, re, sys
 
 SQ = chr(39)  # a literal single quote would end the surrounding bash string
 
@@ -249,7 +250,9 @@ def handle(words):
         add(plain[-1])
     elif base in INPLACE and any(
         f.startswith("-i") or f == "--in-place"
-        or (base in ("perl", "ruby") and not f.startswith("--") and "i" in f[1:])
+        # Clustered switches like -pi or -lpie. Only no-argument letters may
+        # precede the i, so -Mstrict or -rdigest are not mistaken for -i.
+        or (base in ("perl", "ruby") and re.fullmatch(r"-[pnlaw]*i\S*", f))
         for f in flags
     ):
         # The script operand is not a file, so skip the first plain word.
