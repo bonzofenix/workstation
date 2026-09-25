@@ -93,7 +93,8 @@ For each unresolved comment:
 4. **Apply + reply atomically**: Do both in one step — never explain in a reply and commit separately.
    - Make the code change
    - Commit: `"fix: address review comment - [brief description]"`
-   - Post reply: `"Done in [commit_hash]."` — no re-explanation of what was already discussed
+   - Push, so the commit link resolves on GitHub
+   - Post reply: `"Done in [commit_hash](commit permalink)."` — no re-explanation of what was already discussed
 
 5. **If skipping**:
    - One sentence max for the reply. State the reason, not the history.
@@ -101,7 +102,7 @@ For each unresolved comment:
 
 ## Code References in Replies
 
-When replying to comments, **always include GitHub permalink references** to support claims:
+Replies stay within the length limits above. When a reply references code (usually a skip reason), link it with a GitHub permalink instead of describing it:
 
 - Link to the changed code: `[methodName](https://github.com/OWNER/REPO/blob/BRANCH/path/file.go#L42)`
 - Link to line ranges: `#L10-L25` for multi-line references
@@ -109,11 +110,9 @@ When replying to comments, **always include GitHub permalink references** to sup
 - Link to third-party library source when explaining library behavior
 - Build links using the PR's head branch: `https://github.com/OWNER/REPO/blob/BRANCH/path`
 
-Example reply:
+Example skip reply:
 ```
-Switched to Bearer auth via [`HTTPAuthClient().Do()`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L177).
-Uses [`doAuthRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L174) for /introspect
-and [`doUaaRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L185) for /userinfo.
+Keeping this — [`doAuthRequest`](https://github.com/org/repo/blob/branch/cf/wrapper.go#L174) already sends the Bearer token.
 ```
 
 This makes it easy for reviewers to verify claims without searching the codebase.
