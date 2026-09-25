@@ -30,8 +30,8 @@ NO_BREW=true make install
 # Enable debug output
 DEBUG=true make install
 
-# Configure SAP GitHub credentials (if needed)
-git config credential.https://[redacted-host] SAP_USER
+# Configure GitHub Enterprise credentials (if needed)
+git config credential.https://<ghe-host>.username <user>
 ```
 
 ## What Gets Installed

@@ -230,6 +230,17 @@
   },
   "alwaysThinkingEnabled": false,
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    },
+    "claude-fable-5": {
+      "effortLevel": "high"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
@@ -246,41 +257,18 @@
       "Bash(gh pr view:*)",
       "Bash(systemctl status:*)",
       "Bash(journalctl:*)",
-      "Bash(sqlite3 *.db \"SELECT*\")"
+      "Bash(sqlite3 *.db \"SELECT*\")",
+      "Bash(qmd query:*)",
+      "Bash(qmd get:*)",
+      "Bash(mdfind:*)"
     ],
     "soft_deny": [
       "$defaults",
       "Bash(railway down:*)",
       "Bash(railway delete:*)",
       "Bash(systemctl stop:*)",
-      "Bash(systemctl restart:*)"
-    ],
-    "environment": [
-      "### Org-wide",
-      "**Organization**: [redacted]",
-      "**Cloud provider(s)**: [redacted]",
-      "**Repository visibility**: [redacted]",
-      "**Internal sharing / snippet hosting**: [redacted]",
-      "**Secrets management**: [redacted]",
-      "**Default / protected branches**: [redacted]",
-      "**CI/CD deploy targets**: [redacted]",
-      "**Network posture**: [redacted]",
-      "**Host containment**: [redacted]",
-      "**Source control**: [redacted]",
-      "**Trusted internal domains**: [redacted]",
-      "**Trusted cloud buckets**: [redacted]",
-      "**Key internal services**: [redacted]",
-      "**Internal package registry**: [redacted]",
-      "**Sensitive data locations & audiences**: [redacted]",
-      "**Data retention / declassification**: [redacted]",
-      "**Sensitive remote targets**: [redacted]",
-      "**Protected deployment namespaces / environments**: [redacted]",
-      "**Protected IaC scopes**: [redacted]",
-      "### User-specific",
-      "**Primary use of Claude Code**: [redacted]",
-      "**Trusted repo**: [redacted]",
-      "**Org-specific CLiIs**: [redacted]",
-      "**Routine under bonzofenix/app1 prefix**: [redacted]"
+      "Bash(systemctl restart:*)",
+      "Bash(make migrate-down:*)"
     ]
   },
   "voiceEnabled": true,

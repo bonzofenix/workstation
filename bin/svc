@@ -3,7 +3,7 @@
 # One view of everything scheduled or running on this host.
 #
 # systemctl shows units. crontab shows cron. Neither shows the other, and on
-# this box that gap hid a real job: a nightly app1 backup in root's
+# this box that gap hid a real job: a nightly app backup in root's
 # crontab was invisible to every `systemctl list-timers` anyone ran. This
 # gathers services, timers AND cron into one place so nothing scheduled is
 # off-screen.
@@ -226,7 +226,7 @@ cmd_top() {
 
 cmd_one() {
   local u="$1"
-  # Accept a bare name: `svc app3` rather than the full unit id.
+  # Accept a bare name: `svc myapp` rather than the full unit id.
   systemctl cat "$u" >/dev/null 2>&1 || u="$u.service"
 
   # A bare name that resolves to a .service can still have a .timer beside it,

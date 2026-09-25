@@ -52,6 +52,11 @@ else
   log_success "~/.git-authors already exists, skipping template copy"
 fi
 
+log_step "Enabling this repo's hooks"
+# Repo-local, not global: .githooks/pre-commit runs bin/leak-check, which keeps
+# private strings out of this public repo.
+git -C "$WORKSTATION_DIR" config core.hooksPath .githooks
+
 log_step "Setting up Git aliases"
 git config --global alias.gst 'git status'
 git config --global alias.st status

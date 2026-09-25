@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# leak-check: refuse to commit private strings to a public repo.
+#
+# Greps the lines a commit adds against a denylist of regexes (one ERE per
+# line, # comments allowed) kept in the private memory repo, so the list of
+# what is private is itself never published. Without the denylist (anyone but
+# its owner) it does nothing.
+#
+# Usage:
+#   leak-check            check staged changes (what the pre-commit hook runs)
+#   leak-check <rev>      check what this branch adds since <rev> (<rev>...HEAD)
+#
+# Installed as this repo's pre-commit hook by `make git` (core.hooksPath).
+# Bypass for a genuine false positive: git commit --no-verify.
+#
+# Exit: 0 clean, 1 private strings found, 2 could not check (bad rev or a bad
+# pattern). "Could not check" is never reported as clean.
+set -euo pipefail
+
+denylist="${MEMORY_DIR:-$HOME/workspace/memory}/leak-denylist.txt"
+[[ -f "$denylist" ]] || exit 0
+
+# Strip CR too: a CRLF denylist would otherwise leave every pattern ending in
+# \r, matching nothing, silently.
+patterns="$(sed -e 's/\r$//' -e 's/[[:space:]]*#.*//' -e '/^[[:space:]]*$/d' "$denylist")"
+[[ -n "$patterns" ]] || exit 0
+
+# Validate the patterns once: grep exits 2 on a bad regex, which would
+# otherwise look the same as "no match".
+rc=0
+grep -iEf <(printf '%s\n' "$patterns") </dev/null >/dev/null 2>&1 || rc=$?
+if [[ $rc -gt 1 ]]; then
+  echo "leak-check: invalid pattern in $denylist" >&2
+  exit 2
+fi
+
+diff_args=(--cached)
+if [[ $# -gt 0 ]]; then
+  git rev-parse --verify -q "$1^{commit}" >/dev/null \
+    || { echo "leak-check: unknown revision: $1" >&2; exit 2; }
+  diff_args=("$1...HEAD")
+fi
+
+# Fixed prefixes: diff.noprefix / diff.mnemonicPrefix would change "+++ b/".
+diff_out="$(git diff "${diff_args[@]}" --unified=0 --no-color --no-ext-diff \
+  --src-prefix=a/ --dst-prefix=b/)"
+
+# Added lines only, tagged with their file. "+++ " is a file header only
+# between "diff --git" and the first hunk; inside a hunk it is an added line
+# whose content starts with "++ ".
+hits="$(printf '%s\n' "$diff_out" | awk '
+  /^diff --git / { inhunk = 0; next }
+  /^@@/          { inhunk = 1; next }
+  !inhunk && /^\+\+\+ / { file = substr($0, 7); next }
+  inhunk && /^\+/       { print file ": " substr($0, 2) }
+' | grep -iEf <(printf '%s\n' "$patterns") || true)"
+
+if [[ -n "$hits" ]]; then
+  echo "leak-check: these added lines match the private denylist ($denylist):" >&2
+  printf '%s\n' "$hits" | sed 's/^/  /' >&2
+  echo "Move private content to the memory repo, or commit with --no-verify if this is a false positive." >&2
+  exit 1
+fi

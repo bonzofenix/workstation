@@ -115,6 +115,7 @@ The workstation includes simple AI-powered scripts:
 - `autorefactor` - Refactors code using clean code principles
 - `autocommit` - Auto-generates commit messages (alias in `aliases.bash`)
 - `autoreset` - Soft resets and re-commits with new AI message
+
 ### Claude Code: three repos
 
 This repo is public, so it holds only public-safe tooling. Claude Code content
@@ -127,7 +128,15 @@ is split across three repos:
 | `bonzofenix/memory` | private | memory, work skills, `Skillfile.local`, anything private | `$MEMORY_DIR` (`~/workspace/memory`) |
 
 **Never add private content here**: memory, hostnames/IPs, employer-specific
-details, private repo names. They go in the memory repo.
+details, private repo names. They go in the memory repo. Two guards back this
+up:
+- `bin/leak-check` runs as the pre-commit hook (`make git` sets
+  `core.hooksPath .githooks`) and blocks added lines matching the private
+  `leak-denylist.txt` in the memory repo.
+- `bin/lint` (CI) fails if `assets/claude/settings.json` gains an
+  `autoMode.environment` block or `assets/claude/memory` reappears. Auto-mode
+  environment context is per project: it belongs in that project's
+  `.claude/settings.local.json`.
 
 **Skills and plugins are declarative.** The `Skillfile` in `bonzofenix/skills`
 (Brewfile-style: `marketplace`, `plugin`, `collection`, `skill` lines) lists
