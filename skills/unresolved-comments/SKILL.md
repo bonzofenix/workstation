@@ -65,23 +65,39 @@ Fetch and display ONLY unresolved comments from a GitHub pull request, then assi
 
 If no unresolved comments exist, return "No unresolved comments found."
 
+## Comment Classification
+
+Before presenting a comment to the user, classify it:
+
+- **Style/preference** — formatting, naming, if/return vs match, cosmetic structure. Reviewer has a preference, no correctness impact.
+- **Correctness/logic** — the suggestion fixes a bug, closes a gap, or prevents future breakage.
+- **Architectural** — changes where responsibility lives, call signatures, abstraction level.
+
 ## Comment Resolution Workflow
 
 For each unresolved comment:
 
-1. **Analyze the comment**: Read the relevant code context
-2. **Provide your assessment**: 
-   - Explain whether the suggestion makes sense
-   - Discuss trade-offs and implications
-   - Give your recommendation (apply or skip)
-3. **Let user decide**: Present options and wait for user input
-4. **If applying the fix**:
+1. **Analyze the comment**: Read the relevant code context and classify it (style, correctness, or architectural).
+
+2. **Present to user — lead with disposition, not reasoning**:
+
+   - **Style/preference**: Skip the tradeoff essay. Just ask apply or skip with a one-liner max.
+     > "Style preference — apply it or skip?"
+   - **Correctness/architectural**: Brief assessment (2-3 sentences max). State your recommendation clearly first, reasoning second.
+     > "Recommend applying — [one-line reason]. [Optional: one-line tradeoff only if genuinely non-obvious]."
+
+   Never defend the existing approach AND propose applying the change in the same message — pick one.
+
+3. **Let user decide**: Wait for user input.
+
+4. **Apply + reply atomically**: Do both in one step — never explain in a reply and commit separately.
    - Make the code change
-   - Commit with message format: "fix: address review comment - [brief description]"
-   - Reply with: "Fixed in {commit_hash}"
+   - Commit: `"fix: address review comment - [brief description]"`
+   - Post reply: `"Done in [commit_hash]."` — no re-explanation of what was already discussed
+
 5. **If skipping**:
-   - Provide a concise explanation for the user to reply with
-   - Format: 1-2 sentences explaining why the suggestion wasn't applied
+   - One sentence max for the reply. State the reason, not the history.
+   - Format: `"Keeping this — [reason]."`
 
 ## Code References in Replies
 
