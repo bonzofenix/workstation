@@ -58,8 +58,10 @@ function main() {
   fi
 
   log_step "Installing Claude skills and plugins"
+  # Skills and plugins are declared in the Skillfile of bonzofenix/skills
+  # (plus an optional private Skillfile.local in the memory repo).
   "$workstation_dir/bin/skills-bundle" install \
-    || log_warning "skills-bundle failed; run it manually: skills-bundle install"
+    || log_warning "skills-bundle reported failures (listed above); fix and rerun: skills-bundle install"
 
   log_success "Claude Code configs configured"
 }

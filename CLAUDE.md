@@ -140,7 +140,9 @@ everything in use; `Skillfile.local` in the memory repo adds private entries.
 - `dump` - print a Skillfile of what is installed now
 
 To add a skill or plugin, edit the Skillfile, not `~/.claude`, then run
-`skills-bundle install`. Runs automatically in `make configurations`.
+`skills-bundle install`. Runs automatically in `make claude-configs` (part of
+`make install` and `make install-linux`); exits non-zero and lists failures if
+anything could not be installed.
 
 ## Common Development Patterns
 

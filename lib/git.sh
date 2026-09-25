@@ -37,12 +37,16 @@ git config --system --unset credential.helper
 log_step "Configuring authors file"
 # The real authors list lives in the private memory repo; the public asset is
 # only an example template.
+# `make install` runs this before skills-bundle clones the memory repo, so a
+# fresh machine gets the template first; a later run upgrades an untouched
+# template copy to the private file.
 private_authors="${MEMORY_DIR:-$HOME/workspace/memory}/git-authors"
-if [ ! -e ~/.git-authors ] && [ -f "$private_authors" ]; then
+template_authors="$WORKSTATION_DIR/assets/git-authors"
+if [ -f "$private_authors" ] && { [ ! -e ~/.git-authors ] || cmp -s ~/.git-authors "$template_authors"; }; then
   cp "$private_authors" ~/.git-authors
   log_success "~/.git-authors copied from $private_authors"
 elif [ ! -e ~/.git-authors ]; then
-  cp "$WORKSTATION_DIR/assets/git-authors" ~/.git-authors
+  cp "$template_authors" ~/.git-authors
   log_warning "Please edit ~/.git-authors with your own author information"
 else
   log_success "~/.git-authors already exists, skipping template copy"

@@ -159,11 +159,6 @@ for hook_dir in "$WORKSTATION_DIR"/assets/claude/hooks/*/; do
   ln -fns "${hook_dir%/}" ~/.claude/hooks/"$(basename "$hook_dir")"
 done
 
-log_step "Installing Claude skills and plugins"
-# Skills and plugins are declared in the Skillfile of bonzofenix/skills (plus
-# an optional private Skillfile.local in the memory repo). skills-bundle clones
-# those repos if missing, links every skill, fetches pinned third-party ones,
-# installs plugins, and prunes links it owns that are no longer listed.
-"$WORKSTATION_DIR/bin/skills-bundle" install \
-  || log_warning "skills-bundle failed; run it manually: skills-bundle install"
+# Claude skills and plugins are installed by lib/claude-configs.sh (via
+# bin/skills-bundle), which both `make install` and `make install-linux` run.
 
