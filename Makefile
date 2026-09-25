@@ -10,7 +10,7 @@ default: install
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
 
-install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals claude-configs devbox
+install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals devbox claude-configs
 	@source ~/.bash_profile
 	@gum style --foreground 2 --bold "  Installation complete!"
 

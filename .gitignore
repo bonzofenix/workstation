@@ -4,7 +4,6 @@ assets/vim/bundle/ctrlp.vim/.netrwhist
 assets/nvim/nvim
 assets/vim/plugged/
 assets/config/nvim/pack/
-lib/pr_reviewer/reviews
 assets/claude/hooks/**/.state.json
 assets/claude/hooks/**/packs/*/sounds/
 
