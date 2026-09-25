@@ -35,7 +35,7 @@ DEBUG=true make install    # Enable debug output
   - `configurations.sh` - Sets up dotfiles, shell configs, PATH, and symlinks configuration files
   - `osx-configurations.sh` - Configures macOS system preferences
   - `nix.sh` - Sets up Nix package manager
-  - `pr_reviewer/` - Python tool for AI-powered PR reviews
+  - `claude-configs.sh` - Links Claude settings, hooks, statusline and memory; runs `skills-bundle`
 
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
   - Git workflow: `cleanup-branches`, `cleanup-worktrees`, `delete-branch`, `worktrees`, `new-worktree`
@@ -115,27 +115,32 @@ The workstation includes simple AI-powered scripts:
 - `autorefactor` - Refactors code using clean code principles
 - `autocommit` - Auto-generates commit messages (alias in `aliases.bash`)
 - `autoreset` - Soft resets and re-commits with new AI message
-- `pr_reviewer.py` - Reviews PRs using GPT-4 (in `lib/pr_reviewer/`)
+### Claude Code: three repos
 
-**Claude Code Plugins** (auto-installed during setup):
+This repo is public, so it holds only public-safe tooling. Claude Code content
+is split across three repos:
 
-Official plugins:
-- `gopls-lsp` - Go language server support
-- `ralph-loop` - Loop/recurring task automation
-- `code-simplifier` - Code simplification and refactoring
-- `atlassian` - Jira/Confluence integration
-- `skill-creator` - Create custom Claude Code skills
+| Repo | Visibility | Holds | Local clone |
+|---|---|---|---|
+| `bonzofenix/workstation` (this) | public | `bin/`, `lib/`, dotfiles, `assets/claude/` settings, hooks, statusline | `~/workstation` |
+| `bonzofenix/skills` | public | general-purpose skills + the `Skillfile` | `$SKILLS_DIR` (`~/workspace/skills`) |
+| `bonzofenix/memory` | private | memory, work skills, `Skillfile.local`, anything private | `$MEMORY_DIR` (`~/workspace/memory`) |
 
-Community plugins:
-- `caveman` - Ultra-compressed communication mode (saves ~75% tokens)
-- `andrej-karpathy-skills` - Karpathy's coding guidelines and patterns
-- `obsidian-markdown` - Obsidian Flavored Markdown with wikilinks, embeds
-- `obsidian-bases` - Obsidian Bases files (views, filters, formulas)
-- `json-canvas` - JSON Canvas files (nodes, edges, groups)
-- `obsidian-cli` - Obsidian vault interface, plugin/theme development
-- `defuddle` - Extract clean markdown from web pages
+**Never add private content here**: memory, hostnames/IPs, employer-specific
+details, private repo names. They go in the memory repo.
 
-Auto-installed during `make configurations` if Claude Code CLI available.
+**Skills and plugins are declarative.** The `Skillfile` in `bonzofenix/skills`
+(Brewfile-style: `marketplace`, `plugin`, `collection`, `skill` lines) lists
+everything in use; `Skillfile.local` in the memory repo adds private entries.
+`bin/skills-bundle`:
+- `install` - clone missing repos, link skills un-namespaced into
+  `~/.claude/skills`, fetch pinned third-party skills into
+  `~/.claude/skills-vendor/`, install plugins, prune stale links it owns
+- `check` - report drift (exit 1 if anything listed is missing)
+- `dump` - print a Skillfile of what is installed now
+
+To add a skill or plugin, edit the Skillfile, not `~/.claude`, then run
+`skills-bundle install`. Runs automatically in `make configurations`.
 
 ## Common Development Patterns
 

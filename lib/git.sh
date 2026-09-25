@@ -35,7 +35,13 @@ ln -fs "$WORKSTATION_DIR/assets/gitignore_global" ~/.gitignore_global
 git config --system --unset credential.helper
 
 log_step "Configuring authors file"
-if [ ! -e ~/.git-authors ]; then
+# The real authors list lives in the private memory repo; the public asset is
+# only an example template.
+private_authors="${MEMORY_DIR:-$HOME/workspace/memory}/git-authors"
+if [ ! -e ~/.git-authors ] && [ -f "$private_authors" ]; then
+  cp "$private_authors" ~/.git-authors
+  log_success "~/.git-authors copied from $private_authors"
+elif [ ! -e ~/.git-authors ]; then
   cp "$WORKSTATION_DIR/assets/git-authors" ~/.git-authors
   log_warning "Please edit ~/.git-authors with your own author information"
 else

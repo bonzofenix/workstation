@@ -15,10 +15,13 @@ info=0
 # Run shellcheck on all bin and lib scripts
 while IFS= read -r script; do
   if [[ -f "$script" ]]; then
-    # zsh scripts cannot be parsed by this linter, which reports SC1071 for
-    # the whole file. Skip them rather than carry a permanent error that
-    # means "not analyzed" — it would mask real errors in everything else.
-    if head -1 "$script" | grep -q 'zsh'; then
+    # Only sh-family scripts can be parsed by this linter; zsh, python and
+    # other interpreters get SC1071 for the whole file. Skip them rather than
+    # carry a permanent error that means "not analyzed" — it would mask real
+    # errors in everything else. Files without a shebang (sourced *.sh
+    # libraries) are still linted.
+    first_line="$(head -1 "$script")"
+    if [[ "$first_line" == '#!'* ]] && ! grep -qE '(^#!.*[/ ](ba|da|k)?sh)([[:space:]]|$)' <<< "$first_line"; then
       continue
     fi
 
