@@ -1,4 +1,4 @@
 pairs:
-  am: Alan M; bonzofenix@gmail.com
+  jd: Jane Doe; jane@example.com
 
 email_template: '{{.Username}}'

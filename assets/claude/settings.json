@@ -99,11 +99,6 @@
             "type": "command",
             "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "for d in $HOME/workspace/skills/*/; do name=$(basename \"$d\"); mkdir -p \"$HOME/.claude/skills/$name\"; cp \"$d/SKILL.md\" \"$HOME/.claude/skills/$name/skill.md\" 2>/dev/null || true; done",
-            "timeout": 10
           }
         ]
       },

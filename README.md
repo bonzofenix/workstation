@@ -40,7 +40,8 @@ git config credential.https://[redacted-host] SAP_USER
 - **Git setup**: Git duet, extensive aliases, default branch `develop`
 - **Development tools**: Neovim, direnv, devbox, GitHub Copilot
 - **Custom scripts**: 50+ utilities in `bin/` (worktree management, AI-powered tools)
-- **AI integration**: autodiff, autorefactor, autocommit, pr_reviewer
+- **AI integration**: autodiff, autorefactor, autocommit
+- **Claude Code**: settings, hooks and statusline; skills and plugins declared in the [`Skillfile`](https://github.com/bonzofenix/skills/blob/main/Skillfile) and applied by `skills-bundle`
 
 ## Key Features
 

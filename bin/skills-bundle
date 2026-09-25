@@ -1,0 +1,567 @@
+#!/usr/bin/env python3
+"""skills-bundle: declarative Claude Code skills and plugins, like `brew bundle`.
+
+Reads a Skillfile (Brewfile-style, one entry per line, # comments) and makes
+~/.claude match it:
+
+  marketplace "anthropics/claude-plugins-official"
+  plugin      "pr-review-toolkit@claude-plugins-official"
+  collection  "bonzofenix/skills", dir: "$SKILLS_DIR", path: "skills"
+  skill       "test-audit", from: "openclaw/openclaw", ref: "<sha>", path: ".agents/skills/test-audit"
+
+- marketplace / plugin: installed with the `claude plugin` CLI.
+- collection: a repo you own and edit. Cloned if missing, never pinned; every
+  directory under `path` is symlinked into ~/.claude/skills un-namespaced.
+- skill: a third-party skill pinned to a ref. Only that one folder is
+  downloaded (via the GitHub API, so a huge repo is not cloned) into
+  ~/.claude/skills-vendor/<name>, then symlinked.
+
+Two files are read and merged: the public Skillfile in $SKILLS_DIR and an
+optional private Skillfile.local in $MEMORY_DIR, so private repos never have
+to be named in a public file.
+
+Commands:
+  install   make ~/.claude match the Skillfiles (default)
+  check     report drift; exit 1 if anything listed is missing
+  dump      print a Skillfile built from what is installed now
+"""
+import json
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+HOME = os.path.expanduser("~")
+CLAUDE = os.path.join(HOME, ".claude")
+SKILLS_HOME = os.path.join(CLAUDE, "skills")
+VENDOR = os.path.join(CLAUDE, "skills-vendor")
+BACKUP = os.path.join(CLAUDE, "skills-backup")
+MARKER = ".skillfile.json"
+# Where skills lived before they moved to their own repo (<workstation>/skills).
+LEGACY_SKILLS = os.path.realpath(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "skills"))
+
+ENV = {
+    "SKILLS_REPO": os.environ.get("SKILLS_REPO", "bonzofenix/skills"),
+    "SKILLS_DIR": os.environ.get("SKILLS_DIR", os.path.join(HOME, "workspace", "skills")),
+    "MEMORY_REPO": os.environ.get("MEMORY_REPO", "bonzofenix/memory"),
+    "MEMORY_DIR": os.environ.get("MEMORY_DIR", os.path.join(HOME, "workspace", "memory")),
+}
+
+
+def say(msg):
+    print(f"  {msg}")
+
+
+def warn(msg):
+    print(f"  warning: {msg}", file=sys.stderr)
+
+
+# Everything that went wrong during `install`. Each failure is reported where
+# it happens and again in the summary, and makes `install` exit non-zero so a
+# caller like `make` cannot print success over a partial install.
+FAILURES = []
+
+
+def fail(msg):
+    FAILURES.append(msg)
+    warn(msg)
+
+
+def err_text(e):
+    out = getattr(e, "stderr", None) or ""
+    if isinstance(out, bytes):
+        out = out.decode(errors="replace")
+    return (out.strip() or str(e))[:200]
+
+
+class ClaudeQueryError(Exception):
+    pass
+
+
+def expand(path):
+    for k, v in ENV.items():
+        path = path.replace(f"${k}", v)
+    return os.path.expanduser(path)
+
+
+def run(cmd, check=True):
+    return subprocess.run(cmd, capture_output=True, text=True, check=check)
+
+
+def have(tool):
+    return shutil.which(tool) is not None
+
+
+# --- Skillfile ------------------------------------------------------------
+
+def skillfile_paths():
+    return [
+        os.path.join(ENV["SKILLS_DIR"], "Skillfile"),
+        os.path.join(ENV["MEMORY_DIR"], "Skillfile.local"),
+    ]
+
+
+def empty():
+    return {"marketplaces": {}, "plugins": [], "collections": {}, "skills": {}}
+
+
+def strip_comment(line):
+    """Drop a `# comment`. As in shell, `#` starts one only at the start of a
+    word and outside quotes, so `owner/repo#ref` survives intact (shlex's own
+    comment handling would cut it there and silently drop the rest)."""
+    quote = None
+    for i, c in enumerate(line):
+        if quote:
+            if c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c == "#" and (i == 0 or line[i - 1].isspace()):
+            return line[:i]
+    return line
+
+
+def parse_line(line):
+    """`kind "name", key: "value", ...` -> (kind, name, {key: value})."""
+    words = [w.rstrip(",") for w in shlex.split(strip_comment(line))]
+    if not words:
+        return None
+    if len(words) < 2 or len(words) % 2:
+        raise ValueError("expected: kind \"name\", key: \"value\", ...")
+    opts = {}
+    for key, value in zip(words[2::2], words[3::2]):
+        if not key.endswith(":"):
+            raise ValueError(f"expected `key:` before {value!r}")
+        opts[key[:-1]] = value
+    return words[0], words[1], opts
+
+
+def parse(path, into):
+    with open(path) as f:
+        for n, line in enumerate(f, 1):
+            try:
+                entry = parse_line(line)
+            except ValueError as e:
+                sys.exit(f"{path}:{n}: {e}")
+            if entry is None:
+                continue
+            kind, name, opts = entry
+            if kind == "marketplace":
+                into["marketplaces"][name] = name
+            elif kind == "plugin":
+                if name not in into["plugins"]:
+                    into["plugins"].append(name)
+            elif kind == "collection":
+                if "dir" not in opts:
+                    sys.exit(f"{path}:{n}: collection needs dir:")
+                into["collections"][name] = {"repo": name, **opts}
+            elif kind == "skill":
+                if "from" not in opts:
+                    sys.exit(f"{path}:{n}: skill needs from:")
+                source = opts["from"] + (f"#{opts['ref']}" if "ref" in opts else "")
+                into["skills"][name] = {"source": source, "path": opts.get("path", "")}
+            else:
+                sys.exit(f"{path}:{n}: unknown entry {kind!r}")
+
+
+def load():
+    merged = empty()
+    found = [p for p in skillfile_paths() if os.path.exists(p)]
+    if not found:
+        sys.exit(f"skills-bundle: no Skillfile found (looked in {', '.join(skillfile_paths())})")
+    for path in found:
+        parse(path, merged)
+    return merged
+
+
+def bootstrap():
+    """Clone the repos that hold the Skillfiles themselves. The private one
+    failing (no access) is expected for anyone but its owner."""
+    for repo_key, dir_key, required in (("SKILLS_REPO", "SKILLS_DIR", True),
+                                        ("MEMORY_REPO", "MEMORY_DIR", False)):
+        if os.path.isdir(ENV[dir_key]):
+            continue
+        if clone(ENV[repo_key], ENV[dir_key]):
+            continue
+        if required:
+            sys.exit(f"skills-bundle: could not clone {ENV[repo_key]} into {ENV[dir_key]}")
+        say(f"skipping {ENV[repo_key]} (not cloneable here; private parts skipped)")
+
+
+def clone(repo, dest):
+    """Clone via gh (uses its auth and protocol), falling back to plain https
+    git, e.g. when gh is installed but not logged in. Never prompts: a
+    credential prompt for a private repo would hang `make install`."""
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+    attempts = []
+    if have("gh"):
+        attempts.append(["gh", "repo", "clone", repo, dest])
+    attempts.append(["git", "clone", f"https://github.com/{repo}.git", dest])
+    errors = []
+    for cmd in attempts:
+        r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        if r.returncode == 0:
+            say(f"cloned {repo} -> {dest}")
+            return True
+        errors.append(f"{cmd[0]}: {err_text(r)}")
+        if os.path.isdir(dest) and not os.listdir(dest):
+            os.rmdir(dest)  # empty leftover from the failed attempt
+    warn(f"clone of {repo} failed: " + " | ".join(errors))
+    return False
+
+
+# --- desired state --------------------------------------------------------
+
+def desired_links(sf):
+    """(name -> absolute source dir for every skill to link, [missing
+    collection roots]). A missing root is reported, never silently empty:
+    otherwise a failed clone or a typo in path: installs nothing and `check`
+    still says everything is installed."""
+    links, missing = {}, []
+    for name, col in sf["collections"].items():
+        root = os.path.join(expand(col["dir"]), col.get("path", ""))
+        if not os.path.isdir(root):
+            missing.append(f"collection {name}: {root} missing")
+            continue
+        for entry in sorted(os.listdir(root)):
+            src = os.path.join(root, entry)
+            if os.path.isdir(src) and not entry.startswith("."):
+                links[entry] = src
+    for name in sf["skills"]:
+        links[name] = os.path.join(VENDOR, name)
+    return links, missing
+
+
+def managed_roots(sf):
+    roots = [os.path.realpath(VENDOR)]
+    for col in sf["collections"].values():
+        roots.append(os.path.realpath(os.path.join(expand(col["dir"]), col.get("path", ""))))
+    return roots
+
+
+def under(path, roots):
+    real = os.path.realpath(os.path.dirname(path))
+    return any(real == r for r in roots)
+
+
+def link_source(path):
+    """Absolute target of a symlink (relative targets resolve from its dir)."""
+    src = os.readlink(path)
+    return src if os.path.isabs(src) else os.path.join(os.path.dirname(path), src)
+
+
+# --- vendored skills ------------------------------------------------------
+
+def parse_source(source):
+    repo, _, ref = source.partition("#")
+    return repo, ref or "HEAD"
+
+
+def gh_contents(repo, path, ref):
+    out = run(["gh", "api", f"repos/{repo}/contents/{path}?ref={ref}"]).stdout
+    data = json.loads(out)
+    if isinstance(data, dict) and "type" not in data:
+        raise ValueError(data.get("message", f"unexpected response for {repo}/{path}"))
+    return data
+
+
+def download_tree(repo, path, ref, dest):
+    items = gh_contents(repo, path, ref)
+    if isinstance(items, dict):
+        items = [items]
+    for item in items:
+        target = os.path.join(dest, item["name"])
+        if item["type"] == "dir":
+            os.makedirs(target, exist_ok=True)
+            download_tree(repo, item["path"], ref, target)
+        elif item["type"] in ("symlink", "submodule"):
+            # Raise rather than skip: a partial copy would get a marker and
+            # never be refetched, so the gap would become permanent and silent.
+            raise ValueError(f"{item['path']}: {item['type']} entries are not supported")
+        elif item["type"] == "file":
+            raw = subprocess.run(
+                ["gh", "api", "-H", "Accept: application/vnd.github.raw",
+                 f"repos/{repo}/contents/{item['path']}?ref={ref}"],
+                capture_output=True, check=True).stdout
+            with open(target, "wb") as f:
+                f.write(raw)
+
+
+def vendor(name, spec):
+    dest = os.path.join(VENDOR, name)
+    marker = {"source": spec["source"], "path": spec.get("path", "")}
+    marker_path = os.path.join(dest, MARKER)
+    if os.path.exists(marker_path):
+        with open(marker_path) as f:
+            if json.load(f) == marker:
+                return
+    if not have("gh"):
+        fail(f"skill {name}: gh CLI needed to fetch {spec['source']}")
+        return
+    repo, ref = parse_source(spec["source"])
+    os.makedirs(VENDOR, exist_ok=True)
+    tmp = tempfile.mkdtemp(prefix=f".{name}-", dir=VENDOR)
+    aside = None
+    try:
+        download_tree(repo, marker["path"], ref, tmp)
+        with open(os.path.join(tmp, MARKER), "w") as f:
+            json.dump(marker, f)
+        # Swap in the new copy; if that fails, put the old one back so the
+        # working skill is never left missing. The old copy is deleted only
+        # once the new one is confirmed in place.
+        if os.path.exists(dest):
+            aside = f"{tmp}.old"
+            os.rename(dest, aside)
+        try:
+            os.rename(tmp, dest)
+        except OSError:
+            if aside:
+                os.rename(aside, dest)
+                aside = None
+            raise
+        old, aside = aside, None
+        if old:
+            shutil.rmtree(old, ignore_errors=True)
+        say(f"fetched {name} from {spec['source']}")
+    except Exception as e:  # any failure: report it, never abort the whole install
+        kept = f"; previous copy kept at {aside}" if aside and os.path.exists(aside) else ""
+        fail(f"skill {name}: fetch of {spec['source']} failed: {type(e).__name__}: {err_text(e)}{kept}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# --- linking --------------------------------------------------------------
+
+def backup_aside(path):
+    """Move a real directory out of the way. Backups go OUTSIDE
+    ~/.claude/skills, where anything left behind would load as a live skill."""
+    os.makedirs(BACKUP, exist_ok=True)
+    base = os.path.join(BACKUP, f"{os.path.basename(path)}-{time.strftime('%Y%m%d-%H%M%S')}")
+    dest, n = base, 1
+    while os.path.exists(dest):
+        dest, n = f"{base}.{n}", n + 1
+    shutil.move(path, dest)
+    say(f"backed up {path} -> {dest}")
+
+
+def link(name, src):
+    target = os.path.join(SKILLS_HOME, name)
+    if os.path.islink(target):
+        if os.readlink(target) == src:
+            return
+        os.unlink(target)  # a symlink only; no data lives in it
+    elif os.path.exists(target):
+        backup_aside(target)
+    os.symlink(src, target)
+    say(f"linked {name}")
+
+
+def prune(sf, wanted):
+    """Remove links we own that the Skillfile no longer asks for, or whose
+    source is gone. Links pointing anywhere else are left alone."""
+    roots = managed_roots(sf)
+    for entry in sorted(os.listdir(SKILLS_HOME)):
+        path = os.path.join(SKILLS_HOME, entry)
+        if not os.path.islink(path):
+            continue
+        dangling = not os.path.exists(path)
+        source = link_source(path)
+        # Skills used to live in this repo's skills/ directory. Links left
+        # pointing there dangle once it is gone; reclaim those (dangling only).
+        if dangling and under(source, [LEGACY_SKILLS]):
+            os.unlink(path)
+            say(f"removed legacy link {entry}")
+            continue
+        ours = under(source, roots)
+        if ours and (dangling or entry not in wanted):
+            os.unlink(path)
+            say(f"removed stale link {entry}")
+
+
+# --- plugins --------------------------------------------------------------
+
+def claude_json(*args):
+    """Query the claude CLI. A failed query raises: treating it as "nothing
+    installed" would make install re-add everything and check misreport."""
+    try:
+        return json.loads(run(["claude", "plugin", *args, "--json"]).stdout)
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+        raise ClaudeQueryError(f"`claude plugin {' '.join(args)} --json` failed: {err_text(e)}")
+
+
+def installed_state():
+    """(installed plugin ids, added marketplace repos)."""
+    plugins = {p["id"] for p in claude_json("list")}
+    mkts = {m.get("repo") for m in claude_json("marketplace", "list")}
+    return plugins, mkts
+
+
+def install_plugins(sf):
+    if not (sf["marketplaces"] or sf["plugins"]):
+        return
+    if not have("claude"):
+        fail("claude CLI not found; marketplaces and plugins not installed")
+        return
+    try:
+        have_plugins, have_mkts = installed_state()
+    except ClaudeQueryError as e:
+        fail(f"plugins not reconciled: {e}")
+        return
+    for name, repo in sf["marketplaces"].items():
+        if repo not in have_mkts:
+            r = run(["claude", "plugin", "marketplace", "add", repo], check=False)
+            if r.returncode == 0:
+                say(f"marketplace {name}: added")
+            else:
+                fail(f"marketplace {name}: add failed: {err_text(r)}")
+    for plugin in sf["plugins"]:
+        if plugin not in have_plugins:
+            r = run(["claude", "plugin", "install", plugin], check=False)
+            if r.returncode == 0:
+                say(f"plugin {plugin}: installed")
+            else:
+                fail(f"plugin {plugin}: install failed: {err_text(r)}")
+
+
+# --- commands -------------------------------------------------------------
+
+def cmd_install():
+    bootstrap()
+    sf = load()
+    install_plugins(sf)
+    for name, col in sf["collections"].items():
+        d = expand(col["dir"])
+        if not os.path.isdir(d) and not clone(col["repo"], d):
+            fail(f"collection {name}: could not clone {col['repo']} into {d}")
+    for name, spec in sf["skills"].items():
+        vendor(name, spec)
+    os.makedirs(SKILLS_HOME, exist_ok=True)
+    wanted, missing = desired_links(sf)
+    for msg in missing:
+        fail(msg)
+    for name, src in wanted.items():
+        if os.path.isdir(src):
+            link(name, src)
+        else:
+            fail(f"skill {name}: source {src} missing, not linked")
+    prune(sf, wanted)
+    if FAILURES:
+        print(f"skills-bundle: install finished with {len(FAILURES)} failure(s):", file=sys.stderr)
+        for msg in FAILURES:
+            print(f"  - {msg}", file=sys.stderr)
+        return 1
+    print("skills-bundle: install complete")
+    return 0
+
+
+def cmd_check():
+    sf = load()
+    problems, notes = [], []
+    local = skillfile_paths()[1]
+    if not os.path.exists(local):
+        notes.append(f"Skillfile.local not found at {local}; private entries not checked")
+    wanted, missing = desired_links(sf)
+    problems += missing
+    for name, src in wanted.items():
+        target = os.path.join(SKILLS_HOME, name)
+        if not os.path.isdir(src):
+            problems.append(f"skill {name}: source missing ({src})")
+        elif not os.path.islink(target) or os.readlink(target) != src:
+            problems.append(f"skill {name}: not linked to {src}")
+    roots = managed_roots(sf)
+    if os.path.isdir(SKILLS_HOME):
+        for entry in sorted(os.listdir(SKILLS_HOME)):
+            path = os.path.join(SKILLS_HOME, entry)
+            if entry in wanted or entry.startswith("."):
+                continue
+            if os.path.islink(path) and under(link_source(path), roots):
+                problems.append(f"skill {entry}: stale link (not in Skillfile)")
+            else:
+                notes.append(f"skill {entry}: unmanaged (not in any Skillfile)")
+    if sf["marketplaces"] or sf["plugins"]:
+        if not have("claude"):
+            problems.append("plugins/marketplaces: claude CLI not found, cannot verify")
+        else:
+            try:
+                installed, mkts = installed_state()
+                problems += [f"marketplace {n}: not added" for n, r in sf["marketplaces"].items() if r not in mkts]
+                problems += [f"plugin {p}: not installed" for p in sf["plugins"] if p not in installed]
+                notes += [f"plugin {p}: installed but not in Skillfile" for p in sorted(installed - set(sf["plugins"]))]
+            except ClaudeQueryError as e:
+                problems.append(f"plugins/marketplaces: cannot verify: {e}")
+    for line in problems:
+        print(f"  MISSING  {line}")
+    for line in notes:
+        print(f"  extra    {line}")
+    if problems:
+        print(f"skills-bundle: {len(problems)} missing; run `skills-bundle install`")
+        return 1
+    print("skills-bundle: everything in the Skillfile is installed")
+    return 0
+
+
+def q(s):
+    return json.dumps(s)  # a JSON string literal is a valid quoted Skillfile word
+
+
+def cmd_dump():
+    """Print a Skillfile of everything installed now: the Skillfiles' own
+    entries plus plugins, marketplaces and vendored skills found on disk."""
+    sf = empty()
+    for path in skillfile_paths():
+        if os.path.exists(path):
+            parse(path, sf)
+    if not have("claude"):
+        sys.exit("skills-bundle: claude CLI not found; cannot dump plugins")
+    try:
+        plugins, mkts = installed_state()
+    except ClaudeQueryError as e:
+        sys.exit(f"skills-bundle: {e}")
+    for repo in sorted(r for r in mkts if r):
+        sf["marketplaces"].setdefault(repo, repo)
+    sf["plugins"] = sorted(set(sf["plugins"]) | plugins)
+    if os.path.isdir(VENDOR):
+        for name in sorted(os.listdir(VENDOR)):
+            marker = os.path.join(VENDOR, name, MARKER)
+            if os.path.exists(marker) and name not in sf["skills"]:
+                with open(marker) as f:
+                    sf["skills"][name] = json.load(f)
+
+    for repo in sf["marketplaces"]:
+        print(f"marketplace {q(repo)}")
+    for plugin in sf["plugins"]:
+        print(f"plugin      {q(plugin)}")
+    for repo, col in sf["collections"].items():
+        extra = "".join(f", {k}: {q(v)}" for k, v in col.items() if k != "repo")
+        print(f"collection  {q(repo)}{extra}")
+    for name, spec in sf["skills"].items():
+        repo, _, ref = spec["source"].partition("#")
+        line = f"skill       {q(name)}, from: {q(repo)}"
+        line += f", ref: {q(ref)}" if ref else ""
+        line += f", path: {q(spec['path'])}" if spec.get("path") else ""
+        print(line)
+    return 0
+
+
+def main(argv):
+    cmd = argv[1] if len(argv) > 1 else "install"
+    if cmd in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+    if cmd == "install":
+        return cmd_install()
+    if cmd == "check":
+        return cmd_check()
+    if cmd == "dump":
+        return cmd_dump()
+    print(f"skills-bundle: unknown command {cmd!r}\n{__doc__}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
