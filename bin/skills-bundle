@@ -280,7 +280,9 @@ def download_tree(repo, path, ref, dest):
             os.makedirs(target, exist_ok=True)
             download_tree(repo, item["path"], ref, target)
         elif item["type"] in ("symlink", "submodule"):
-            fail(f"{repo}/{item['path']}: {item['type']} entries are not supported; skipped")
+            # Raise rather than skip: a partial copy would get a marker and
+            # never be refetched, so the gap would become permanent and silent.
+            raise ValueError(f"{item['path']}: {item['type']} entries are not supported")
         elif item["type"] == "file":
             raw = subprocess.run(
                 ["gh", "api", "-H", "Accept: application/vnd.github.raw",
@@ -310,7 +312,8 @@ def vendor(name, spec):
         with open(os.path.join(tmp, MARKER), "w") as f:
             json.dump(marker, f)
         # Swap in the new copy; if that fails, put the old one back so the
-        # working skill is never left missing.
+        # working skill is never left missing. The old copy is deleted only
+        # once the new one is confirmed in place.
         if os.path.exists(dest):
             aside = f"{tmp}.old"
             os.rename(dest, aside)
@@ -321,13 +324,15 @@ def vendor(name, spec):
                 os.rename(aside, dest)
                 aside = None
             raise
+        old, aside = aside, None
+        if old:
+            shutil.rmtree(old, ignore_errors=True)
         say(f"fetched {name} from {spec['source']}")
     except Exception as e:  # any failure: report it, never abort the whole install
-        fail(f"skill {name}: fetch of {spec['source']} failed: {type(e).__name__}: {err_text(e)}")
+        kept = f"; previous copy kept at {aside}" if aside and os.path.exists(aside) else ""
+        fail(f"skill {name}: fetch of {spec['source']} failed: {type(e).__name__}: {err_text(e)}{kept}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-        if aside:
-            shutil.rmtree(aside, ignore_errors=True)  # the superseded vendored copy
 
 
 # --- linking --------------------------------------------------------------
