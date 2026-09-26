@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from urllib.parse import quote
 
 HOME = os.path.expanduser("~")
 CLAUDE = os.path.join(HOME, ".claude")
@@ -262,39 +263,49 @@ def parse_source(source):
     return repo, ref or "HEAD"
 
 
-def gh_contents(repo, path, ref):
-    out = run(["gh", "api", f"repos/{repo}/contents/{path}?ref={ref}"]).stdout
-    data = json.loads(out)
-    if isinstance(data, dict) and "type" not in data:
-        raise ValueError(data.get("message", f"unexpected response for {repo}/{path}"))
-    return data
+MODE_EXEC, MODE_FILE, MODE_SYMLINK, MODE_SUBMODULE = "100755", "100644", "120000", "160000"
 
 
 def download_tree(repo, path, ref, dest):
-    items = gh_contents(repo, path, ref)
-    if isinstance(items, dict):
-        items = [items]
-    for item in items:
-        target = os.path.join(dest, item["name"])
-        if item["type"] == "dir":
+    """Download one folder of `repo` at `ref` into `dest`.
+
+    The tree comes from the git trees API (`<ref>:<path>`), which lists every
+    file in one call and carries git file modes. The contents API does not,
+    and fetching through it silently dropped the executable bit from scripts.
+    """
+    tree_ref = f"{ref}:{path}" if path else ref
+    listing = json.loads(run(["gh", "api",
+                              f"repos/{repo}/git/trees/{quote(tree_ref, safe=':/')}?recursive=1"]).stdout)
+    if "tree" not in listing:
+        raise ValueError(listing.get("message", f"unexpected response for {repo}:{path}"))
+    if listing.get("truncated"):
+        raise ValueError(f"{repo}:{path}: tree listing truncated (folder too large)")
+    for entry in listing["tree"]:
+        rel, mode = entry["path"], entry["mode"]
+        target = os.path.join(dest, rel)
+        if entry["type"] == "tree":
             os.makedirs(target, exist_ok=True)
-            download_tree(repo, item["path"], ref, target)
-        elif item["type"] in ("symlink", "submodule"):
+        elif mode in (MODE_SYMLINK, MODE_SUBMODULE):
             # Raise rather than skip: a partial copy would get a marker and
             # never be refetched, so the gap would become permanent and silent.
-            raise ValueError(f"{item['path']}: {item['type']} entries are not supported")
-        elif item["type"] == "file":
+            raise ValueError(f"{rel}: {'symlink' if mode == MODE_SYMLINK else 'submodule'} entries are not supported")
+        elif entry["type"] == "blob":
+            src = f"{path}/{rel}" if path else rel
             raw = subprocess.run(
                 ["gh", "api", "-H", "Accept: application/vnd.github.raw",
-                 f"repos/{repo}/contents/{item['path']}?ref={ref}"],
+                 f"repos/{repo}/contents/{quote(src)}?ref={ref}"],
                 capture_output=True, check=True).stdout
+            os.makedirs(os.path.dirname(target), exist_ok=True)
             with open(target, "wb") as f:
                 f.write(raw)
+            os.chmod(target, 0o755 if mode == MODE_EXEC else 0o644)
 
 
 def vendor(name, spec):
     dest = os.path.join(VENDOR, name)
-    marker = {"source": spec["source"], "path": spec.get("path", "")}
+    # "format" bumps whenever how a copy is built changes, so copies made the
+    # old way are refetched once (2: file modes are preserved).
+    marker = {"source": spec["source"], "path": spec.get("path", ""), "format": 2}
     marker_path = os.path.join(dest, MARKER)
     if os.path.exists(marker_path):
         with open(marker_path) as f:
