@@ -273,6 +273,13 @@ def download_tree(repo, path, ref, dest):
     file in one call and carries git file modes. The contents API does not,
     and fetching through it silently dropped the executable bit from scripts.
     """
+    # Normalise: "skills/foo/" or "./skills/foo" would otherwise build
+    # "skills/foo//x" file paths, which the contents API 404s.
+    path = path.strip("/")
+    while path.startswith("./"):
+        path = path[2:].lstrip("/")
+    if path == ".":
+        path = ""
     tree_ref = f"{ref}:{path}" if path else ref
     listing = json.loads(run(["gh", "api",
                               f"repos/{repo}/git/trees/{quote(tree_ref, safe=':/')}?recursive=1"]).stdout)
