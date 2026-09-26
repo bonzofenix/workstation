@@ -17,9 +17,6 @@ brew "gnupg"
 
 brew "tmux"
 
-# herdr - agent-aware terminal multiplexer (tmux alternative)
-brew "herdr"
-
 brew "wget"
 
 brew "duti" # set default apps for file types

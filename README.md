@@ -37,6 +37,7 @@ git config credential.https://<ghe-host>.username <user>
 ## What Gets Installed
 
 - **Shell configuration**: bash/zsh with vi mode, TMUX auto-start, custom aliases
+- **tmux session restore**: sessions and open Claude conversations come back after a reboot
 - **Git setup**: Git duet, extensive aliases, default branch `develop`
 - **Development tools**: Neovim, direnv, devbox, GitHub Copilot
 - **Custom scripts**: 50+ utilities in `bin/` (worktree management, AI-powered tools)
@@ -66,6 +67,6 @@ See [`CLAUDE.md`](./CLAUDE.md) for full documentation and architecture details.
 
 - Some brew applications require re-entering sudo password (no workaround)
 - Old Homebrew installations can cause issues - follow WARNING messages and re-run
-- If TMUX doesn't auto-start, check `~/.bash_profile` or `~/.zshrc` sourcing
+- If TMUX doesn't auto-start, check `~/.zprofile` has the guarded `tmux new -As base` line and the terminal starts zsh as an interactive login shell
 
 

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Reopen the Claude conversation each tmux pane was running after
+# tmux-resurrect restores it (e.g. after a reboot).
+#
+# The tmux-pane-session hook tags the pane running Claude with @claude_session
+# and @claude_cwd. tmux-resurrect then drives this script (assets/tmux.conf):
+#
+#   save    - @resurrect-hook-post-save-layout, after every save: snapshot the
+#             tags as "session:window.pane<TAB>session-id<TAB>cwd" lines, keyed
+#             the way resurrect restores panes.
+#   resume  - typed into each restored pane that was running claude: resume that
+#             pane's conversation from its own directory (the pane's may differ),
+#             or open the picker when there is none to resume.
+set -euo pipefail
+
+map="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/claude-sessions"
+
+case "${1:-}" in
+  save)
+    # resurrect ignores this hook's exit status and continuum discards its
+    # output, so a failed save would only show as a restore that brings back
+    # nothing. Say so in tmux instead.
+    trap 'tmux display-message "claude-tmux-session save failed (line $LINENO)"' ERR
+    mkdir -p "$(dirname "$map")"
+    tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index}"$'\t'"#{@claude_session}"$'\t'"#{@claude_cwd}" \
+      | awk -F '\t' '$2 != ""' > "$map.tmp"
+    mv "$map.tmp" "$map"
+    ;;
+  resume)
+    pane="$(tmux display -p -t "${TMUX_PANE:?not inside tmux}" '#{session_name}:#{window_index}.#{pane_index}')"
+    session_id="" cwd=""
+    if [ -f "$map" ]; then
+      IFS=$'\t' read -r session_id cwd < <(awk -F '\t' -v pane="$pane" '$1 == pane { id = $2; dir = $3 } END { print id "\t" dir }' "$map")
+    fi
+    if [ -z "$session_id" ]; then
+      echo "claude-tmux-session: no saved conversation for pane $pane; pick one" >&2
+    elif [ ! -d "$cwd" ]; then
+      echo "claude-tmux-session: $cwd is gone, cannot resume $session_id; pick one" >&2
+    else
+      cd -- "$cwd"
+      exec claude --resume "$session_id"
+    fi
+    exec claude --resume
+    ;;
+  *)
+    echo "usage: ${0##*/} save|resume" >&2
+    exit 64
+    ;;
+esac

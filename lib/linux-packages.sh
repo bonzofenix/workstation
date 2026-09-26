@@ -32,7 +32,6 @@ run_with_spin "Updating apt index..." $SUDO apt-get update -qq
 #   gnupg     -> gnupg (same, but pulls a different default set)
 #   uv        -> not packaged; installed separately below
 #   gum       -> not in the Ubuntu archive; installed from Charm's repo below
-#   herdr     -> macOS-only tap, skipped
 #   bun/node  -> node from the archive; bun installed separately if wanted
 APT_PACKAGES=(
   zsh

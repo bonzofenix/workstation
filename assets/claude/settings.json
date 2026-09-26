@@ -99,15 +99,22 @@
             "type": "command",
             "command": "$HOME/.claude/hooks/peon-ping/peon.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/tmux-pane-session/tag.sh",
+            "timeout": 10
           }
         ]
-      },
+      }
+    ],
+    "SessionEnd": [
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "[ -x \"$HOME/.claude/hooks/herdr-agent-state.sh\" ] && bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session || true",
+            "command": "$HOME/.claude/hooks/tmux-pane-session/tag.sh",
             "timeout": 10
           }
         ]

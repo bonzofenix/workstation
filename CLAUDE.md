@@ -45,7 +45,6 @@ DEBUG=true make install    # Enable debug output
 - **`assets/`** - Configuration files and dotfiles
   - `aliases.bash` - Custom bash aliases loaded globally
   - `tmux.conf` - tmux configuration
-  - `herdr/config.toml` - herdr configuration (agent multiplexer, tmux alternative)
   - `gitignore_global` - Global git ignore patterns
   - `config/nvim/` - Neovim configuration
   - `config/ghostty/` - Ghostty terminal configuration
@@ -64,11 +63,20 @@ DEBUG=true make install    # Enable debug output
 ### Shell Configuration
 
 The setup configures both bash and zsh:
-- Symlinks `~/.bash_profile` to `~/.zshenv` for consistency
-- Uses `add_to_profile` function to safely add configuration without duplication
+- Links `~/.zshenv -> ~/.bash_profile`; `add_to_profile` appends to `~/.zprofile` (read by zsh login shells), skipping any line whose text already appears in the file
 - Default shell uses vi mode keybindings
-- TMUX automatically starts on new terminal sessions
+- TMUX automatically starts in interactive zsh login shells outside tmux (session `base`)
 - PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
+
+### tmux Session Restore
+
+tmux-resurrect and tmux-continuum save the tmux layout periodically
+(`@continuum-save-interval` in `assets/tmux.conf`) and restore it when the
+tmux server starts, so a reboot plus a new terminal brings back every session,
+window and pane. Panes that were running `claude` reopen their conversation:
+- The `tmux-pane-session` hook (`assets/claude/hooks/`) tags the pane with `@claude_session` and `@claude_cwd` on SessionStart and clears them on SessionEnd. Only the claude that is the pane shell's direct child tags it, so a nested `claude -p` or a background session cannot.
+- `bin/claude-tmux-session save` (resurrect post-save hook) snapshots the tags to `${XDG_DATA_HOME:-~/.local/share}/tmux/resurrect/claude-sessions`
+- `bin/claude-tmux-session resume` runs in each restored claude pane: `cd <cwd> && claude --resume <id>`, or the `claude --resume` picker when the pane has no saved conversation. Original CLI flags (`--model` etc.) are not restored.
 
 ### Git Configuration
 
@@ -168,9 +176,8 @@ When modifying scripts in `bin/`:
 1. **Shell aliases**: Edit `assets/aliases.bash`
 2. **Git config**: Modify `lib/git.sh` or run git config commands directly
 3. **TMUX**: Edit `assets/tmux.conf`
-4. **herdr**: Edit `assets/herdr/config.toml` (validate with `herdr config check`, apply with `herdr server reload-config`)
-5. **Neovim**: Edit files in `assets/config/nvim/`
-6. **Homebrew packages**: Edit `assets/work/Brewfile` or `assets/personal/Brewfile`
+4. **Neovim**: Edit files in `assets/config/nvim/`
+5. **Homebrew packages**: Edit `assets/work/Brewfile` or `assets/personal/Brewfile`
 
 After changes to assets, re-run `make configurations` to apply.
 
