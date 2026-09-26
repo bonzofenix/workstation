@@ -124,7 +124,11 @@ cask "git-credential-manager"
 # Browsers
 cask "obsidian"
 
-
+# Open-source CLI variant (tailscale + tailscaled), NOT the GUI cask.
+# Tailscale's SSH server only runs on Linux and the macOS open-source variant;
+# both GUI builds (App Store and standalone macsys) refuse to host it.
+# Daemon is registered separately via: sudo tailscaled install-system-daemon
+brew "tailscale"
 
 tap "hashicorp/tap"
 brew "hashicorp/tap/vault"
