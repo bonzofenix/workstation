@@ -60,6 +60,7 @@ if [ -e ~/.tmux.conf ] && [ ! -L ~/.tmux.conf ]; then
   mv ~/.tmux.conf "$HOME/.tmux.conf.bak-$(date +%Y%m%d-%H%M%S)"
 fi
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
+install_tmux_plugins
 
 log_step "Configuring Oh My Zsh"
 # Provides the prompt and completion. RUNZSH= stops the installer dropping

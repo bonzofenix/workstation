@@ -56,10 +56,21 @@ log_error() {
 run_with_spin() {
   local title="$1"; shift
   if _has_gum; then
-    gum spin --spinner dot --title "$title" -- "$@"
+    # --show-error: without it a failing command's output is swallowed.
+    gum spin --spinner dot --show-error --title "$title" -- "$@"
   else
     echo "  • $title"
     "$@"
+  fi
+}
+
+# Installs the plugins tmux.conf lists; tpm skips any already present.
+# Loud on failure: without resurrect and continuum nothing is saved, and
+# that only shows after a reboot restores nothing.
+install_tmux_plugins() {
+  if ! run_with_spin "Installing tmux plugins..." ~/.tmux/plugins/tpm/bin/install_plugins; then
+    log_error "tmux plugins failed to install; sessions will not survive a reboot. Rerun ~/.tmux/plugins/tpm/bin/install_plugins to see why"
+    return 1
   fi
 }
 
@@ -87,7 +98,10 @@ function add_to_file(){
   local file_changed="false"
 
   for file_line in "${@:2}"; do
-    if ! grep -q "${file_line//\"/\\\"}" "$file"; then
+    # -F: profile lines are shell code, not regexes. As a regex a line like
+    # [[ ... $- == *i* ]] is invalid; grep exits 2, `!` reads that as missing,
+    # and the line is appended on every run. Still a substring match (no -x).
+    if ! grep -qF -- "$file_line" "$file"; then
       echo "$file_line" >> "$file"
       file_changed="true"
     fi

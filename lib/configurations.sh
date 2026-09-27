@@ -51,15 +51,36 @@ log_step "Configuring tmux"
 [ ! -d ~/.tmux/plugins/tpm ] && run_with_spin "Cloning tmux plugin manager..." git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 [ -e ~/.tmux.conf ] && rm -f ~/.tmux.conf
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
+install_tmux_plugins
 
-log_step "Configuring herdr"
-mkdir -p ~/.config/herdr
-# Back up rather than rm: unlike ~/.tmux.conf this path may hold a real
-# config that was never symlinked, and losing it silently would be rude.
-if [ -e ~/.config/herdr/config.toml ] && [ ! -L ~/.config/herdr/config.toml ]; then
-  mv ~/.config/herdr/config.toml ~/.config/herdr/config.toml.bak-$(date +%Y%m%d-%H%M%S)
+# Start tmux in interactive terminals. Two guards:
+# - $- == *i*: ~/.zprofile is read by every zsh login shell, non-interactive
+#   ones included (zsh -lc). Where ~/.zprofile is also linked to
+#   ~/.bash_profile (this script only links ~/.zshenv; older setups added the
+#   other by hand), every zsh reads it through ~/.zshenv, and so does make's
+#   `source ~/.bash_profile`.
+# - TMUX_AUTOSTARTED: in that linked layout zsh sources the file twice (as
+#   ~/.zshenv, then ~/.zprofile); without it, detaching re-attached at once.
+#
+# Older installs wrote unguarded forms (`if [ -z $TMUX ] ; then tmux new -As
+# base ; fi`, `[ -z $TMUX ] && <prefix>/bin/tmux new -As base`) that #4 stopped
+# adding but left in place. Drop them and their header so they cannot attach
+# ahead of the guarded line.
+legacy_tmux_re='^(if )?\[ -z \$TMUX \].*tmux new -As base|^# Adding tmux to run by default on new terminal$'
+if grep -qsE -- "$legacy_tmux_re" ~/.zprofile; then
+  profile_without_legacy="$(grep -vE -- "$legacy_tmux_re" ~/.zprofile)"
+  # grep -v exits 1 when nothing is left and 2 on a read error; never rewrite
+  # the profile from a failed read.
+  if [ $? -le 1 ]; then
+    # Rewrite in place rather than mv, so a symlinked ~/.zprofile stays a link.
+    printf '%s\n' "$profile_without_legacy" > ~/.zprofile
+    log_success "Removed legacy tmux autostart from ~/.zprofile"
+  else
+    log_error "Could not read ~/.zprofile; remove its unguarded tmux autostart line by hand"
+  fi
 fi
-ln -fs "$WORKSTATION_DIR/assets/herdr/config.toml" ~/.config/herdr/config.toml
+add_to_profile '# Start tmux in interactive terminals' \
+               '[[ -z $TMUX && -z $TMUX_AUTOSTARTED && $- == *i* ]] && TMUX_AUTOSTARTED=1 && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
 
 log_step "Configuring history"
 add_to_profile '# Only ignore duplicates in history' \
