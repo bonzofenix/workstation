@@ -202,6 +202,9 @@
   },
   "outputStyle": "Concise",
   "sandbox": {
+    "excludedCommands": [
+      "trash:*"
+    ],
     "network": {
       "allowedDomains": [
         "github.com",
@@ -267,7 +270,8 @@
       "Bash(sqlite3 *.db \"SELECT*\")",
       "Bash(qmd query:*)",
       "Bash(qmd get:*)",
-      "Bash(mdfind:*)"
+      "Bash(mdfind:*)",
+      "Bash(trash:*) — moves files/dirs to the macOS Trash, which is recoverable (not irreversible deletion); allowed also inside compound scripts and loops"
     ],
     "soft_deny": [
       "$defaults",
