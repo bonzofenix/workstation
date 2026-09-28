@@ -56,7 +56,8 @@ log_step "Trusting this repo's directory"
 # A checkout owned by another uid (a macOS host dir bind-mounted into a Linux
 # container and used as root, say) makes git refuse it with "detected dubious
 # ownership". The ~/.gitconfig wipe above drops any earlier safe.directory
-# entry, and the hooks step below needs the repo readable, so trust it here.
+# entry, and the hooks step below fails until git trusts the repo, so trust the
+# checkout this script runs from here.
 git config --global --add safe.directory "$(cd "$WORKSTATION_DIR" && pwd -P)"
 
 log_step "Enabling this repo's hooks"
