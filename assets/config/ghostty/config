@@ -18,6 +18,13 @@ cursor-style-blink = false
 # Mouse
 mouse-hide-while-typing = true
 
+# Bell: Claude Code rings it (peon-ping hook) when a session finishes or needs
+# input, on this Mac or on any host reached over ssh. Play a sound, bounce the
+# dock icon and mark the tab title with 🔔.
+bell-features = audio,attention,title
+bell-audio-path = /System/Library/Sounds/Glass.aiff
+bell-audio-volume = 0.5
+
 # Shell integration
 shell-integration = detect
 shell-integration-features = cursor,sudo,title
