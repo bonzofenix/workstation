@@ -276,8 +276,8 @@ fi
 # Ring the terminal bell, so a session on any host is heard on the Mac.
 # Claude captures hook output, so write BEL to the pane's tty. tmux forwards it
 # to its client terminal (bell-action any), which over ssh is the outer tmux
-# pane, which forwards it again to Ghostty; Ghostty plays the bell sound
-# (bell-features in assets/config/ghostty/config). Each tmux also flags the
+# pane. The Mac's tmux plays the sound (alert-bell hook in assets/tmux.conf)
+# and forwards the bell to Ghostty, which marks the tab. Each tmux also flags the
 # window in its status bar when it is not the one on screen, so the tab for
 # the right host lights up too.
 if [ -n "$RING_BELL" ] && [ -n "${TMUX_PANE:-}" ]; then
