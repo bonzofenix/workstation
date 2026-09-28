@@ -19,11 +19,11 @@ cursor-style-blink = false
 mouse-hide-while-typing = true
 
 # Bell: Claude Code rings it (peon-ping hook) when a session finishes or needs
-# input, on this Mac or on any host reached over ssh. Play a sound, bounce the
-# dock icon and mark the tab title with 🔔.
-bell-features = audio,attention,title
-bell-audio-path = /System/Library/Sounds/Glass.aiff
-bell-audio-volume = 0.5
+# input, on this Mac or on any host reached over ssh. Bounce the dock icon and
+# mark the tab title with 🔔. The sound comes from tmux (alert-bell hook in
+# assets/tmux.conf): audio here stayed silent on 1.3.1, and enabling it too
+# would play the chime twice if it ever starts working.
+bell-features = no-audio,attention,title
 
 # Shell integration
 shell-integration = detect
