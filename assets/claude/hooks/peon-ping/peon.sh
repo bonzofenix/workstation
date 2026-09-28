@@ -59,6 +59,7 @@ emit("CWD", event.get("cwd", ""))
 AGENT_MODES = {"acceptEdits", "ignoreEdits", "bypassPermissions", "delegate"}
 session_id = event.get("session_id", "")
 perm_mode = event.get("permission_mode", "")
+emit("SESSION_ID", session_id)
 
 try:
     state = json.load(open(state_file))
@@ -77,7 +78,20 @@ emit_bool("IS_AGENT_SESSION", session_id in agent_sessions)
 )"
 
 [ "${ENABLED:-true}" = "false" ] && exit 0
-[ "${IS_AGENT_SESSION:-false}" = "true" ] && exit 0
+
+# The claude the tmux-pane-session hook tagged as this pane's own is the one
+# the user is driving. TMUX_PANE is inherited, so a `claude -p` run from the
+# pane (skill evals) or a background session carries it too; those are not.
+OWNS_PANE=""
+if [ -n "${TMUX_PANE:-}" ] && [ -n "${SESSION_ID:-}" ] &&
+   [ "$(tmux show-option -p -t "$TMUX_PANE" -v @claude_session 2>/dev/null)" = "$SESSION_ID" ]; then
+  OWNS_PANE="1"
+fi
+
+# The permission-mode guess marks sessions the user drives too (`c` runs with
+# --dangerously-skip-permissions; Shift+Tab into acceptEdits sticks for good),
+# so the pane's own claude is never skipped as an agent.
+[ "${IS_AGENT_SESSION:-false}" = "true" ] && [ -z "$OWNS_PANE" ] && exit 0
 
 # Extract and sanitize project name for display
 PROJECT="${CWD##*/}"
@@ -151,6 +165,7 @@ SOUND_CATEGORY=""
 TAB_STATUS=""
 SHOW_MARKER=""
 TRIGGER_ALERT=""
+RING_BELL=""
 
 case "$EVENT" in
   SessionStart)
@@ -165,9 +180,17 @@ case "$EVENT" in
     TAB_STATUS="working"
     ;;
   Stop)
-    # No sound - Stop fires after each tool, idle_prompt is the real completion signal
+    # Stop fires once per turn, when Claude finishes responding. No voice line
+    # (idle_prompt plays "complete" once the answer has sat unread), but alert
+    # and ring the bell now. A `claude -p` run from the pane fires Stop too,
+    # so only the pane's own claude may alert. A claude started through a
+    # wrapper that forks (caffeinate) is never tagged and stays quiet.
     TAB_STATUS="done"
     SHOW_MARKER="1"
+    if [ -n "$OWNS_PANE" ]; then
+      TRIGGER_ALERT="1"
+      RING_BELL="1"
+    fi
     ;;
   Notification)
     case "$NOTIFY_TYPE" in
@@ -176,6 +199,14 @@ case "$EVENT" in
         TAB_STATUS="needs approval"
         SHOW_MARKER="1"
         TRIGGER_ALERT="1"
+        RING_BELL="1"
+        ;;
+      elicitation_dialog|elicitation_url_dialog)
+        SOUND_CATEGORY="permission"
+        TAB_STATUS="needs input"
+        SHOW_MARKER="1"
+        TRIGGER_ALERT="1"
+        RING_BELL="1"
         ;;
       idle_prompt)
         SOUND_CATEGORY="complete"
@@ -210,10 +241,14 @@ esac
 # Build tab title with optional attention marker
 TAB_TITLE="${SHOW_MARKER:+● }${PROJECT}: ${TAB_STATUS}"
 
-# Get tmux window ID once for reuse
+# Get tmux window ID once for reuse. WINDOW_IN_VIEW is 1 when the window is
+# the current one of an attached session.
 WINDOW_ID=""
+WINDOW_IN_VIEW=""
 if [ -n "${TMUX_PANE:-}" ] && { [ "$TMUX_RENAME_WINDOW" = "true" ] || [ -n "$TRIGGER_ALERT" ]; }; then
-  WINDOW_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{window_id}')
+  read -r WINDOW_ID WINDOW_IN_VIEW < <(
+    tmux display-message -t "$TMUX_PANE" -p '#{window_id} #{&&:#{window_active},#{session_attached}}'
+  )
 
   # Renaming the window is opt-in: the colour alert alone is enough to draw
   # attention, and rewriting the tab title churns the window list.
@@ -238,8 +273,22 @@ if [ -n "$SOUND_CATEGORY" ]; then
   fi
 fi
 
-# Highlight tmux window when attention needed
-if [ -n "$TRIGGER_ALERT" ] && [ -n "$WINDOW_ID" ]; then
+# Ring the terminal bell, so a session on any host is heard on the Mac.
+# Claude captures hook output, so write BEL to the pane's tty. tmux forwards it
+# to its client terminal (bell-action any), which over ssh is the outer tmux
+# pane, which forwards it again to Ghostty; Ghostty plays the bell sound
+# (bell-features in assets/config/ghostty/config). Each tmux also flags the
+# window in its status bar when it is not the one on screen, so the tab for
+# the right host lights up too.
+if [ -n "$RING_BELL" ] && [ -n "${TMUX_PANE:-}" ]; then
+  PANE_TTY=$(tmux display-message -t "$TMUX_PANE" -p '#{pane_tty}')
+  [ -w "$PANE_TTY" ] && printf '\a' > "$PANE_TTY"
+fi
+
+# Highlight tmux window when attention needed. Skip the window already on
+# screen: window-status-style does not show on the current window, and the
+# alert would only light up once the user switched away from what they saw.
+if [ -n "$TRIGGER_ALERT" ] && [ -n "$WINDOW_ID" ] && [ "$WINDOW_IN_VIEW" != "1" ]; then
   tmux set-window-option -t "$WINDOW_ID" window-status-style "$TMUX_ALERT_STYLE"
   tmux set-option -w -t "$WINDOW_ID" @claude_alert 1
 fi

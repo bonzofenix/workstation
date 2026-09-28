@@ -17,7 +17,10 @@ pane_pid="$(tmux display -p -t "$TMUX_PANE" '#{pane_pid}' 2>/dev/null)" || exit 
 # TMUX_PANE is inherited, so Claude processes that are not the pane's own
 # carry it too: a `claude -p` run from the pane's session (skill evals do
 # this), or a background session. Only the claude that is a direct child of
-# the pane shell counts; it is also the only one tmux-resurrect records.
+# the pane shell counts; it is also the only one tmux-resurrect records. A
+# claude that is the pane's own process (`exec claude`, `tmux new-window
+# claude`) is tagged too, so peon-ping alerts for it, but resurrect does not
+# see it and will not reopen it.
 pid=$PPID
 while [ "${pid:-1}" -gt 1 ]; do
   case "$(ps -o args= -p "$pid" | awk '{ print $1 }')" in
@@ -26,7 +29,7 @@ while [ "${pid:-1}" -gt 1 ]; do
   pid="$(ps -o ppid= -p "$pid" | tr -d ' ')"
 done
 [ "${pid:-1}" -gt 1 ] || exit 0
-[ "$(ps -o ppid= -p "$pid" | tr -d ' ')" = "$pane_pid" ] || exit 0
+[ "$pid" = "$pane_pid" ] || [ "$(ps -o ppid= -p "$pid" | tr -d ' ')" = "$pane_pid" ] || exit 0
 
 fields="$(printf '%s' "$input" | python3 -c '
 import json, sys
