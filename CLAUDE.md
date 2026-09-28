@@ -35,7 +35,7 @@ DEBUG=true make install    # Enable debug output
   - `configurations.sh` - Sets up dotfiles, shell configs, PATH, and symlinks configuration files
   - `osx-configurations.sh` - Configures macOS system preferences
   - `nix.sh` - Sets up Nix package manager
-  - `claude-configs.sh` - Links Claude settings, hooks, statusline and memory; runs `skills-bundle`
+  - `claude-configs.sh` - Links Claude settings, global CLAUDE.md, hooks, statusline and memory; runs `skills-bundle`
 
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
   - Git workflow: `cleanup-branches`, `cleanup-worktrees`, `delete-branch`, `worktrees`, `new-worktree`
@@ -131,7 +131,7 @@ is split across three repos:
 
 | Repo | Visibility | Holds | Local clone |
 |---|---|---|---|
-| `bonzofenix/workstation` (this) | public | `bin/`, `lib/`, dotfiles, `assets/claude/` settings, hooks, statusline | `~/workstation` |
+| `bonzofenix/workstation` (this) | public | `bin/`, `lib/`, dotfiles, `assets/claude/` settings, global CLAUDE.md, hooks, statusline | `~/workstation` |
 | `bonzofenix/skills` | public | general-purpose skills + the `Skillfile` | `$SKILLS_DIR` (`~/workspace/skills`) |
 | `bonzofenix/memory` | private | memory, work skills, `Skillfile.local`, anything private | `$MEMORY_DIR` (`~/workspace/memory`) |
 
