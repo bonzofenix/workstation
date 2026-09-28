@@ -28,6 +28,7 @@ function main() {
   mkdir -p "$target_dir/hooks"
 
   link_if_missing "$source_dir/settings.json" "$target_dir/settings.json" "settings.json"
+  link_if_missing "$source_dir/CLAUDE.md" "$target_dir/CLAUDE.md" "global CLAUDE.md"
   link_if_missing "$source_dir/statusline-command.sh" "$target_dir/statusline-command.sh" "statusline"
   # Every hook, not a hand-picked list: settings.json references them all, and
   # a hook it names but that was never linked fails on every tool call.
