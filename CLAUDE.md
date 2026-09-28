@@ -74,7 +74,7 @@ tmux-resurrect and tmux-continuum save the tmux layout periodically
 (`@continuum-save-interval` in `assets/tmux.conf`) and restore it when the
 tmux server starts, so a reboot plus a new terminal brings back every session,
 window and pane. Panes that were running `claude` reopen their conversation:
-- The `tmux-pane-session` hook (`assets/claude/hooks/`) tags the pane with `@claude_session` and `@claude_cwd` on SessionStart and clears them on SessionEnd. Only the claude that is the pane shell's direct child tags it, so a nested `claude -p` or a background session cannot.
+- The `tmux-pane-session` hook (`assets/claude/hooks/`) tags the pane with `@claude_session` and `@claude_cwd` on SessionStart and clears them on SessionEnd. Only the claude that is the pane shell's direct child (or the pane's own process, as with `exec claude`) tags it, so a nested `claude -p` or a background session cannot. peon-ping also uses the tag: only the tagged claude rings the terminal bell when a turn finishes.
 - `bin/claude-tmux-session save` (resurrect post-save hook) snapshots the tags to `${XDG_DATA_HOME:-~/.local/share}/tmux/resurrect/claude-sessions`
 - `bin/claude-tmux-session resume` runs in each restored claude pane: `cd <cwd> && claude --resume <id>`, or the `claude --resume` picker when the pane has no saved conversation. Original CLI flags (`--model` etc.) are not restored.
 

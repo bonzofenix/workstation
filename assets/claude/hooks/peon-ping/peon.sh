@@ -184,7 +184,7 @@ case "$EVENT" in
     # (idle_prompt plays "complete" once the answer has sat unread), but alert
     # and ring the bell now. A `claude -p` run from the pane fires Stop too,
     # so only the pane's own claude may alert. A claude started through a
-    # wrapper (caffeinate, direnv exec) is never tagged and stays quiet.
+    # wrapper that forks (caffeinate) is never tagged and stays quiet.
     TAB_STATUS="done"
     SHOW_MARKER="1"
     if [ -n "$OWNS_PANE" ]; then
