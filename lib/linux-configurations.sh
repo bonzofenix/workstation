@@ -43,8 +43,9 @@ add_to_profile '# Adds local bin to path' \
 add_to_profile '# Add Go toolchain' \
                'path+=("/usr/local/go/bin")'
 
-# npm's global prefix is moved here by linux-packages.sh so global installs
-# (Claude Code among them) do not need sudo.
+# npm global installs made under ~/.npm-global stay on PATH. Older machines
+# installed Claude Code there; that copy comes first on PATH, so uninstall it
+# to move to the official installer.
 add_to_profile '# npm global bin' \
                'path=("$HOME/.npm-global/bin" $path)'
 

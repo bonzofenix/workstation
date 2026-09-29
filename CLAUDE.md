@@ -19,6 +19,7 @@ make git-aliases      # Setup git aliases
 make configurations   # Link configuration files
 make osx-configurations # Setup macOS preferences
 make nix              # Setup Nix package manager
+make claude-code      # Install the Claude Code CLI (official installer)
 
 # Optional flags
 NO_BREW=true make install  # Skip homebrew installation
@@ -35,6 +36,7 @@ DEBUG=true make install    # Enable debug output
   - `configurations.sh` - Sets up dotfiles, shell configs, PATH, and symlinks configuration files
   - `osx-configurations.sh` - Configures macOS system preferences
   - `nix.sh` - Sets up Nix package manager
+  - `claude-code.sh` - Installs the Claude Code CLI with `curl -fsSL https://claude.ai/install.sh | bash`; skips when `claude` is already installed
   - `claude-configs.sh` - Links Claude settings, global CLAUDE.md, hooks, statusline and memory; runs `skills-bundle`
 
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
