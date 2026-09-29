@@ -17,6 +17,7 @@ make homebrew          # Install Homebrew packages
 make git              # Configure git settings
 make configurations   # Link configuration files
 make osx-configurations # Setup macOS preferences
+make claude-code      # Install the Claude Code CLI
 ```
 
 **Prerequisites**: macOS with Xcode Command Line Tools installed
@@ -42,7 +43,7 @@ git config credential.https://<ghe-host>.username <user>
 - **Development tools**: Neovim, direnv, devbox, GitHub Copilot
 - **Custom scripts**: 50+ utilities in `bin/` (worktree management, AI-powered tools)
 - **AI integration**: autodiff, autorefactor, autocommit
-- **Claude Code**: settings, hooks and statusline; skills and plugins declared in the [`Skillfile`](https://github.com/bonzofenix/skills/blob/main/Skillfile) and applied by `skills-bundle`
+- **Claude Code**: the `claude` CLI (official installer), settings, hooks and statusline; skills and plugins declared in the [`Skillfile`](https://github.com/bonzofenix/skills/blob/main/Skillfile) and applied by `skills-bundle`
 
 ## Key Features
 

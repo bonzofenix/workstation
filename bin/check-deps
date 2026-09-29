@@ -83,7 +83,7 @@ check_command "git-duet" "optional" "brew tap git-duet/tap && brew install git-d
 
 echo ""
 echo "AI-powered scripts:"
-check_command "claude" "optional" "Install Claude CLI from https://claude.ai/cli"
+check_command "claude" "optional" "make claude-code (or: curl -fsSL https://claude.ai/install.sh | bash)"
 check_command "sgpt" "optional" "pip install shell-gpt"
 
 echo ""

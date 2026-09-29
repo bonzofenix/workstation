@@ -10,13 +10,13 @@ default: install
 # This will grab all targets in the Makefile and make them PHONY
 .PHONY: $(MAKECMDGOALS)
 
-install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals devbox claude-configs
+install: check-dependencies cache-password homebrew git configurations osx-configurations nix npm-globals devbox claude-code claude-configs
 	@source ~/.bash_profile
 	@gum style --foreground 2 --bold "  Installation complete!"
 
 # Linux workstation: the same shell, git and Claude setup as macOS, without
 # Homebrew or the osx-configurations defaults writes.
-install-linux: linux-packages git linux-configurations claude-configs
+install-linux: linux-packages git linux-configurations claude-code claude-configs
 	@echo "  Linux installation complete. Open a new shell to pick it up."
 
 # Adds what a VPS needs on top of install-linux: Go, PostgreSQL, Caddy,
@@ -74,8 +74,13 @@ osx-configurations:
 git:
 	@DEBUG="${DEBUG}" ./lib/git.sh
 
+claude-code:
+	@DEBUG="${DEBUG}" ./lib/claude-code.sh
+
+# ~/.local/bin is only on PATH in a new shell, so a claude that claude-code
+# just installed there would be invisible to skills-bundle without this.
 claude-configs:
-	@DEBUG="${DEBUG}" ./lib/claude-configs.sh
+	@PATH="$${HOME}/.local/bin:$${PATH}" DEBUG="${DEBUG}" ./lib/claude-configs.sh
 
 devbox:
 	@DEBUG="${DEBUG}" ./lib/devbox.sh
