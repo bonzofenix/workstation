@@ -43,8 +43,9 @@ add_to_profile '# Adds local bin to path' \
 add_to_profile '# Add Go toolchain' \
                'path+=("/usr/local/go/bin")'
 
-# npm global installs made under ~/.npm-global (older machines installed
-# Claude Code there) stay on PATH.
+# npm global installs made under ~/.npm-global stay on PATH. Older machines
+# installed Claude Code there; that copy comes first on PATH, so uninstall it
+# to move to the official installer.
 add_to_profile '# npm global bin' \
                'path=("$HOME/.npm-global/bin" $path)'
 

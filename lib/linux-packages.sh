@@ -105,8 +105,8 @@ if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# Node from NodeSource rather than the Ubuntu archive, which ships a version
-# too old for current npm tooling.
+# Node from NodeSource rather than the Ubuntu archive, which ships an old
+# version. Kept as a general-purpose runtime for npx-launched tools.
 if ! command -v node >/dev/null 2>&1; then
   log_step "Installing Node.js"
   curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
