@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# Ctrl-R for Claude Code: fuzzy-search every conversation, finished or still
+# running, and get back into it.
+#
+# Ctrl+Shift+R in Ghostty sends M-R, which tmux turns into a popup running
+# `claude-search --popup` (assets/tmux.conf). Run it by hand anywhere else;
+# any arguments pre-fill the query.
+#
+#   enter   a running session: jump to its tmux pane.
+#           a finished one: resume it in the pane you came from when that pane
+#           sits at a shell prompt, otherwise in a new tmux window.
+#   ctrl-f  resume a copy (--fork-session), leaving the original untouched; the
+#           way to branch off a session that is still running.
+#   ctrl-r  rebuild the list.
+#
+# Once resumed, /compact trims a long conversation before carrying on.
+#
+# The index is one cache entry per transcript under
+# ${XDG_CACHE_HOME:-~/.cache}/claude-search, rebuilt only when the transcript
+# is newer than its entry, so only the first run reads every transcript. Each
+# entry holds the title, the first cwd, and the user prompts plus the start of
+# each assistant reply, which is what the search matches against.
+set -euo pipefail
+
+claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/claude-search"
+self="$(cd "$(dirname "$0")" && pwd -P)/${0##*/}"
+
+# GNU coreutils may shadow the BSD tools on macOS, so try both spellings.
+mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
+fmt_date() { date -d "@$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -r "$1" '+%Y-%m-%d %H:%M'; }
+
+transcripts() {
+  # Subagent transcripts live one level deeper and are not resumable.
+  # -H: follow projects itself when it is a symlink.
+  find -H "$claude_dir/projects" -mindepth 2 -maxdepth 2 -name '*.jsonl' 2>/dev/null
+}
+
+# index_one writes <id>.line ("mtime path cwd display text", tab separated) and
+# <id>.log (the conversation, one message per line, for the preview). A
+# transcript without a single prompt leaves an empty .line so it is not
+# re-read every time.
+index_one() {
+  local f="$1" id m
+  id="$(basename "$f" .jsonl)"
+  m="$(mtime "$f")"
+  # -R + fromjson? skips the half-written last line of a running session.
+  jq -rR 'fromjson? // empty
+    | select(.isSidechain | not)
+    | def flat: gsub("\\s+"; " ") | ltrimstr(" ");
+      if .type == "ai-title" then "T\t" + (.aiTitle | flat)
+      elif .type == "custom-title" then "N\t" + (.customTitle | flat)
+      elif .type == "user" and (.isMeta | not) then
+        (if .cwd then "C\t" + .cwd else empty end),
+        (.message.content
+          | if type == "string" then . else map(select(.type == "text") | .text) | join(" ") end
+          | flat | select(length > 0 and (startswith("<") | not)) | "U\t" + .)
+      elif .type == "assistant" then
+        .message.content
+          | if type == "array" then map(select(.type == "text") | .text) | join(" ") else "" end
+          | flat | select(length > 0) | "A\t" + .[0:300]
+      else empty end' "$f" \
+    | awk -F '\t' -v OFS='\t' -v path="$f" -v mtime="$m" -v date="$(fmt_date "$m")" -v logf="$cache/$id.log" '
+        $1 == "C" && cwd == "" { cwd = $2 }
+        $1 == "T" { title = $2 }
+        $1 == "N" { name = $2 }
+        $1 == "U" { n++; if (first == "") first = $2; text = text " " $2; print "› " $2 > logf }
+        $1 == "A" { text = text " " $2; print "  " $2 > logf }
+        END {
+          if (n == 0) exit
+          if (name != "") title = name
+          if (title == "") title = substr(first, 1, 80)
+          if (cwd == "") cwd = "-"
+          # A worktree reads better as repo/worktree than by its own basename.
+          project = cwd
+          if (split(cwd, parts, "/.claude/worktrees/") == 2) {
+            sub(/.*\//, "", parts[1]); project = parts[1] "/" parts[2]
+          } else sub(/.*\//, "", project)
+          display = sprintf("\033[2m%s\033[0m  \033[36m%-24s\033[0m  %s", date, substr(project, 1, 24), title)
+          print mtime, path, cwd, display, substr(text, 1, 20000)
+        }' > "$cache/$id.line.tmp"
+  mv "$cache/$id.line.tmp" "$cache/$id.line"
+}
+
+# list prints "id path cwd live display text" per conversation, newest first.
+# live is the session's tmux target when it is running inside tmux, "live"
+# when it runs elsewhere, and "-" when it is not running.
+list() {
+  mkdir -p "$cache"
+  local f id running
+  while IFS= read -r f; do
+    id="$(basename "$f" .jsonl)"
+    if [ "$f" -nt "$cache/$id.line" ]; then index_one "$f"; fi
+  done < <(transcripts)
+
+  # Every running claude keeps a <pid>.json; a crashed one leaves it behind,
+  # hence the kill -0.
+  running="$(
+    for f in "$claude_dir"/sessions/*.json; do
+      [ -f "$f" ] || continue
+      jq -r '[.pid, .sessionId, (.tmux // "live")] | @tsv' "$f" 2>/dev/null
+    done | while IFS=$'\t' read -r pid sid target; do
+      kill -0 "$pid" 2>/dev/null && printf '%s\t%s\n' "$sid" "$target"
+    done
+  )"
+
+  transcripts | while IFS= read -r f; do cat "$cache/$(basename "$f" .jsonl).line" 2>/dev/null || true; done \
+    | sort -t $'\t' -k1,1rn \
+    | RUNNING="$running" awk -F '\t' -v OFS='\t' '
+        BEGIN {
+          # From the environment: awk -v rejects the newlines in the list.
+          n = split(ENVIRON["RUNNING"], rows, "\n")
+          for (i = 1; i <= n; i++) if (split(rows[i], kv, "\t") == 2) live[kv[1]] = kv[2]
+        }
+        {
+          id = $2; sub(/.*\//, "", id); sub(/\.jsonl$/, "", id)
+          target = (id in live) ? live[id] : "-"
+          mark = (target == "-") ? "  " : "\033[32m●\033[0m "
+          print id, $2, $3, target, mark $4, $5
+        }'
+}
+
+# preview shows where a conversation ran and, when there is a query, the
+# messages that match its first word; otherwise how the conversation ended.
+preview() {
+  local id="$1" query="${2:-}" log word
+  log="$cache/$id.log"
+  printf '\033[1m%s\033[0m\n' "$id"
+  [ -f "$log" ] || return 0
+  word="${query%% *}"
+  word="${word#\'}"
+  if [ -n "$word" ] && grep -qiF -- "$word" "$log"; then
+    grep -iF --color=always -- "$word" "$log" | cut -c1-600 | head -40
+  else
+    tail -n 30 "$log" | cut -c1-600
+  fi
+}
+
+run_in() {
+  local dir="$1" pane="$2"; shift 2
+  local cmd
+  cmd="cd $(printf '%q' "$dir") && $(printf '%q ' "$@")"
+  if [ -n "$pane" ]; then
+    # Typed into the pane when it is idle at a prompt, like Ctrl-R would;
+    # typed rather than run directly so the claude is the pane shell's child
+    # and the tmux-pane-session hook tags the pane for resurrect.
+    case "$(tmux display -p -t "$pane" '#{pane_current_command}')" in
+      zsh | bash | fish | sh | -zsh | -bash) ;;
+      *) pane="$(tmux new-window -P -F '#{pane_id}' -c "$dir")" ;;
+    esac
+    tmux send-keys -t "$pane" "$cmd" Enter
+  else
+    cd -- "$dir"
+    exec "$@"
+  fi
+}
+
+pick() {
+  local pane="" query="" out key line id cwd live fork=""
+  if [ "${1:-}" = --popup ]; then
+    # display-popup does not expand #{pane_id} in its command, but from
+    # inside the popup the current pane is still the one beneath it.
+    pane="$(tmux display -p '#{pane_id}')"
+    shift
+  fi
+  query="$*"
+  command -v fzf >/dev/null || { echo "claude-search: fzf not installed (brew install fzf)" >&2; exit 1; }
+
+  # --no-hscroll keeps date, project and title in view when the match is far
+  # into the text; the preview shows the matching messages instead.
+  out="$(list | fzf --ansi --delimiter=$'\t' --with-nth=5,6 --exact --scheme=history --no-hscroll \
+    --query="$query" --prompt='claude> ' --expect=ctrl-f \
+    --header='enter: resume / jump   ctrl-f: fork a copy   ctrl-r: reload   ● running' \
+    --bind="ctrl-r:reload($(printf '%q' "$self") list)" \
+    --preview="$(printf '%q' "$self") preview {1} {q}" --preview-window=right,45%,wrap)" || exit 0
+
+  key="$(sed -n 1p <<<"$out")"
+  line="$(sed -n 2p <<<"$out")"
+  [ -n "$line" ] || exit 0
+  IFS=$'\t' read -r id _ cwd live _ <<<"$line"
+  [ "$key" = ctrl-f ] && fork=--fork-session
+
+  if [ -z "$fork" ] && [ "$live" != "-" ]; then
+    if [ "$live" = live ]; then
+      echo "claude-search: $id is running outside tmux; ctrl-f forks a copy instead" >&2
+      exit 1
+    elif [ -n "${TMUX:-}" ]; then
+      exec tmux switch-client -t "$live"
+    else
+      exec tmux attach -t "$live"
+    fi
+  fi
+
+  if [ ! -d "$cwd" ]; then
+    # Resume looks the transcript up by the directory it started in.
+    echo "claude-search: $cwd is gone; recreate it or resume $id from its checkout" >&2
+    exit 1
+  fi
+  run_in "$cwd" "$pane" claude --resume "$id" ${fork:+"$fork"}
+}
+
+case "${1:-}" in
+  list) list ;;
+  preview) shift; preview "$@" ;;
+  -h | --help) sed -n '2,/^set -e/p' "$0" | sed '$d; s/^# \{0,1\}//' ;;
+  *) pick "$@" ;;
+esac

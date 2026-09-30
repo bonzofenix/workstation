@@ -47,6 +47,9 @@ brew "tree"
 # jq
 brew "jq"
 
+# fzf (bin/claude-search)
+brew "fzf"
+
 # nmap
 brew "nmap"
 
