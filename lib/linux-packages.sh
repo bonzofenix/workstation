@@ -44,6 +44,7 @@ APT_PACKAGES=(
   htop
   rsync
   ripgrep
+  fzf
   silversearcher-ag
   shellcheck
   neovim

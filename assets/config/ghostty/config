@@ -35,6 +35,9 @@ keybind = super+v=paste_from_clipboard
 keybind = super+n=new_window
 keybind = super+t=new_tab
 keybind = super+w=close_surface
+# Ctrl+Shift+R: search Claude conversations. Terminals send Ctrl+Shift+R as
+# plain Ctrl-R, so send M-R instead, which tmux binds to bin/claude-search.
+keybind = ctrl+shift+r=esc:R
 
 # macOS specific
 macos-titlebar-style = tabs

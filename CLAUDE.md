@@ -78,6 +78,12 @@ window and pane. Panes that were running `claude` reopen their conversation:
 - `bin/claude-tmux-session save` (resurrect post-save hook) snapshots the tags to `${XDG_DATA_HOME:-~/.local/share}/tmux/resurrect/claude-sessions`
 - `bin/claude-tmux-session resume` runs in each restored claude pane: `cd <cwd> && claude --resume <id>`, or the `claude --resume` picker when the pane has no saved conversation. Original CLI flags (`--model` etc.) are not restored.
 
+### Claude Session Search (Ctrl+Shift+R)
+
+Ctrl-R for Claude conversations. Ghostty sends Ctrl+Shift+R as `M-R` (terminals otherwise send it as plain Ctrl-R); tmux binds `M-R` to a popup running `bin/claude-search`:
+- The list is every transcript in `~/.claude/projects/*/*.jsonl`, listed newest first. fzf filters it in `--exact` mode (every space-separated word must appear as typed; case-insensitive unless the query has an uppercase letter) and ranks matches by score, ties newest first. It searches the date, project and title shown plus every user prompt and the first 300 characters of each assistant reply. The index is a per-transcript cache in `${XDG_CACHE_HOME:-~/.cache}/claude-search`, rebuilt only for transcripts newer than their entry; the first run reads everything (~20s), later runs take under a second.
+- Running sessions (`~/.claude/sessions/<pid>.json` whose pid is still a claude or node process) are marked ●; enter jumps to their tmux pane, or, for one running outside tmux, says to fork it with ctrl-f instead. Enter on a finished one resumes it (`cd <first cwd> && claude --resume <id>`), typed into the pane Ctrl+Shift+R came from when it sits at a shell prompt, else in a new window. ctrl-f resumes a copy with `--fork-session`.
+
 ### Git Configuration
 
 - **Default branch**: `main`
