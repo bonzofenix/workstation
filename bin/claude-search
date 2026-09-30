@@ -3,12 +3,14 @@
 # running, and get back into it.
 #
 # Ctrl+Shift+R in Ghostty sends M-R, which tmux turns into a popup running
-# `claude-search --popup` (assets/tmux.conf). Run it by hand anywhere else;
-# any arguments pre-fill the query.
+# `claude-search --popup` (assets/tmux.conf). It also runs by hand; any
+# arguments pre-fill the query.
 #
-#   enter   a running session: jump to its tmux pane.
-#           a finished one: resume it in the pane you came from when that pane
-#           sits at a shell prompt, otherwise in a new tmux window.
+#   enter   a running session: jump to its tmux pane (refused when it runs
+#           outside tmux; fork it with ctrl-f instead).
+#           a finished one: from the popup, resume it in the pane you came from
+#           when that pane sits at a shell prompt, otherwise in a new tmux
+#           window; run by hand, resume it in place.
 #   ctrl-f  resume a copy (--fork-session), leaving the original untouched; the
 #           way to branch off a session that is still running.
 #   ctrl-r  rebuild the list.
@@ -31,19 +33,20 @@ mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
 fmt_date() { date -d "@$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -r "$1" '+%Y-%m-%d %H:%M'; }
 
 transcripts() {
-  # Subagent transcripts live one level deeper and are not resumable.
+  # Subagent transcripts live under <session-id>/subagents/ and are not
+  # resumable.
   # -H: follow projects itself when it is a symlink.
   find -H "$claude_dir/projects" -mindepth 2 -maxdepth 2 -name '*.jsonl'
 }
 
 # index_one writes <id>.line ("mtime path cwd display text", tab separated) and
-# <id>.log (the conversation, one message per line, for the preview). A
-# transcript without a single prompt leaves an empty .line so it is not
-# re-read every time.
+# <id>.log (the indexed user prompts and the first 300 characters of each
+# assistant reply, one per line, for the preview). A transcript without a
+# single prompt leaves an empty .line so it is not re-read every time.
 #
-# Failures are checked by hand: list runs inside $(...), where bash turns
-# set -e off, and a half-written entry would be newer than its transcript and
-# so never rebuilt.
+# Failures are checked by hand: index_one is called on the left of ||, where
+# bash ignores set -e, and a half-written entry would be newer than its
+# transcript and so never rebuilt.
 index_one() {
   local f="$1" id m
   id="$(basename "$f" .jsonl)"
@@ -107,9 +110,11 @@ list() {
   done <<<"$files"
 
   # Every running claude keeps a <pid>.json. One left behind by a crash or a
-  # reboot may name a pid that is dead or now another program, so the pid
-  # must still be a claude. Neither a stale file nor one caught mid-write may
-  # fail the loop: under pipefail that would abort the whole list.
+  # reboot may name a pid that is dead or now another program, so the pid's
+  # process name must still be claude (or node, for an npm install; a pid
+  # reused by another node program still passes). Neither a stale file nor
+  # one caught mid-write may fail the loop: under pipefail that would abort
+  # the whole list.
   running="$(
     for f in "$claude_dir"/sessions/*.json; do
       [ -f "$f" ] || continue
@@ -143,8 +148,8 @@ list() {
         }'
 }
 
-# preview shows where a conversation ran and, when there is a query, the
-# messages that match its first word; otherwise how the conversation ended.
+# preview shows the session id and, when there is a query, the log lines
+# containing its first word (case-insensitive); otherwise the last 30 lines.
 preview() {
   local id="$1" query="${2:-}" log word
   log="$cache/$id.log"
