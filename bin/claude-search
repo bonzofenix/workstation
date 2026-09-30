@@ -33,19 +33,23 @@ fmt_date() { date -d "@$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -r "$1" '+%Y-%m
 transcripts() {
   # Subagent transcripts live one level deeper and are not resumable.
   # -H: follow projects itself when it is a symlink.
-  find -H "$claude_dir/projects" -mindepth 2 -maxdepth 2 -name '*.jsonl' 2>/dev/null
+  find -H "$claude_dir/projects" -mindepth 2 -maxdepth 2 -name '*.jsonl'
 }
 
 # index_one writes <id>.line ("mtime path cwd display text", tab separated) and
 # <id>.log (the conversation, one message per line, for the preview). A
 # transcript without a single prompt leaves an empty .line so it is not
 # re-read every time.
+#
+# Failures are checked by hand: list runs inside $(...), where bash turns
+# set -e off, and a half-written entry would be newer than its transcript and
+# so never rebuilt.
 index_one() {
   local f="$1" id m
   id="$(basename "$f" .jsonl)"
-  m="$(mtime "$f")"
+  m="$(mtime "$f")" || return 1
   # -R + fromjson? skips the half-written last line of a running session.
-  jq -rR 'fromjson? // empty
+  if ! jq -rR 'fromjson? // empty
     | select(.isSidechain | not)
     | def flat: gsub("\\s+"; " ") | ltrimstr(" ");
       if .type == "ai-title" then "T\t" + (.aiTitle | flat)
@@ -77,8 +81,11 @@ index_one() {
             sub(/.*\//, "", parts[1]); project = parts[1] "/" parts[2]
           } else sub(/.*\//, "", project)
           display = sprintf("\033[2m%s\033[0m  \033[36m%-24s\033[0m  %s", date, substr(project, 1, 24), title)
-          print mtime, path, cwd, display, substr(text, 1, 20000)
-        }' > "$cache/$id.line.tmp"
+          print mtime, path, cwd, display, text
+        }' > "$cache/$id.line.tmp"; then
+    echo "claude-search: could not index $f" >&2
+    return 1
+  fi
   mv "$cache/$id.line.tmp" "$cache/$id.line"
 }
 
@@ -86,25 +93,41 @@ index_one() {
 # live is the session's tmux target when it is running inside tmux, "live"
 # when it runs elsewhere, and "-" when it is not running.
 list() {
-  mkdir -p "$cache"
-  local f id running
+  local f id files running
+  if [ ! -d "$claude_dir/projects" ]; then
+    echo "claude-search: no conversations yet ($claude_dir/projects is missing)" >&2
+    return 1
+  fi
+  mkdir -p "$cache" || return 1
+  files="$(transcripts)" || return 1
   while IFS= read -r f; do
+    [ -n "$f" ] || continue
     id="$(basename "$f" .jsonl)"
-    if [ "$f" -nt "$cache/$id.line" ]; then index_one "$f"; fi
-  done < <(transcripts)
+    if [ "$f" -nt "$cache/$id.line" ]; then index_one "$f" || return 1; fi
+  done <<<"$files"
 
-  # Every running claude keeps a <pid>.json; a crashed one leaves it behind,
-  # hence the kill -0.
+  # Every running claude keeps a <pid>.json. One left behind by a crash or a
+  # reboot may name a pid that is dead or now another program, so the pid
+  # must still be a claude. Neither a stale file nor one caught mid-write may
+  # fail the loop: under pipefail that would abort the whole list.
   running="$(
     for f in "$claude_dir"/sessions/*.json; do
       [ -f "$f" ] || continue
-      jq -r '[.pid, .sessionId, (.tmux // "live")] | @tsv' "$f" 2>/dev/null
+      jq -r '[.pid, .sessionId, (.tmux // "live")] | @tsv' "$f" 2>/dev/null || true
     done | while IFS=$'\t' read -r pid sid target; do
-      kill -0 "$pid" 2>/dev/null && printf '%s\t%s\n' "$sid" "$target"
+      # A native install runs as claude (a background one as "claude
+      # bg-spare"), an npm one as node.
+      case "$(ps -o comm= -p "$pid" 2>/dev/null)" in
+        claude | "claude "* | */claude | node | */node) printf '%s\t%s\n' "$sid" "$target" ;;
+      esac
     done
   )"
 
-  transcripts | while IFS= read -r f; do cat "$cache/$(basename "$f" .jsonl).line" 2>/dev/null || true; done \
+  # Every transcript has a .line by now, an empty one when it has no prompt.
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    cat "$cache/$(basename "$f" .jsonl).line" || return 1
+  done <<<"$files" \
     | sort -t $'\t' -k1,1rn \
     | RUNNING="$running" awk -F '\t' -v OFS='\t' '
         BEGIN {
@@ -141,13 +164,16 @@ run_in() {
   local cmd
   cmd="cd $(printf '%q' "$dir") && $(printf '%q ' "$@")"
   if [ -n "$pane" ]; then
-    # Typed into the pane when it is idle at a prompt, like Ctrl-R would;
-    # typed rather than run directly so the claude is the pane shell's child
-    # and the tmux-pane-session hook tags the pane for resurrect.
-    case "$(tmux display -p -t "$pane" '#{pane_current_command}')" in
-      zsh | bash | fish | sh | -zsh | -bash) ;;
-      *) pane="$(tmux new-window -P -F '#{pane_id}' -c "$dir")" ;;
-    esac
+    # Typed into the pane when its shell is idle at a prompt, like Ctrl-R
+    # would; typed rather than run directly so the claude is the pane shell's
+    # child and the tmux-pane-session hook tags the pane for resurrect. The
+    # shell is at its prompt only while it owns the terminal's foreground
+    # process group; anything it runs (a script, an editor, claude) takes it.
+    local shell_pid
+    shell_pid="$(tmux display -p -t "$pane" '#{pane_pid}')"
+    if [ "$(ps -o tpgid= -p "$shell_pid" | tr -d ' ')" != "$shell_pid" ]; then
+      pane="$(tmux new-window -P -F '#{pane_id}' -c "$dir")"
+    fi
     tmux send-keys -t "$pane" "$cmd" Enter
   else
     cd -- "$dir"
@@ -164,15 +190,33 @@ pick() {
     shift
   fi
   query="$*"
-  command -v fzf >/dev/null || { echo "claude-search: fzf not installed (brew install fzf)" >&2; exit 1; }
+  local tool
+  for tool in fzf jq; do
+    command -v "$tool" >/dev/null || { echo "claude-search: $tool not installed (brew install $tool)" >&2; exit 1; }
+  done
+
+  # Built before fzf starts, so a failure is reported here rather than
+  # showing up as an empty list.
+  local entries
+  entries="$(list)" || { echo "claude-search: could not build the session list" >&2; exit 1; }
 
   # --no-hscroll keeps date, project and title in view when the match is far
   # into the text; the preview shows the matching messages instead.
-  out="$(list | fzf --ansi --delimiter=$'\t' --with-nth=5,6 --exact --scheme=history --no-hscroll \
+  # --tiebreak=index keeps equally good matches newest first.
+  local rc=0
+  out="$(fzf --ansi --delimiter=$'\t' --with-nth=5,6 --exact --tiebreak=index --no-hscroll \
     --query="$query" --prompt='claude> ' --expect=ctrl-f \
     --header='enter: resume / jump   ctrl-f: fork a copy   ctrl-r: reload   ● running' \
     --bind="ctrl-r:reload($(printf '%q' "$self") list)" \
-    --preview="$(printf '%q' "$self") preview {1} {q}" --preview-window=right,45%,wrap)" || exit 0
+    --preview="$(printf '%q' "$self") preview {1} {q}" --preview-window=right,45%,wrap \
+    <<<"$entries")" || rc=$?
+  # 1 is no match, 130 is Esc: close quietly. Anything else is an error, and a
+  # non-zero exit keeps the tmux popup open to show it.
+  case "$rc" in
+    0) ;;
+    1 | 130) exit 0 ;;
+    *) echo "claude-search: fzf failed (exit $rc)" >&2; exit "$rc" ;;
+  esac
 
   key="$(sed -n 1p <<<"$out")"
   line="$(sed -n 2p <<<"$out")"
