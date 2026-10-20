@@ -67,7 +67,7 @@ DEBUG=true make install    # Enable debug output
 The setup configures both bash and zsh:
 - Links `~/.zshenv -> ~/.bash_profile`; `add_to_profile` appends to `~/.zprofile` (read by zsh login shells), skipping any line whose text already appears in the file
 - Default shell uses vi mode keybindings
-- TMUX automatically starts in interactive zsh login shells outside tmux (session `base`)
+- Interactive zsh login shells outside tmux open `bin/terminal-start`, a gum picker: `local` attaches tmux session `base`; each literal `Host` alias in `~/.ssh/config` (no patterns, no dotted names) sshes there and attaches its tmux `base`. Esc gives a plain shell
 - PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
 
 ### tmux Session Restore
@@ -202,7 +202,7 @@ Key environment variables set by the installation:
 
 - The workstation uses **`main`** as the default branch
 - Git workflow scripts filter out `main`/`master` as protected branches
-- TMUX starts automatically on new terminal sessions
+- New terminals ask where to open (local tmux or an ssh host)
 - Direnv and devbox are configured for per-project environments
 - GitHub Copilot is installed for Neovim
 - The setup creates a symlink `~/icloud` to iCloud Drive folder

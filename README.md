@@ -68,6 +68,6 @@ See [`CLAUDE.md`](./CLAUDE.md) for full documentation and architecture details.
 
 - Some brew applications require re-entering sudo password (no workaround)
 - Old Homebrew installations can cause issues - follow WARNING messages and re-run
-- If TMUX doesn't auto-start, check `~/.zprofile` has the guarded `tmux new -As base` line and the terminal starts zsh as an interactive login shell
+- If TMUX doesn't auto-start, check `~/.zprofile` has the guarded `bin/terminal-start` line and the terminal starts zsh as an interactive login shell
 
 

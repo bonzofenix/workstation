@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# Pick where a new terminal opens: local tmux, or a host from ~/.ssh/config.
+# ~/.zprofile runs this in interactive login shells outside tmux.
+#
+#   local        tmux session `base` on this machine
+#   <host>       ssh to it and attach its tmux session `base`, or a login
+#                shell when the host has no tmux
+#   Esc/Ctrl-C   plain local shell, no tmux
+#
+# Detaching or leaving ssh drops back to the local shell, as before.
+#
+# Hosts come from ~/.ssh/config so no hostnames live in this public repo:
+# every literal `Host` alias, skipping patterns (*, ?, !) and dotted names
+# (github.com and other service aliases). `Include`d files are not read.
+# Without gum or any host it goes straight to local tmux.
+
+set -uo pipefail
+
+tmux_bin="$(command -v tmux || echo "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/tmux")"
+
+ssh_hosts() {
+  [[ -r ~/.ssh/config ]] || return 0
+  awk 'tolower($1) == "host" { for (i = 2; i <= NF; i++) if ($i !~ /[*?!.]/ && !seen[$i]++) print $i }' ~/.ssh/config
+}
+
+hosts="$(ssh_hosts)"
+if [[ -z "$hosts" ]] || ! command -v gum >/dev/null; then
+  exec "$tmux_bin" new -As base
+fi
+
+choice="$(printf 'local\n%s\n' "$hosts" | gum choose --header "Open terminal on")" || exit 0
+
+case "$choice" in
+  local) exec "$tmux_bin" new -As base ;;
+  *)     exec ssh -t -o ConnectTimeout=5 "$choice" \
+           'command -v tmux >/dev/null && exec tmux new -As base || exec "$SHELL" -l' ;;
+esac

@@ -53,7 +53,8 @@ log_step "Configuring tmux"
 ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 install_tmux_plugins
 
-# Start tmux in interactive terminals. Two guards:
+# Interactive terminals open bin/terminal-start: a gum picker for local tmux
+# (session `base`) or an ssh host from ~/.ssh/config. Two guards:
 # - $- == *i*: ~/.zprofile is read by every zsh login shell, non-interactive
 #   ones included (zsh -lc). Where ~/.zprofile is also linked to
 #   ~/.bash_profile (this script only links ~/.zshenv; older setups added the
@@ -64,9 +65,10 @@ install_tmux_plugins
 #
 # Older installs wrote unguarded forms (`if [ -z $TMUX ] ; then tmux new -As
 # base ; fi`, `[ -z $TMUX ] && <prefix>/bin/tmux new -As base`) that #4 stopped
-# adding but left in place. Drop them and their header so they cannot attach
-# ahead of the guarded line.
-legacy_tmux_re='^(if )?\[ -z \$TMUX \].*tmux new -As base|^# Adding tmux to run by default on new terminal$'
+# adding but left in place, and later the guarded line that attached tmux
+# directly, before the picker. Drop them and their headers so they cannot
+# attach ahead of the picker line.
+legacy_tmux_re='^(if )?\[ -z \$TMUX \].*tmux new -As base|TMUX_AUTOSTARTED=1 && .*tmux new -As base$|^# Adding tmux to run by default on new terminal$|^# Start tmux in interactive terminals$'
 if grep -qsE -- "$legacy_tmux_re" ~/.zprofile; then
   profile_without_legacy="$(grep -vE -- "$legacy_tmux_re" ~/.zprofile)"
   # grep -v exits 1 when nothing is left and 2 on a read error; never rewrite
@@ -79,8 +81,8 @@ if grep -qsE -- "$legacy_tmux_re" ~/.zprofile; then
     log_error "Could not read ~/.zprofile; remove its unguarded tmux autostart line by hand"
   fi
 fi
-add_to_profile '# Start tmux in interactive terminals' \
-               '[[ -z $TMUX && -z $TMUX_AUTOSTARTED && $- == *i* ]] && TMUX_AUTOSTARTED=1 && '"$HOMEBREW_PREFIX"'/bin/tmux new -As base'
+add_to_profile '# Pick local tmux or an ssh host in interactive terminals' \
+               '[[ -z $TMUX && -z $TMUX_AUTOSTARTED && $- == *i* ]] && TMUX_AUTOSTARTED=1 && ~/workstation/bin/terminal-start'
 
 log_step "Configuring history"
 add_to_profile '# Only ignore duplicates in history' \
