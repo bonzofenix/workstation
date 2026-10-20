@@ -67,7 +67,7 @@ DEBUG=true make install    # Enable debug output
 The setup configures both bash and zsh:
 - Links `~/.zshenv -> ~/.bash_profile`; `add_to_profile` appends to `~/.zprofile` (read by zsh login shells), skipping any line whose text already appears in the file
 - Default shell uses vi mode keybindings
-- Interactive zsh login shells outside tmux open `bin/terminal-start`, a gum picker: `local` attaches tmux session `base`; each literal `Host` alias in `~/.ssh/config` (no patterns, no dotted names) sshes there and attaches its tmux `base`. Esc gives a plain shell
+- Interactive zsh login shells outside tmux open `bin/terminal-start`, a gum picker: `local` attaches tmux session `base`; each literal `Host` alias in `~/.ssh/config` (no patterns, no dotted names) sshes there and attaches its tmux `main`. Esc gives a plain shell
 - PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
 
 ### tmux Session Restore

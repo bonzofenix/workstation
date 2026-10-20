@@ -4,8 +4,9 @@
 # ~/.zprofile runs this in interactive login shells outside tmux.
 #
 #   local        tmux session `base` on this machine
-#   <host>       ssh to it and attach its tmux session `base`, or a login
-#                shell when the host has no tmux
+#   <host>       ssh to it and attach its tmux session `main` (the session
+#                lib/linux-configurations.sh auto-attaches on ssh login), or a
+#                login shell when the host has no tmux
 #   Esc/Ctrl-C   plain local shell, no tmux
 #
 # Detaching or leaving ssh drops back to the local shell, as before.
@@ -21,7 +22,7 @@ tmux_bin="$(command -v tmux || echo "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/tmux"
 
 ssh_hosts() {
   [[ -r ~/.ssh/config ]] || return 0
-  awk 'tolower($1) == "host" { for (i = 2; i <= NF; i++) if ($i !~ /[*?!.]/ && !seen[$i]++) print $i }' ~/.ssh/config
+  awk 'tolower($1) == "host" { for (i = 2; i <= NF; i++) { if ($i ~ /^#/) break; if ($i !~ /[*?!.]/ && !seen[$i]++) print $i } }' ~/.ssh/config
 }
 
 hosts="$(ssh_hosts)"
@@ -31,8 +32,13 @@ fi
 
 choice="$(printf 'local\n%s\n' "$hosts" | gum choose --header "Open terminal on")" || exit 0
 
-case "$choice" in
-  local) exec "$tmux_bin" new -As base ;;
-  *)     exec ssh -t -o ConnectTimeout=5 "$choice" \
-           'command -v tmux >/dev/null && exec tmux new -As base || exec "$SHELL" -l' ;;
-esac
+[[ "$choice" == local ]] && exec "$tmux_bin" new -As base
+
+# Run the remote side in a login shell so its profile puts a Homebrew or
+# ~/.local tmux on PATH; sshd's command PATH alone misses those. The profile's
+# own tmux/picker autostart is guarded on interactive shells, so -lc skips it.
+# shellcheck disable=SC2016 # $SHELL expands on the remote
+remote_cmd='command -v tmux >/dev/null && exec tmux new -As main || exec "$SHELL" -l'
+# Most remotes lack terminfo for Ghostty's TERM, and tmux refuses to start.
+[[ "${TERM:-}" == xterm-ghostty ]] && export TERM=xterm-256color
+exec ssh -t -o ConnectTimeout=5 "$choice" "exec \"\$SHELL\" -lc $(printf '%q' "$remote_cmd")"
