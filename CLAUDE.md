@@ -67,14 +67,14 @@ DEBUG=true make install    # Enable debug output
 The setup configures both bash and zsh:
 - Links `~/.zshenv -> ~/.bash_profile`; `add_to_profile` appends to `~/.zprofile` (read by zsh login shells), skipping any line whose text already appears in the file
 - Default shell uses vi mode keybindings
-- Interactive zsh login shells outside tmux open `bin/terminal-start`, a gum picker: `local` attaches tmux session `base`; each literal `Host` alias in `~/.ssh/config` (no patterns, no dotted names) sshes there and attaches its tmux `main`. Esc gives a plain shell
+- On macOS, interactive zsh login shells outside tmux open `bin/terminal-start`, a gum picker: `local` attaches tmux session `base`; each literal `Host` alias in `~/.ssh/config` (no patterns, no dotted names) sshes there and attaches its tmux `main`, or a login shell if it has no tmux. Esc gives a plain shell. Without gum or any host it goes straight to local tmux
 - PATH includes: `~/workstation/bin`, `~/bin`, `~/.local/bin`, coreutils
 
 ### tmux Session Restore
 
 tmux-resurrect and tmux-continuum save the tmux layout periodically
 (`@continuum-save-interval` in `assets/tmux.conf`) and restore it when the
-tmux server starts, so a reboot plus a new terminal brings back every session,
+tmux server starts, so a reboot plus picking `local` in a new terminal brings back every session,
 window and pane. Panes that were running `claude` reopen their conversation:
 - The `tmux-pane-session` hook (`assets/claude/hooks/`) tags the pane with `@claude_session` and `@claude_cwd` on SessionStart and clears them on SessionEnd. Only the claude that is the pane shell's direct child (or the pane's own process, as with `exec claude`) tags it, so a nested `claude -p` or a background session cannot. peon-ping also uses the tag: only the tagged claude rings the terminal bell when a turn finishes.
 - `bin/claude-tmux-session save` (resurrect post-save hook) snapshots the tags to `${XDG_DATA_HOME:-~/.local/share}/tmux/resurrect/claude-sessions`
@@ -202,7 +202,7 @@ Key environment variables set by the installation:
 
 - The workstation uses **`main`** as the default branch
 - Git workflow scripts filter out `main`/`master` as protected branches
-- New terminals ask where to open (local tmux or an ssh host)
+- New terminals ask where to open (local tmux or an ssh host) when gum and ssh hosts are available
 - Direnv and devbox are configured for per-project environments
 - GitHub Copilot is installed for Neovim
 - The setup creates a symlink `~/icloud` to iCloud Drive folder

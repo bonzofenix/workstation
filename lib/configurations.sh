@@ -54,14 +54,16 @@ ln -fs "$WORKSTATION_DIR/assets/tmux.conf" ~/.tmux.conf
 install_tmux_plugins
 
 # Interactive terminals open bin/terminal-start: a gum picker for local tmux
-# (session `base`) or an ssh host from ~/.ssh/config. Two guards:
+# (session `base`) or an ssh host from ~/.ssh/config. When ~/workstation does
+# not have the script yet (installer run from a worktree before merge), the
+# line attaches local tmux directly. Two guards:
 # - $- == *i*: ~/.zprofile is read by every zsh login shell, non-interactive
 #   ones included (zsh -lc). Where ~/.zprofile is also linked to
 #   ~/.bash_profile (this script only links ~/.zshenv; older setups added the
 #   other by hand), every zsh reads it through ~/.zshenv, and so does make's
 #   `source ~/.bash_profile`.
 # - TMUX_AUTOSTARTED: in that linked layout zsh sources the file twice (as
-#   ~/.zshenv, then ~/.zprofile); without it, detaching re-attached at once.
+#   ~/.zshenv, then ~/.zprofile); without it, detaching reopened the picker at once.
 #
 # Older installs wrote unguarded forms (`if [ -z $TMUX ] ; then tmux new -As
 # base ; fi`, `[ -z $TMUX ] && <prefix>/bin/tmux new -As base`) that #4 stopped
@@ -69,20 +71,29 @@ install_tmux_plugins
 # directly, before the picker. Drop them and their headers so they cannot
 # attach ahead of the picker line.
 legacy_tmux_re='^(if )?\[ -z \$TMUX \].*tmux new -As base|TMUX_AUTOSTARTED=1 && .*tmux new -As base$|^# Adding tmux to run by default on new terminal$|^# Start tmux in interactive terminals$'
-if grep -qsE -- "$legacy_tmux_re" ~/.zprofile; then
-  profile_without_legacy="$(grep -vE -- "$legacy_tmux_re" ~/.zprofile)"
-  # grep -v exits 1 when nothing is left and 2 on a read error; never rewrite
-  # the profile from a failed read.
-  if [ $? -le 1 ]; then
-    # Rewrite in place rather than mv, so a symlinked ~/.zprofile stays a link.
-    printf '%s\n' "$profile_without_legacy" > ~/.zprofile
-    log_success "Removed legacy tmux autostart from ~/.zprofile"
+#
+# The rewrite truncates the live profile, so it only happens when the
+# filtered copy holds exactly the unmatched lines, and after a backup.
+# -a: one stray NUL byte makes BSD grep print "Binary file ... matches" in
+# place of the content and exit 0. grep -v exits 1 when nothing is left and
+# 2 on a read error.
+if grep -qsaE -- "$legacy_tmux_re" ~/.zprofile; then
+  profile_tmp="$(mktemp)"
+  profile_backup=~/.zprofile.bak-$(date +%Y%m%d-%H%M%S)
+  grep -avE -- "$legacy_tmux_re" ~/.zprofile > "$profile_tmp"
+  filter_status=$?
+  expected_lines=$(( $(grep -ac '' ~/.zprofile) - $(grep -acE -- "$legacy_tmux_re" ~/.zprofile) ))
+  # Write back with cat rather than mv, so a symlinked ~/.zprofile stays a link.
+  if [ "$filter_status" -le 1 ] && [ "$(grep -ac '' "$profile_tmp")" -eq "$expected_lines" ] \
+     && cp ~/.zprofile "$profile_backup" && cat "$profile_tmp" > ~/.zprofile; then
+    log_success "Removed legacy tmux autostart from ~/.zprofile (backup: $profile_backup)"
   else
-    log_error "Could not read ~/.zprofile; remove its unguarded tmux autostart line by hand"
+    log_error "Could not rewrite ~/.zprofile; remove its legacy tmux autostart lines by hand"
   fi
+  rm -f "$profile_tmp"
 fi
 add_to_profile '# Pick local tmux or an ssh host in interactive terminals' \
-               '[[ -z $TMUX && -z $TMUX_AUTOSTARTED && $- == *i* ]] && TMUX_AUTOSTARTED=1 && ~/workstation/bin/terminal-start'
+               '[[ -z $TMUX && -z $TMUX_AUTOSTARTED && $- == *i* ]] && TMUX_AUTOSTARTED=1 && if [[ -x ~/workstation/bin/terminal-start ]]; then ~/workstation/bin/terminal-start; else '"$HOMEBREW_PREFIX"'/bin/tmux new -As base; fi'
 
 log_step "Configuring history"
 add_to_profile '# Only ignore duplicates in history' \
