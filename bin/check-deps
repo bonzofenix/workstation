@@ -94,7 +94,6 @@ check_command "fly" "optional" "Install from your Concourse instance"
 
 echo ""
 echo "Containers:"
-check_command "docker" "optional" "brew install --cask docker"
 check_command "kubectl" "optional" "brew install kubectl"
 
 echo ""

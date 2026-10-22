@@ -33,9 +33,6 @@ cask "slack"
 # Video player
 cask "vlc"
 
-# Docker For Mac
-cask "docker-desktop"
-
 # Ruby tools
 brew "readline"
 
@@ -118,6 +115,10 @@ brew "ffmpeg"
 brew "exiftool"
 
 cask "spotify"
+
+# Lightweight Rust Spotify client (Premium required); trial alongside spotify
+tap "crmne/tap"
+cask "crmne/tap/spotifast"
 
 cask "git-credential-manager"
 
