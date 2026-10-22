@@ -111,7 +111,9 @@ brew "ffmpeg"
 
 brew "exiftool"
 
-cask "spotify"
+# Lightweight Rust Spotify client (Premium required)
+tap "crmne/tap"
+cask "crmne/tap/spotifast"
 
 cask "git-credential-manager"
 

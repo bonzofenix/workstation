@@ -20,7 +20,7 @@ brew update
 # sudo chown -R $(whoami) /usr/local/bin
 brew upgrade
 brew cleanup
-brew trust git-duet/tap oven-sh/bun josephpage/jetpack-io hashicorp/tap yakitrak/yakitrak steipete/tap 2>/dev/null || true
+brew trust git-duet/tap oven-sh/bun josephpage/jetpack-io hashicorp/tap yakitrak/yakitrak steipete/tap crmne/tap 2>/dev/null || true
 brew bundle --file $SCRIPT_DIR/../assets/work/Brewfile
 
 add_to_profile '# Homebrew Path' \
