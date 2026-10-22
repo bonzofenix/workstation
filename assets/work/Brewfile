@@ -33,9 +33,6 @@ cask "slack"
 # Video player
 cask "vlc"
 
-# Docker For Mac
-cask "docker-desktop"
-
 # Ruby tools
 brew "readline"
 

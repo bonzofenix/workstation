@@ -40,7 +40,7 @@ DEBUG=true make install    # Enable debug output
 - **`bin/`** - Custom utility scripts (50+ scripts) added to PATH
   - Git workflow: `cleanup-branches`, `cleanup-worktrees`, `delete-branch`, `worktrees`, `new-worktree`
   - AI-powered: `autodiff`, `autorefactor`, `claude-cost`
-  - Development: `bosh-*`, `cf-*`, `docker-*` scripts
+  - Development: `bosh-*`, `cf-*` scripts
 
 - **`assets/`** - Configuration files and dotfiles
   - `aliases.bash` - Custom bash aliases loaded globally
