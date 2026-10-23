@@ -51,7 +51,7 @@
       "Bash(rmdir *)"
     ]
   },
-  "model": "claude-opus-5-5[1m]",
+  "model": "sonnet",
   "skillOverrides": {
     "atlassian:search-company-knowledge": "off",
     "atlassian:triage-issue": "off"
@@ -202,9 +202,6 @@
   },
   "outputStyle": "Concise",
   "sandbox": {
-    "excludedCommands": [
-      "trash:*"
-    ],
     "network": {
       "allowedDomains": [
         "github.com",
@@ -216,7 +213,10 @@
         "registry.npmjs.org",
         "raw.githubusercontent.com"
       ]
-    }
+    },
+    "excludedCommands": [
+      "trash:*"
+    ]
   },
   "spinnerVerbs": {
     "mode": "replace",
